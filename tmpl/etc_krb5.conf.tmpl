@@ -10,6 +10,10 @@
  ticket_lifetime = 24h
  renew_lifetime = 7d
  forwardable = true
+ # Set udp_preference_limit = 1 when only TCP should be used. Consider using in
+ # complex network environments when troubleshooting or when dealing with
+ # inconsistent client behavior or GSS (63) messages.
+ #udp_preference_limit = 1
 
 [realms]
  @@kdc_realm@@ = {
@@ -20,3 +24,4 @@
 [domain_realm]
  .@@domain@@ = @@kdc_realm@@
  @@hostname@@ = @@kdc_realm@@
+

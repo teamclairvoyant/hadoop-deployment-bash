@@ -4,16 +4,17 @@
 
 [realms]
  @@kdc_realm@@ = {
-  #master_key_type = aes256-cts
+  master_key_type = aes256-cts
   acl_file = /var/kerberos/krb5kdc/kadm5.acl
   dict_file = /usr/share/dict/words
   admin_keytab = /var/kerberos/krb5kdc/kadm5.keytab
-  default_principal_flags = renewable
+#  default_principal_flags = renewable
+  default_principal_flags = +renewable, +forwardable
+  max_life = 1d
   max_renewable_life = 7d
 
-  # WARNING: aes256-ct:normal is disabled to simplify testing, since it
-  # requires the enhanced security JCE policy file to be installed. You should
-  # NOT run with this configuration in production or any real environment. You
-  # have been warned.
-  supported_enctypes = aes128-cts:normal des3-hmac-sha1:normal arcfour-hmac:normal des-hmac-sha1:normal des-cbc-md5:normal des-cbc-crc:normal
+  # WARNING: aes256-ct:normal requires the enhanced security JCE policy file to
+  # be installed.
+  #supported_enctypes = aes256-cts:normal aes128-cts:normal des3-hmac-sha1:normal arcfour-hmac:normal des-hmac-sha1:normal des-cbc-md5:normal des-cbc-crc:normal
+  supported_enctypes = aes256-cts:normal aes128-cts:normal
  }

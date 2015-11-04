@@ -13,12 +13,17 @@
 # limitations under the License.
 #
 # Copyright Cloudera 2013
+# Copyright Clairvoyant 2015
 
-tmpl_dir="tmpl"
+prog_dir=`dirname $0`
+tmpl_dir="${prog_dir}/tmpl"
 domain="$(hostname -d)"
 hostname="$(hostname -f)"
-kdc_realm="HADOOP"
+realm="HADOOP.COM"
 kdc_directory="/var/kerberos/krb5kdc"
+kdc_password=""
+cm_principal="cloudera-scm/admin"
+cm_princ_password=""
 
 log() {
   local level="$1"
@@ -82,6 +87,30 @@ configure_environment() {
   [ "$($ID -u)" -eq 0 ] || error "You must run this script as root" 1
 }
 
+gather_passwords() {
+  log DEBUG "Gathering passwords"
+
+  echo -n "Please enter the desired Kerberos realm [$realm]: "
+  read kdc_realm < /dev/tty
+  if [ -z "$kdc_realm" ]; then
+    kdc_realm=$realm
+  fi
+  if [ -z "$kdc_password" ]; then
+    echo "It is important that you NOT FORGET this password."
+    echo -n "Please enter a KDC Master Password: "
+    read kdc_password < /dev/tty
+  fi
+  echo -n "Please enter a new CM principal [$cm_principal]: "
+  read cm_princ < /dev/tty
+  if [ -z "$cm_princ" ]; then
+    cm_princ=$cm_principal
+  fi
+  if [ -z "$cm_princ_password" ]; then
+    echo -n "Please enter a new CM principal password: "
+    read cm_princ_password < /dev/tty
+  fi
+}
+
 prompt_for_safety() {
   echo "*** Local Kerberos Bootstrapper ***"
   echo
@@ -93,15 +122,17 @@ prompt_for_safety() {
   echo
   echo "Using the following settings:"
   echo
-  echo "         domain: ${domain}"
-  echo "       hostname: ${hostname}"
-  echo "      kdc_realm: ${kdc_realm}"
-  echo "  kdc_directory: ${kdc_directory}"
+  echo "           domain: ${domain}"
+  echo "         hostname: ${hostname}"
+  echo "        kdc_realm: ${kdc_realm}"
+  echo "    kdc_directory: ${kdc_directory}"
+  echo "     kdc_password: ${kdc_password}"
+  echo "         cm_princ: ${cm_princ}"
+  echo "cm_princ_password: ${cm_princ_password}"
   echo
   echo "*** DANGER DANGER DANGER DANGER DANGER ***"
   echo "You have 10 seconds to hit Control-C to stop this script!"
   echo "*** DANGER DANGER DANGER DANGER DANGER ***"
-  echo
 
   for i in $($SEQ 1 10) ; do
     $SLEEP 1
@@ -116,7 +147,7 @@ install_krb_packages() {
 
   local krb_packages="krb5-server krb5-workstation"
 
-  $YUM install -y $krb_packages || error "Yum install failed" 1
+  $YUM install -y -e1 -d1 $krb_packages || error "Yum install failed" 1
 
   detect_command kadmin.local KADMIN_LOCAL
   detect_command kadmin
@@ -166,31 +197,29 @@ configure_krb_client() {
 create_kdc_database() {
   log DEBUG "Creating the KDC database"
 
-  echo "*** NOTICE NOTICE NOTICE ***"
-  echo "The KDC database this utility creates is for TESTING PURPOSES ONLY and"
-  echo "should, under no circumstances, be used in a production setting or any"
-  echo "situation where strong security is required. The master database"
-  echo "password used is not secure, nor is the database created in the most"
-  echo "secure manner. You have been warned."
-  echo "*** NOTICE NOTICE NOTICE ***"
+#  echo "*** NOTICE NOTICE NOTICE ***"
+#  echo "The KDC database this utility creates is for TESTING PURPOSES ONLY and"
+#  echo "should, under no circumstances, be used in a production setting or any"
+#  echo "situation where strong security is required. The master database"
+#  echo "password used is not secure, nor is the database created in the most"
+#  echo "secure manner. You have been warned."
+#  echo "*** NOTICE NOTICE NOTICE ***"
 
   log INFO "Creating the KDC can take some time as it gathers random data. To"
   log INFO "help it along, generate some activity on the host (move the mouse,"
   log INFO "generate disk IO, etc.)."
 
-  $KDB5_UTIL -P "cloudera-test" create -s >/dev/null ||
+  $KDB5_UTIL -P "$kdc_password" create -s >/dev/null ||
     error "Unable to create kerberos KDC database" 1
+  log INFO "Successfully created kerberos KDC database"
 
-  log DEBUG "Generating cloudera-scm/admin principal for Cloudera Manager"
+  log DEBUG "Generating $cm_princ principal for Cloudera Manager"
 
   $KADMIN_LOCAL >/dev/null <<EOF
-  addprinc -pw cloudera cloudera-scm/admin
-#  xst -k cmf.keytab cloudera-scm/admin
+  addpol default
+  addprinc -pw $cm_princ_password $cm_princ
 EOF
-
-  echo
-
-  [ "$?" -eq 0 ] || error "Unable to generate and/or export cloudera-scm/admin principal" 1
+  [ "$?" -eq 0 ] || error "Unable to generate and/or export $cm_princ principal" 1
 }
 
 configure_cm_files() {
@@ -231,12 +260,13 @@ start_services() {
     error "Failed to start krb5kdc service" 1
   $SERVICE kadmin start ||
     error "Failed to start kadmin service" 1
+  echo
 }
 
 initializing_principals(){
-    log DEBUG "Creating several principals for a start; hdfs, hive, and daisuke."
+    log DEBUG "Creating several principals for a start: hdfs and testuser."
     echo "addprinc -pw hdfs hdfs" | kadmin.local
-    echo "addprinc -pw hive hive" | kadmin.local
+    echo "addprinc -pw testuser testuser" | kadmin.local
 }
 
 display_next_steps() {
@@ -261,16 +291,20 @@ display_next_steps2() {
   echo "*** NEXT ***"
   echo
   echo "KDC server is configured with realm \"${kdc_realm}\". "
-  echo "Please do the following steps here to configure KDC with a cluster managed by Cloudera Manager:"
+  echo "Please do the following steps here to configure KDC with a cluster managed by"
+  echo "Cloudera Manager:"
   echo "http://www.cloudera.com/content/cloudera/en/documentation/core/latest/topics/cm_sg_s4_kerb_wizard.html"
   echo 
-  echo "Note that this utility installs the required packages only on the host this runs. If there are"
-  echo "two or more servers in the cluster, install the client libraries on the other hosts:"
+  echo "Note that this utility installs the required packages only on the host on which"
+  echo "this runs. If there are two or more servers in the cluster, install the client"
+  echo "libraries on the other hosts:"
   echo
   echo "yum -y install krb5-workstation"
+  echo
 }
 
 configure_environment
+gather_passwords
 prompt_for_safety
 install_krb_packages
 configure_kdc
