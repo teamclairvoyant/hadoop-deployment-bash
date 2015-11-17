@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # (c) Copyright 2015 Cloudera, Inc.
+# Copyright Clairvoyant 2015
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +14,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+echo "*** Installing tools..."
+yum -y -e1 -d1 install wget bind-utils
 
 # Generic script for resizing the root disk partition for a cloud virtual machine
 
