@@ -14,7 +14,7 @@
 #
 # Copyright Clairvoyant 2015
 
-wget http://archive.cloudera.com/director/redhat/6/x86_64/director/cloudera-director.repo -O /etc/yum.repos.d/cloudera-director.repo
+wget -q http://archive.cloudera.com/director/redhat/6/x86_64/director/cloudera-director.repo -O /etc/yum.repos.d/cloudera-director.repo
 yum -y -e1 -d1 install oracle-j2sdk1.7 cloudera-director-server cloudera-director-client
 cp -pc /etc/cloudera-director-server/application.properties /etc/cloudera-director-server/application.properties-orig
 chgrp cloudera-director /etc/cloudera-director-server/application.properties

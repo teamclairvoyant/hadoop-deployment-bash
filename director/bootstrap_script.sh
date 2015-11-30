@@ -43,13 +43,13 @@ fi
 
 # Detect if the root parition is GPT or MBR (the strategy is different)
 
-if ! (fdisk -l "${ROOT_DEVICE}" 2>/dev/null | grep -q 'GPT'); then
+if ! (fdisk -lu "${ROOT_DEVICE}" 2>/dev/null | grep -q 'GPT'); then
 
     # MBR partitions can be resized using fdisk or parted by rewriting the partition table
 
     ROOT_PARTITION="${ROOT_DEVICE}1"
-    START_BLOCK=$(echo p | fdisk "${ROOT_DEVICE}" 2>/dev/null | grep "${ROOT_PARTITION}" | awk '{if (NF == 7){print $3} else {print $2}}')
-    (echo d; echo n; echo p; echo 1; echo "${START_BLOCK}"; echo; echo w;) | fdisk "${ROOT_DEVICE}" 2>/dev/null
+    START_BLOCK=$(echo p | fdisk -u "${ROOT_DEVICE}" 2>/dev/null | grep "${ROOT_PARTITION}" | awk '{if (NF == 7){print $3} else {print $2}}')
+    (echo d; echo n; echo p; echo 1; echo "${START_BLOCK}"; echo; echo w;) | fdisk -u "${ROOT_DEVICE}" 2>/dev/null
 
     # To complete the process resize2fs needs to be called after reboot (if there is no cloud-init)
 
