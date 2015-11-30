@@ -88,6 +88,14 @@ configure_environment() {
 }
 
 gather_passwords() {
+  echo "*** Local Kerberos Bootstrapper ***"
+  echo
+  echo "This utility will bootstrap a local MIT KDC for use with"
+  echo "Cloudera Manager and Hadoop. Changes *will* be made to"
+  echo "Kerberos related files and any pre-existing KDC. Backups"
+  echo "are made of all changes files, but you shouldn't depend"
+  echo "on them."
+  echo
   log DEBUG "Gathering passwords"
 
   echo -n "Please enter the desired Kerberos realm [$realm]: "
@@ -112,13 +120,13 @@ gather_passwords() {
 }
 
 prompt_for_safety() {
-  echo "*** Local Kerberos Bootstrapper ***"
-  echo
-  echo "This utility will bootstrap a local MIT KDC for use with"
-  echo "Cloudera Manager and Hadoop. Changes *will* be made to"
-  echo "Kerberos related files and any pre-existing KDC. Backups"
-  echo "are made of all changes files, but you shouldn't depend"
-  echo "on them."
+#  echo "*** Local Kerberos Bootstrapper ***"
+#  echo
+#  echo "This utility will bootstrap a local MIT KDC for use with"
+#  echo "Cloudera Manager and Hadoop. Changes *will* be made to"
+#  echo "Kerberos related files and any pre-existing KDC. Backups"
+#  echo "are made of all changes files, but you shouldn't depend"
+#  echo "on them."
   echo
   echo "Using the following settings:"
   echo
