@@ -19,8 +19,13 @@ if [ -z $SCMHOST ]; then
   echo "ERROR: Missing SCM hostname."
   exit 1
 fi
-wget -q http://archive.cloudera.com/cm5/redhat/6/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
-yum -y -e1 -d1 install oracle-j2sdk1.7 cloudera-manager-agent
+if rpm -q redhat-lsb-core; then
+  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
+else
+  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+fi
+wget -q http://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+yum -y -e1 -d1 install cloudera-manager-agent
 sed -i -e "/server_host/s|=.*|=${SCMHOST}|" /etc/cloudera-scm-agent/config.ini
 service cloudera-scm-agent start
 chkconfig cloudera-scm-agent on
