@@ -29,7 +29,7 @@ if [ "$INSTALLDB" = yes ]; then
   service cloudera-scm-server-db start
   chkconfig cloudera-scm-server-db on
 fi
-yum -y -e1 -d1 install cloudera-manager-server
+yum -y -e1 -d1 install cloudera-manager-server openldap-clients
 if [ "$INSTALLDB" = yes ]; then
   service cloudera-scm-server start
   chkconfig cloudera-scm-server on
