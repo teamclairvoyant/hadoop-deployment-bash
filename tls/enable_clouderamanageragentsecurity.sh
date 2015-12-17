@@ -16,9 +16,12 @@
 
 sed -e '/^use_tls/s|=.*|=1|' \
     -e '/^verify_cert_file/d' \
-    -e '/^# verify_cert_file/a\
-verify_cert_file=/opt/cloudera/security/x509/cmhost.pem' \
+    -e '/^verify_cert_dir/d' \
+    -e '/^# verify_cert_dir/a\
+verify_cert_dir=/opt/cloudera/security/CAcerts' \
     -i /etc/cloudera-scm-agent/config.ini
-touch /opt/cloudera/security/x509/cmhost.pem
+#    -e '/^# verify_cert_file/a\
+#verify_cert_file=/opt/cloudera/security/x509/cmhost.pem' \
+#touch /opt/cloudera/security/x509/cmhost.pem
 service cloudera-scm-agent restart
 

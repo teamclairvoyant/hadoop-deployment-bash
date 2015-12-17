@@ -15,7 +15,10 @@
 # Copyright Clairvoyant 2015
 
 . /etc/profile.d/java.sh
-cp -p ${JAVA_HOME}/jre/lib/security/cacerts ${JAVA_HOME}/jre/lib/security/jssecacerts
+/bin/cp -p ${JAVA_HOME}/jre/lib/security/cacerts ${JAVA_HOME}/jre/lib/security/jssecacerts
 keytool -importcert -file /opt/cloudera/security/CAcerts/ca.cert.pem -alias CAcert -keystore ${JAVA_HOME}/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
 keytool -importcert -file /opt/cloudera/security/CAcerts/intermediate.cert.pem -alias CAcertint -keystore ${JAVA_HOME}/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
+
+yum -y -e1 -d1 install openssl-perl
+c_rehash /opt/cloudera/security/CAcerts/
 
