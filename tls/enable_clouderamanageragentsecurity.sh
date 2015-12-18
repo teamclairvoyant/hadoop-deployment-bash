@@ -14,14 +14,36 @@
 #
 # Copyright Clairvoyant 2015
 
+LEVEL3=$1
+if [ -n "$LEVEL3" ]; then
+  # https://www.cloudera.com/content/www/en-us/documentation/enterprise/latest/topics/cm_sg_config_tls_agent_auth.html
+  sed -e '/^client_key_file/d' \
+      -e '/^client_keypw_file/d' \
+      -e '/^client_cert_file/d' \
+      -e '/^# client_key_file/a\
+client_key_file=/opt/cloudera/security/x509/localhost.key' \
+      -e '/^# client_keypw_file/a\
+client_keypw_file=/etc/cloudera-scm-agent/agentkey.pw' \
+      -e '/^# client_cert_file/a\
+client_cert_file=/opt/cloudera/security/x509/localhost.pem' \
+      -i /etc/cloudera-scm-agent/config.ini
+fi
+
+# https://www.cloudera.com/content/www/en-us/documentation/enterprise/latest/topics/cm_sg_config_tls_auth.html
 sed -e '/^use_tls/s|=.*|=1|' \
     -e '/^verify_cert_file/d' \
     -e '/^verify_cert_dir/d' \
     -e '/^# verify_cert_dir/a\
 verify_cert_dir=/opt/cloudera/security/CAcerts' \
     -i /etc/cloudera-scm-agent/config.ini
+
+#sed -e '/^use_tls/s|=.*|=1|' \
+#    -e '/^verify_cert_file/d' \
+#    -e '/^verify_cert_dir/d' \
 #    -e '/^# verify_cert_file/a\
 #verify_cert_file=/opt/cloudera/security/x509/cmhost.pem' \
+#    -i /etc/cloudera-scm-agent/config.ini
 #touch /opt/cloudera/security/x509/cmhost.pem
+
 service cloudera-scm-agent restart
 
