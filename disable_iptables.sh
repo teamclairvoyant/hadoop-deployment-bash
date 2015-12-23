@@ -14,6 +14,18 @@
 #
 # Copyright Clairvoyant 2015
 
-service iptables stop
-chkconfig iptables off
+if rpm -q redhat-lsb-core; then
+  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
+else
+  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+fi
+if [ $OSREL == 6 ]; then
+  service iptables stop
+  chkconfig iptables off
+else
+  service firewalld stop
+  chkconfig firewalld off
+  service iptables stop
+  chkconfig iptables off
+fi
 
