@@ -14,7 +14,17 @@
 #
 # Copyright Clairvoyant 2015
 
+if rpm -q redhat-lsb-core; then
+  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
+else
+  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+fi
+if [ $OSREL == 7 ]; then
+  # https://www.centos.org/forums/viewtopic.php?f=47&t=47626
+  systemctl disable chronyd.service
+fi
 yum -y -e1 -d1 install ntp
 service ntpd start
 chkconfig ntpd on
+
 
