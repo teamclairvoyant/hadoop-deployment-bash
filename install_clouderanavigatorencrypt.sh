@@ -26,14 +26,18 @@ else
   #OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
   OSVERSION=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | sed -e 's|\.el.*||'`
 fi
+
+# Find the correct kernel-headers and kernel-devel that match the running kernel.
+if ! yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r); then
+  cp -p /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo-orig
+  sed -e "s|\$releasever|$OSVERSION|" -i /etc/yum.repos.d/CentOS-Base.repo
+  yum clean metadata
+  yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r)
+  mv /etc/yum.repos.d/CentOS-Base.repo-orig /etc/yum.repos.d/CentOS-Base.repo
+fi
+
 yum -y -e1 -d1 install epel-release
 wget -q http://${YUMHOST}/navigator-encrypt-3.8.0/cloudera-navencrypt.repo -O /etc/yum.repos.d/cloudera-navencrypt.repo
-cp -p /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo-orig
-sed -e "s|\$releasever|$OSVERSION|" -i /etc/yum.repos.d/CentOS-Base.repo
-yum clean metadata
-#yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r)
-yum -y -e1 -d1 --disablerepo=updates install navencrypt
-mv /etc/yum.repos.d/CentOS-Base.repo-orig /etc/yum.repos.d/CentOS-Base.repo
-#service navencrypt-mount start
+yum -y -e1 -d1 install navencrypt
 chkconfig navencrypt-mount on
 
