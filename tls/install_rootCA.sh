@@ -22,3 +22,8 @@ keytool -importcert -file /opt/cloudera/security/CAcerts/intermediate.cert.pem -
 yum -y -e1 -d1 install openssl-perl
 c_rehash /opt/cloudera/security/CAcerts/
 
+if [ -d /etc/pki/ca-trust/source/anchors/ ]; then
+  cp -p /opt/cloudera/security/CAcerts/*.pem /etc/pki/ca-trust/source/anchors/
+  update-ca-trust extract
+fi
+
