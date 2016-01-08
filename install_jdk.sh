@@ -14,11 +14,32 @@
 #
 # Copyright Clairvoyant 2015
 
+USECLOUDERA=$1
+if [ -z $USECLOUDERA ]; then
+  USECLOUDERA=yes
+fi
 if rpm -q redhat-lsb-core; then
   OSREL=`lsb_release -rs | awk -F. '{print $1}'`
 else
   OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
 fi
-wget -q http://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
-yum -y -e1 -d1 install oracle-j2sdk1.7
+if [ "$USECLOUDERA" = yes ]; then
+  wget -q http://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+  yum -y -e1 -d1 install oracle-j2sdk1.7
+elif [ "$USECLOUDERA" = 7 ]; then
+  pushd /tmp
+  wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.rpm -O jdk-7u79-linux-x64.rpm
+  rpm -Uvh jdk-7u79-linux-x64.rpm
+  popd
+elif [ "$USECLOUDERA" = 8 ]; then
+  pushd /tmp
+  wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    http://download.oracle.com/otn-pub/java/jdk/8u65-b17/jdk-8u65-linux-x64.rpm -O jdk-8u65-linux-x64.rpm
+  rpm -Uvh jdk-8u65-linux-x64.rpm
+  popd
+else
+  echo "ERROR: Unknown Java version.  Please choose 7 or 8."
+  exit 10
+fi
 
