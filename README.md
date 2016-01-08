@@ -19,16 +19,16 @@ EOF
 
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
-  scp -p ${GITREPO}/install_{tools,ntp,jce,jdbc,krb5,clouderamanageragent,sssd}.sh \
-  ${GITREPO}/update_hosts.sh ${GITREPO}/change_swappiness.sh ${GITREPO}/configure_javahome.sh \
+  scp -p ${GITREPO}/install_{tools,ntp,jdk,jce,jdbc,clouderamanageragent}.sh \
+  ${GITREPO}/change_swappiness.sh ${GITREPO}/configure_javahome.sh \
   ${GITREPO}/disable_{iptables,selinux,thp}.sh $HOST:
 done
 
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
-  ssh -t $HOST 'for X in install_tools.sh update_hosts.sh change_swappiness.sh disable_iptables.sh \
-  disable_selinux.sh disable_thp.sh install_ntp.sh configure_javahome.sh install_jce.sh install_jdbc.sh \
-  install_krb5.sh; do sudo bash -x /home/centos/${X};done'
+  ssh -t $HOST 'for X in install_tools.sh change_swappiness.sh disable_iptables.sh \
+  disable_selinux.sh disable_thp.sh install_ntp.sh install_jdk.sh configure_javahome.sh \
+  install_jce.sh install_jdbc.sh ; do sudo bash -x /home/centos/${X};done'
 done
 
 CMSERVER=ip-10-2-5-22.ec2.internal
