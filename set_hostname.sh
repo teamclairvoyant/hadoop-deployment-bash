@@ -31,3 +31,7 @@ else
 fi
 hostname $H
 
+if rpm -q cloud-init; then
+  echo 'preserve_hostname: True' >/etc/cloud/cloud.cfg.d/04_hostname.cfg
+fi
+
