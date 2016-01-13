@@ -32,8 +32,13 @@ if ! yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r);
   cp -p /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo-orig
   sed -e "s|\$releasever|$OSVERSION|" -i /etc/yum.repos.d/CentOS-Base.repo
   yum clean metadata
-  yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r)
+  if ! yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r); then
+    sed -e '/^mirrorlist/s|^|#|' -e '/#baseurl/s|^#||' -e '/^baseurl/s|mirror.centos.org/centos|vault.centos.org|' -i /etc/yum.repos.d/CentOS-Base.repo
+    yum clean metadata
+    yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r)
+  fi
   mv /etc/yum.repos.d/CentOS-Base.repo-orig /etc/yum.repos.d/CentOS-Base.repo
+  yum clean metadata
 fi
 
 yum -y -e1 -d1 install epel-release
