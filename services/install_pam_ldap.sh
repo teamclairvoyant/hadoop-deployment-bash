@@ -15,12 +15,12 @@
 # Copyright Clairvoyant 2015
 
 LDAPBASEDN=$1
-if [ -z $LDAPBASEDN ]; then
+if [ -z "$LDAPBASEDN" ]; then
   echo "ERROR: Missing LDAP Base DN."
   exit 1
 fi
 LDAPSERVER=$2
-if [ -z $LDAPSERVER ]; then
+if [ -z "$LDAPSERVER" ]; then
   echo "ERROR: Missing LDAP server."
   exit 1
 fi

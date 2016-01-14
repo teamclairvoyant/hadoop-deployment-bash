@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 SP="$1"
-if [ -z $SP ]; then
+if [ -z "$SP" ]; then
   echo "ERROR: Missing keystore password."
   exit 1
 fi

@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 USECLOUDERA=$1
-if [ -z $USECLOUDERA ]; then
+if [ -z "$USECLOUDERA" ]; then
   USECLOUDERA=yes
 fi
 if rpm -q redhat-lsb-core; then

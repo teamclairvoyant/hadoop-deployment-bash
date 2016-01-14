@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 INSTALLDB=$1
-if [ -z $INSTALLDB ]; then
+if [ -z "$INSTALLDB" ]; then
   INSTALLDB=yes
 fi
 if rpm -q redhat-lsb-core; then

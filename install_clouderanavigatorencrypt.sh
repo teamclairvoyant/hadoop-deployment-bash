@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 YUMHOST=$1
-if [ -z $YUMHOST ]; then
+if [ -z "$YUMHOST" ]; then
   echo "ERROR: Missing YUM hostname."
   exit 1
 fi

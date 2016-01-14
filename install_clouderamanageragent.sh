@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 SCMHOST=$1
-if [ -z $SCMHOST ]; then
+if [ -z "$SCMHOST" ]; then
   echo "ERROR: Missing SCM hostname."
   exit 1
 fi

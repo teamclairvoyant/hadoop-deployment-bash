@@ -21,7 +21,7 @@
 #done >hostlist
 
 HOSTLIST=$1
-if [ -z $HOSTLIST ]; then
+if [ -z "$HOSTLIST" ]; then
   echo "ERROR: Missing hostlist file."
   exit 1
 fi
