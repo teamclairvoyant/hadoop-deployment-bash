@@ -26,6 +26,9 @@ fi
 if [ "$USECLOUDERA" = yes ]; then
   wget -q http://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
   yum -y -e1 -d1 install oracle-j2sdk1.7
+  DIRNAME=`rpm -ql oracle-j2sdk1.7|head -1`
+  TARGET=`basename $DIRNAME`
+  ln -s $TARGET /usr/java/default
 elif [ "$USECLOUDERA" = 7 ]; then
   pushd /tmp
   wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
