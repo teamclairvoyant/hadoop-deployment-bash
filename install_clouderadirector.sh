@@ -21,7 +21,7 @@ else
 fi
 wget -q http://archive.cloudera.com/director/redhat/${OSREL}/x86_64/director/cloudera-director.repo -O /etc/yum.repos.d/cloudera-director.repo
 yum -y -e1 -d1 install cloudera-director-server cloudera-director-client
-cp -pc /etc/cloudera-director-server/application.properties /etc/cloudera-director-server/application.properties-orig
+cp -p /etc/cloudera-director-server/application.properties /etc/cloudera-director-server/application.properties-orig
 chgrp cloudera-director /etc/cloudera-director-server/application.properties
 chmod 0640 /etc/cloudera-director-server/application.properties
 sed -i -e '/lp.encryption.twoWayCipher:/a\
