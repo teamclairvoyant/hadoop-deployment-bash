@@ -56,7 +56,8 @@ EOF
 ldapadd -x -w $ROOTPW -D $ROOTDN -H ldapi:/// <<EOF
 dn: uid=user00,ou=People,dc=${DOMAIN2},dc=${DOMAIN1}
 uid: user00
-cn: user00
+cn: User 00
+givenName: User
 sn: 00
 objectClass: top
 objectClass: posixAccount
@@ -69,29 +70,67 @@ userPassword: ${LDAPPASS}
 mail: user00@${DOMAIN2}.${DOMAIN1}
 gecos: user00 User
 
+dn: uid=user01,ou=People,dc=${DOMAIN2},dc=${DOMAIN1}
+uid: user01
+cn: User 01
+givenName: User
+sn: 01
+objectClass: top
+objectClass: posixAccount
+objectClass: inetOrgPerson
+loginShell: /bin/bash
+homeDirectory: /home/user01
+uidNumber: 15001
+gidNumber: 10001
+userPassword: ${LDAPPASS}
+mail: user01@${DOMAIN2}.${DOMAIN1}
+gecos: user01 User
+
+dn: uid=user02,ou=People,dc=${DOMAIN2},dc=${DOMAIN1}
+uid: user02
+cn: User 02
+givenName: User
+sn: 02
+objectClass: top
+objectClass: posixAccount
+objectClass: inetOrgPerson
+loginShell: /bin/bash
+homeDirectory: /home/user02
+uidNumber: 15002
+gidNumber: 10002
+userPassword: ${LDAPPASS}
+mail: user02@${DOMAIN2}.${DOMAIN1}
+gecos: user02 User
+
 dn: cn=group00,ou=Groups,dc=${DOMAIN2},dc=${DOMAIN1}
 objectClass: posixGroup
 objectClass: top
-cn: sys_admin
+cn: group00
 userPassword: {crypt}x
 gidNumber: 10000
-#memberuid: uid=user00
+memberuid: uid=user00
 
 dn: cn=group01,ou=Groups,dc=${DOMAIN2},dc=${DOMAIN1}
 objectClass: posixGroup
 objectClass: top
-cn: sys_admin
+cn: group01
 userPassword: {crypt}x
 gidNumber: 10001
-memberuid: uid=user00
+memberuid: uid=user01
+
+dn: cn=group02,ou=Groups,dc=${DOMAIN2},dc=${DOMAIN1}
+objectClass: groupOfNames
+member: uid=user02,ou=People,dc=${DOMAIN2},dc=${DOMAIN1}
+cn: group02
 EOF
 
 ldapsearch -x -D $ROOTDN -w $ROOTPW
 
-
-kadmin.local <<EOF
+if [ -x /usr/sbin/kadmin.local ]; then
+  kadmin.local <<EOF
 addprinc -pw p@ssw0rd user00
 EOF
-echo
+  echo
+fi
 
 exit 0

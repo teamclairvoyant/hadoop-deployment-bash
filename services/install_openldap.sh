@@ -69,7 +69,7 @@ EOF
 
 cat <<EOF >>/etc/openldap/ldap.conf
 BASE            dc=${DOMAIN2},dc=${DOMAIN1}
-URI             ldap://$(hostname)
+URI             ldap://$(hostname -f)
 EOF
 
 exit 0
