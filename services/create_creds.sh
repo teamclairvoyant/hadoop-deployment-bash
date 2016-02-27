@@ -18,6 +18,7 @@ DOMAIN1=com
 DOMAIN2=clairvoyantsoft
 ROOTDN="cn=Manager,dc=${DOMAIN2},dc=${DOMAIN1}"
 ROOTPW=password
+LDAPPASS=`slappasswd -s $ROOTPW`
 
 #ldapadd -x -w $ROOTPW -D $ROOTDN -H ldapi:/// <<EOF
 #dn: dc=${DOMAIN2},dc=${DOMAIN1}
