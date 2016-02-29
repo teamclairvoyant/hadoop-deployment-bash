@@ -130,6 +130,8 @@ ldapsearch -x -D $ROOTDN -w $ROOTPW
 if [ -x /usr/sbin/kadmin.local ]; then
   kadmin.local <<EOF
 addprinc -pw p@ssw0rd user00
+addprinc -pw p@ssw0rd user01
+addprinc -pw p@ssw0rd user02
 EOF
   echo
 fi
