@@ -105,7 +105,7 @@ gather_passwords() {
   fi
   if [ -z "$kdc_password" ]; then
     echo "It is important that you NOT FORGET this password."
-    echo -n "Please enter a KDC Master Password: "
+    echo -n "Please enter a STRONG master password for the KDC: "
     read kdc_password < /dev/tty
   fi
   echo -n "Please enter a new CM principal [$cm_principal]: "
@@ -273,8 +273,8 @@ start_services() {
 
 initializing_principals(){
     log DEBUG "Creating several principals for a start: hdfs and testuser."
-    echo "addprinc -pw hdfs hdfs" | kadmin.local
-    echo "addprinc -pw testuser testuser" | kadmin.local
+    echo "addprinc -pw hdfs123 hdfs" | kadmin.local
+    echo "addprinc -pw testuser123 testuser" | kadmin.local
 }
 
 display_next_steps() {
@@ -320,5 +320,5 @@ configure_krb_client
 create_kdc_database
 #configure_cm_files
 start_services
-initializing_principals
+#initializing_principals
 display_next_steps2
