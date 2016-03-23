@@ -14,6 +14,6 @@
 #
 # Copyright Clairvoyant 2015
 
-yum -y -e1 -d1 install krb5-workstation
+yum -y -e1 -d1 install krb5-workstation epel-release
 yum -y -e1 -d1 install kstart k5start
 
