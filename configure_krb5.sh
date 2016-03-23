@@ -22,7 +22,7 @@ hostname="$(hostname -f)"
 realm="HADOOP.COM"
 kdc_directory="/var/kerberos/krb5kdc"
 kdc_password=""
-cm_principal="cloudera-scm/admin"
+cm_principal="cloudera-scm"
 cm_princ_password=""
 
 log() {
