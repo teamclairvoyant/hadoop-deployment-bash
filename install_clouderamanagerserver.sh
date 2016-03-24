@@ -14,10 +14,12 @@
 #
 # Copyright Clairvoyant 2015
 
+# TODO
 INSTALLDB=$1
 if [ -z "$INSTALLDB" ]; then
   INSTALLDB=yes
 fi
+SCMVERSION=$2
 if rpm -q redhat-lsb-core; then
   OSREL=`lsb_release -rs | awk -F. '{print $1}'`
 else
@@ -28,7 +30,12 @@ if rpm -q jdk >/dev/null; then
 else
   HAS_JDK=no
 fi
-wget -q http://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
+  wget -q http://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+  if [ -n "$SCMVERSION" ]; then
+    sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
+  fi
+fi
 if [ "$INSTALLDB" = yes ]; then
   yum -y -e1 -d1 install cloudera-manager-server-db-2
   service cloudera-scm-server-db start

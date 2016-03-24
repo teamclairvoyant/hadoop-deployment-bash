@@ -14,17 +14,24 @@
 #
 # Copyright Clairvoyant 2015
 
+# TODO
 USECLOUDERA=$1
 if [ -z "$USECLOUDERA" ]; then
   USECLOUDERA=yes
 fi
+SCMVERSION=$2
 if rpm -q redhat-lsb-core; then
   OSREL=`lsb_release -rs | awk -F. '{print $1}'`
 else
   OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
 fi
 if [ "$USECLOUDERA" = yes ]; then
-  wget -q http://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+  if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
+    wget -q http://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+    if [ -n "$SCMVERSION" ]; then
+      sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
+    fi
+  fi
   yum -y -e1 -d1 install oracle-j2sdk1.7
   DIRNAME=`rpm -ql oracle-j2sdk1.7|head -1`
   TARGET=`basename $DIRNAME`
