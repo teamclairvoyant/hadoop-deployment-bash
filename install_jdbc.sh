@@ -18,10 +18,22 @@ INSTALLDB=$1
 if [ -z "$INSTALLDB" ]; then
   INSTALLDB=yes
 fi
+if rpm -q jdk >/dev/null; then
+  HAS_JDK=yes
+else
+  HAS_JDK=no
+fi
 if [ "$INSTALLDB" = yes ]; then
   yum -y -e1 -d1 install mysql-connector-java postgresql-jdbc
+  if [ $HAS_JDK = no ]; then yum -y -e1 -d1 remove jdk; fi
 else
-  yum -y -e1 -d1 install mysql-connector-java
-  yum -y -e1 -d1 install postgresql-jdbc
+  if [ "$INSTALLDB" = mysql ]; then
+    yum -y -e1 -d1 install mysql-connector-java
+    if [ $HAS_JDK = no ]; then yum -y -e1 -d1 remove jdk; fi
+  elif [ "$INSTALLDB" = postgresql ]; then
+    yum -y -e1 -d1 install postgresql-jdbc
+  else
+    echo "** ERROR: Argument must be either mysql or postgresql."
+  fi
 fi
 
