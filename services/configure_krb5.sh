@@ -170,10 +170,10 @@ configure_kdc() {
   $MKDIR "$kdc_directory_tmp" ||
     error "Failed to create KDC temp directory:$kdc_directory_tmp" 1
 
-  $SED -e "s/@@kdc_realm@@/${kdc_realm}/" "${tmpl_dir}/kdc.conf.tmpl" > "${kdc_directory_tmp}/kdc.conf" ||
+  $SED -e "s/@@kdc_realm@@/${kdc_realm}/g" "${tmpl_dir}/kdc.conf.tmpl" > "${kdc_directory_tmp}/kdc.conf" ||
     error "Unable to generate kdc.conf" 1
 
-  $SED -e "s/@@kdc_realm@@/${kdc_realm}/" "${tmpl_dir}/kadm5.acl.tmpl" > "${kdc_directory_tmp}/kadm5.acl" ||
+  $SED -e "s/@@kdc_realm@@/${kdc_realm}/g" "${tmpl_dir}/kadm5.acl.tmpl" > "${kdc_directory_tmp}/kadm5.acl" ||
     error "Unable to generate kadm5.acl" 1
 
   if [ -d "$kdc_directory" ] ; then
