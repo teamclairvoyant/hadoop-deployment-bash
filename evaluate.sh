@@ -23,6 +23,9 @@ else
 fi
 
 echo "****************************************"
+echo "****************************************"
+echo `hostname`
+echo "****************************************"
 echo "*** vm.swappiness"
 echo "** running config:"
 sysctl vm.swappiness
@@ -33,10 +36,10 @@ echo "****************************************"
 echo "*** JAVA_HOME"
 echo $JAVA_HOME
 echo $PATH
-java -version
+java -version 2>&1
 
 echo "****************************************"
-echo "*** disable firewall"
+echo "*** Firewall"
 if [ $OSREL == 6 ]; then
   echo "** running config:"
   service iptables status
@@ -71,13 +74,20 @@ fi
 
 echo "****************************************"
 echo "*** Filesystems"
-grep noatime /etc/fstab
+echo "** noatime"
+grep noatime /etc/fstab || echo "none"
+#grep noatime /etc/fstab || echo "WARNING: No filesystems mounted with noatime."
 #tune2fs -l /dev/sda |grep blah
 
-#echo "****************************************"
-#echo "*** Entropy"
-#echo "** running config:"
-#echo "** startup config:"
+echo "****************************************"
+echo "*** Entropy"
+echo "** running config:"
+service rngd status
+echo "** startup config:"
+chkconfig --list rngd
+echo "** available entropy:"
+cat /proc/sys/kernel/random/entropy_avail
+
 echo "****************************************"
 echo "*** JCE"
 if [ -d /usr/java/jdk1.6.0_31/jre/lib/security/ ]; then
@@ -96,14 +106,13 @@ rpm -q mysql-connector-java postgresql-jdbc
 
 echo "****************************************"
 echo "*** Java"
-rpm -q oracle-j2sdk1.7
-rpm -qa | egrep 'jdk|jre' | sort
-java -version
+echo "** installed Javas:"
+rpm -qa | egrep 'jdk|jre|^java|j2sdk' | sort
+echo "** default java version:"
+java -version 2>&1
 
 echo "****************************************"
 echo "*** Kerberos"
-echo "** running config:"
-echo "** startup config:"
 rpm -q krb5-workstation kstart k5start
 
 echo "****************************************"
@@ -123,11 +132,21 @@ if [ $OSREL == 7 ]; then
   systemctl status chronyd.service
   # chronyc sources
 fi
+echo "** timesync status:"
 ntpq -p
 
 echo "****************************************"
 echo "*** DNS"
-# TODO
+IP=`ip -4 a | awk '/inet/{print $2}' | grep -v 127.0.0.1 | sed -e 's|/[0-9].*||'`
+echo "** IP is:"
+echo $IP
+echo "** hostname is:"
+hostname
+DNS=$(host `hostname`)
+echo "** forward:"
+echo $DNS
+echo "** reverse:"
+host $(echo $DNS | awk '{print $NF}')
 
 #echo "****************************************"
 #echo "*** "
