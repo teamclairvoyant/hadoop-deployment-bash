@@ -30,6 +30,10 @@ if rpm -q jdk >/dev/null; then
 else
   HAS_JDK=no
 fi
+PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
+eval $PROXY
+export http_proxy
+export https_proxy
 if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
   wget -q http://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
   if [ -n "$SCMVERSION" ]; then

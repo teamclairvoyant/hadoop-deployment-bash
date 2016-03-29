@@ -14,6 +14,10 @@
 #
 # Copyright Clairvoyant 2015
 
+PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
+eval $PROXY
+export http_proxy
+export https_proxy
 if rpm -q jdk || test -d /usr/java/jdk1.6.0_*; then
   wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
     http://download.oracle.com/otn-pub/java/jce_policy/6/jce_policy-6.zip -O /tmp/jce_policy-6.zip
