@@ -31,7 +31,7 @@ export http_proxy
 export https_proxy
 if [ "$USECLOUDERA" = yes ]; then
   if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
-    wget -q http://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+    wget -q https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
     if [ -n "$SCMVERSION" ]; then
       sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
     fi

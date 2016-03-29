@@ -23,7 +23,7 @@ PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
 eval $PROXY
 export http_proxy
 export https_proxy
-wget -q http://archive.cloudera.com/director/redhat/${OSREL}/x86_64/director/cloudera-director.repo -O /etc/yum.repos.d/cloudera-director.repo
+wget -q https://archive.cloudera.com/director/redhat/${OSREL}/x86_64/director/cloudera-director.repo -O /etc/yum.repos.d/cloudera-director.repo
 yum -y -e1 -d1 install cloudera-director-server cloudera-director-client
 cp -p /etc/cloudera-director-server/application.properties /etc/cloudera-director-server/application.properties-orig
 chgrp cloudera-director /etc/cloudera-director-server/application.properties
