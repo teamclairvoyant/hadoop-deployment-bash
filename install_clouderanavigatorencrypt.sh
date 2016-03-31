@@ -27,7 +27,9 @@ else
   OSVERSION=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | sed -e 's|\.el.*||'`
 fi
 
-# Find the correct kernel-headers and kernel-devel that match the running kernel.
+echo "** Find the correct kernel-headers and kernel-devel that match the running kernel."
+echo "** DON'T PANIC."
+echo "** This might look scary..."
 if ! yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r); then
   cp -p /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo-orig
   sed -e "s|\$releasever|$OSVERSION|" -i /etc/yum.repos.d/CentOS-Base.repo
@@ -40,6 +42,7 @@ if ! yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r);
   mv /etc/yum.repos.d/CentOS-Base.repo-orig /etc/yum.repos.d/CentOS-Base.repo
   yum clean metadata
 fi
+echo "** End of possible errors."
 
 yum -y -e1 -d1 install epel-release
 wget -q http://${YUMHOST}/navigator-encrypt-3.8.0/cloudera-navencrypt.repo -O /etc/yum.repos.d/cloudera-navencrypt.repo
