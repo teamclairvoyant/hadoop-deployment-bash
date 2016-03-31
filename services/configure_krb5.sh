@@ -22,7 +22,7 @@ hostname="$(hostname -f)"
 realm="HADOOP.COM"
 kdc_directory="/var/kerberos/krb5kdc"
 kdc_password=""
-cm_principal="cloudera-scm/admin"
+cm_principal="cloudera-scm"
 cm_princ_password=""
 
 log() {
@@ -105,7 +105,7 @@ gather_passwords() {
   fi
   if [ -z "$kdc_password" ]; then
     echo "It is important that you NOT FORGET this password."
-    echo -n "Please enter a KDC Master Password: "
+    echo -n "Please enter a STRONG master password for the KDC: "
     read kdc_password < /dev/tty
   fi
   echo -n "Please enter a new CM principal [$cm_principal]: "
@@ -170,10 +170,10 @@ configure_kdc() {
   $MKDIR "$kdc_directory_tmp" ||
     error "Failed to create KDC temp directory:$kdc_directory_tmp" 1
 
-  $SED -e "s/@@kdc_realm@@/${kdc_realm}/" "${tmpl_dir}/kdc.conf.tmpl" > "${kdc_directory_tmp}/kdc.conf" ||
+  $SED -e "s/@@kdc_realm@@/${kdc_realm}/g" "${tmpl_dir}/kdc.conf.tmpl" > "${kdc_directory_tmp}/kdc.conf" ||
     error "Unable to generate kdc.conf" 1
 
-  $SED -e "s/@@kdc_realm@@/${kdc_realm}/" "${tmpl_dir}/kadm5.acl.tmpl" > "${kdc_directory_tmp}/kadm5.acl" ||
+  $SED -e "s/@@kdc_realm@@/${kdc_realm}/g" "${tmpl_dir}/kadm5.acl.tmpl" > "${kdc_directory_tmp}/kadm5.acl" ||
     error "Unable to generate kadm5.acl" 1
 
   if [ -d "$kdc_directory" ] ; then
@@ -273,8 +273,8 @@ start_services() {
 
 initializing_principals(){
     log DEBUG "Creating several principals for a start: hdfs and testuser."
-    echo "addprinc -pw hdfs hdfs" | kadmin.local
-    echo "addprinc -pw testuser testuser" | kadmin.local
+    echo "addprinc -pw hdfs123 hdfs" | kadmin.local
+    echo "addprinc -pw testuser123 testuser" | kadmin.local
 }
 
 display_next_steps() {
@@ -320,5 +320,5 @@ configure_krb_client
 create_kdc_database
 #configure_cm_files
 start_services
-initializing_principals
+#initializing_principals
 display_next_steps2

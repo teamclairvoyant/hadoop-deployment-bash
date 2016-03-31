@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2016
 
-yum -y -e1 -d1 install krb5-workstation epel-release
-yum -y -e1 -d1 install kstart k5start
+rpm -e java-1.6.0-openjdk
+rpm -e java-1.7.0-openjdk
+rpm -e java-1.8.0-openjdk
 
