@@ -14,5 +14,7 @@
 #
 # Copyright Clairvoyant 2016
 
-rpm -e java-1.6.0-openjdk java-1.7.0-openjdk java-1.8.0-openjdk
+rpm -e java-1.6.0-openjdk
+rpm -e java-1.7.0-openjdk
+rpm -e java-1.8.0-openjdk
 
