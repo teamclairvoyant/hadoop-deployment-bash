@@ -13,14 +13,25 @@
 # limitations under the License.
 #
 # Copyright Clairvoyant 2015
+
 VAL=1
+
+if rpm -q redhat-lsb-core; then
+  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
+else
+  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+fi
 
 sysctl -w vm.swappiness=$VAL
 
-if grep -q vm.swappiness /etc/sysctl.conf; then
-  sed -i -e "/^vm.swappiness/s|=.*|= $VAL|" /etc/sysctl.conf
+if [ $OSREL == 6 ]; then
+  if grep -q vm.swappiness /etc/sysctl.conf; then
+    sed -i -e "/^vm.swappiness/s|=.*|= $VAL|" /etc/sysctl.conf
+  else
+    echo "vm.swappiness = $VAL" >>/etc/sysctl.conf
+  fi
 else
-  echo "vm.swappiness = $VAL" >> /etc/sysctl.conf
+  echo "# Tuning for Hadoop installation." >/etc/sysctl.d/cloudera.conf
+  echo "vm.swappiness = $VAL" >>/etc/sysctl.d/cloudera.conf
 fi
 
-exit 0
