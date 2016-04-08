@@ -31,6 +31,9 @@ if [ $OSREL == 6 ]; then
     echo "vm.swappiness = $VAL" >>/etc/sysctl.conf
   fi
 else
+  if grep -q vm.swappiness /etc/sysctl.conf; then
+    sed -i -e '/^vm.swappiness/d' /etc/sysctl.conf
+  fi
   echo "# Tuning for Hadoop installation." >/etc/sysctl.d/cloudera.conf
   echo "vm.swappiness = $VAL" >>/etc/sysctl.d/cloudera.conf
 fi
