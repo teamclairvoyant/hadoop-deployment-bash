@@ -30,12 +30,23 @@ echo "*** vm.swappiness"
 echo "** running config:"
 sysctl vm.swappiness
 echo "** startup config:"
-grep vm.swappiness /etc/sysctl.conf
+grep -r vm.swappiness /etc/sysctl.*
+
+echo "****************************************"
+echo "*** swap"
+echo "** running config:"
+swapon -s
+echo
+if grep -q swap /etc/fstab; then
+  lsblk `awk '/swap/{print $1}' /etc/fstab`
+fi
+echo "** startup config:"
+grep swap /etc/fstab || echo "none"
 
 echo "****************************************"
 echo "*** JAVA_HOME"
-echo $JAVA_HOME
-echo $PATH
+echo JAVA_HOME=$JAVA_HOME
+echo PATH=$PATH
 java -version 2>&1
 
 echo "****************************************"
@@ -106,10 +117,11 @@ rpm -q mysql-connector-java postgresql-jdbc
 
 echo "****************************************"
 echo "*** Java"
-echo "** installed Javas:"
-rpm -qa | egrep 'jdk|jre|^java|j2sdk' | sort
+echo "** installed Java(s):"
+rpm -qa | egrep 'jdk|jre|^java-|j2sdk' | sort
 echo "** default java version:"
 java -version 2>&1
+# Which is our standard?
 
 echo "****************************************"
 echo "*** Kerberos"
@@ -131,6 +143,7 @@ chkconfig --list ntpd
 if [ $OSREL == 7 ]; then
   systemctl status chronyd.service
   # chronyc sources
+  # Do we want to support chrony? Does CM?
 fi
 echo "** timesync status:"
 ntpq -p
