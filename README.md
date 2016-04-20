@@ -62,8 +62,7 @@ for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
   ssh -t $HOST "for Y in install_tools.sh change_swappiness.sh disable_iptables.sh \
   disable_selinux.sh disable_thp.sh install_ntp.sh install_nscd.sh install_jdk.sh \
-  configure_javahome.sh install_jce.sh install_jdbc.sh ; do sudo bash -x \
-  /home/centos/\${Y} '' $CMVER;done"
+  configure_javahome.sh install_jce.sh; do sudo bash -x /home/centos/\${Y} 8 $CMVER;done"
 done
 ```
 
