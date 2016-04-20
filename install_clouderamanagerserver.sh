@@ -17,7 +17,7 @@
 # TODO
 INSTALLDB=$1
 if [ -z "$INSTALLDB" ]; then
-  INSTALLDB=yes
+  INSTALLDB=embedded
 fi
 SCMVERSION=$2
 if rpm -q redhat-lsb-core; then
@@ -40,13 +40,13 @@ if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
     sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
   fi
 fi
-if [ "$INSTALLDB" = yes ]; then
+if [ "$INSTALLDB" = embedded ]; then
   yum -y -e1 -d1 install cloudera-manager-server-db-2
   service cloudera-scm-server-db start
   chkconfig cloudera-scm-server-db on
 fi
 yum -y -e1 -d1 install cloudera-manager-server openldap-clients
-if [ "$INSTALLDB" = yes ]; then
+if [ "$INSTALLDB" = embedded ]; then
   service cloudera-scm-server start
   chkconfig cloudera-scm-server on
 else
@@ -56,7 +56,7 @@ else
   elif [ "$INSTALLDB" = postgresql ]; then
     yum -y -e1 -d1 install postgresql-jdbc
   else
-    echo "** ERROR: Argument must be either mysql or postgresql."
+    echo "** ERROR: Argument must be either embedded, mysql, or postgresql."
   fi
   echo "** Now you must configure the Cloudera Manager server to connect to the external"
   echo "** database.  Please run:"
