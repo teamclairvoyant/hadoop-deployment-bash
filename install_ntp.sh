@@ -27,4 +27,3 @@ yum -y -e1 -d1 install ntp
 service ntpd start
 chkconfig ntpd on
 
-
