@@ -26,6 +26,18 @@ echo "****************************************"
 echo "****************************************"
 echo `hostname`
 echo "****************************************"
+echo "*** OS details"
+cat /etc/redhat-release
+
+echo "****************************************"
+echo "*** Hardware details"
+grep ^processor /proc/cpuinfo |tail -1
+grep ^"model name" /proc/cpuinfo |tail -1
+echo "memory          : `free -g |awk '/^Mem:/{print $2}'` GiB"
+echo "** Disks:"
+lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | egrep 'NAME|disk'
+
+echo "****************************************"
 echo "*** vm.swappiness"
 echo "** running config:"
 sysctl vm.swappiness
@@ -38,7 +50,7 @@ echo "** running config:"
 swapon -s
 echo
 if grep -q swap /etc/fstab; then
-  lsblk `awk '/swap/{print $1}' /etc/fstab`
+  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT `awk '/swap/{print $1}' /etc/fstab`
 fi
 echo "** startup config:"
 grep swap /etc/fstab || echo "none"
@@ -47,7 +59,7 @@ echo "****************************************"
 echo "*** JAVA_HOME"
 echo JAVA_HOME=$JAVA_HOME
 echo PATH=$PATH
-java -version 2>&1
+java -version 2>&1 || ${JAVA_HOME}/java -version 2>&1
 
 echo "****************************************"
 echo "*** Firewall"
@@ -147,6 +159,9 @@ if [ $OSREL == 7 ]; then
 fi
 echo "** timesync status:"
 ntpq -p
+if [ $OSREL == 7 ]; then
+  chronyc sources
+fi
 
 echo "****************************************"
 echo "*** DNS"
@@ -160,6 +175,10 @@ echo "** forward:"
 echo $DNS
 echo "** reverse:"
 host $(echo $DNS | awk '{print $NF}')
+
+echo "****************************************"
+echo "*** Cloudera Software"
+rpm -qa | grep ^cloudera
 
 #echo "****************************************"
 #echo "*** "
