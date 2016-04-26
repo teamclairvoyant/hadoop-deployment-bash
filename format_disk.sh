@@ -31,6 +31,7 @@ if ! rpm -q parted; then echo "Installing parted. Please wait...";yum -y -d1 -e1
 
 if [ -b /dev/${DISK} -a ! -b /dev/${DISK}1 ]; then
   parted /dev/${DISK} mklabel msdos mkpart primary $FS 1 100%
+  sleep 2
   mkfs -t $FS /dev/${DISK}1
   sed -i -e '/^\/dev\/${DISK}1/d' /etc/fstab
   echo "/dev/${DISK}1 /data/${NUM} $FS defaults,noatime 1 2" >>/etc/fstab
