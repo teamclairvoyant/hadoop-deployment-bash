@@ -29,18 +29,19 @@ Run the evaluation script to gather the configuration of all the nodes of the cl
 mpssh -f HOSTLIST -r ${GITREPO}/evaluate.sh -o evaluate-pre
 ```
 
-Or you can use mussh and print to the screen.
-```
-mussh -H HOSTLIST -m -b -C ${GITREPO}/evaluate.sh
-```
-
 Or you can use SSH-in-a-for-loop and print to the screen.
 ```
+mkdir evaluate-pre
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
   scp -p ${GITREPO}/evaluate.sh ${HOST}:
-  ssh $HOST './evaluate.sh'
+  ssh -q $HOST './evaluate.sh' >evaluate-pre/${HOST}.out 2>evaluate-pre/${HOST}.err
 done
+```
+
+Or you can use mussh and print to the screen.
+```
+mussh -H HOSTLIST -m -b -C ${GITREPO}/evaluate.sh
 ```
 
 # Example
