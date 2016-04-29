@@ -28,11 +28,26 @@ echo `hostname`
 echo "****************************************"
 echo "*** OS details"
 cat /etc/redhat-release
+if [ -f /etc/centos-release ]; then cat /etc/centos-release; fi
 
 echo "****************************************"
 echo "*** Hardware details"
+echo "** system:"
+# https://unix.stackexchange.com/questions/75750/how-can-i-find-the-hardware-model-in-linux
+pushd /sys/devices/virtual/dmi/id/ >/dev/null
+for f in *; do
+  printf "$f : "
+  cat $f 2>/dev/null || echo "***_Unavailable_***"
+done
+popd >/dev/null
+#echo "** manufacturer:"
+#sudo -n dmidecode -s system-manufacturer
+#echo "** model:"
+#sudo -n dmidecode -s system-product-name
+echo "** cpu:"
 grep ^processor /proc/cpuinfo |tail -1
 grep ^"model name" /proc/cpuinfo |tail -1
+echo "** memory:"
 echo "memory          : `free -g |awk '/^Mem:/{print $2}'` GiB"
 echo "** Disks:"
 lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | egrep 'NAME|disk'
@@ -59,6 +74,7 @@ echo "****************************************"
 echo "*** JAVA_HOME"
 echo JAVA_HOME=$JAVA_HOME
 echo PATH=$PATH
+echo "** default java version:"
 java -version 2>&1 || ${JAVA_HOME}/java -version 2>&1
 
 echo "****************************************"
@@ -151,24 +167,25 @@ echo "*** NTP"
 echo "** running config:"
 service ntpd status
 echo "** startup config:"
+RETVAL=0
 chkconfig --list ntpd
 if [ $OSREL == 7 ]; then
   systemctl status chronyd.service
-  # chronyc sources
+  RETVAL=$?
   # Do we want to support chrony? Does CM?
 fi
 echo "** timesync status:"
 ntpq -p
-if [ $OSREL == 7 ]; then
+if [ $OSREL == 7 -a $RETVAL == 0 ]; then
   chronyc sources
 fi
 
 echo "****************************************"
 echo "*** DNS"
 IP=`ip -4 a | awk '/inet/{print $2}' | grep -v 127.0.0.1 | sed -e 's|/[0-9].*||'`
-echo "** IP is:"
+echo -n "** system IP is: "
 echo $IP
-echo "** hostname is:"
+echo -n "** system hostname is: "
 hostname
 DNS=$(host `hostname`)
 echo "** forward:"
