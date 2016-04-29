@@ -7,7 +7,7 @@ Note: This script does not require root level privileges and should be run as a 
 There are several ways to provide some baseline data to the Hadoop Installation Team.
 
 ```
-wget https://raw.githubusercontent.com/razorsedge/hadoop-deployment-bash/master/evaluate.sh
+wget https://raw.githubusercontent.com/teamclairvoyant/hadoop-deployment-bash/master/evaluate.sh
 chmod 0755 evaluate.sh
 ```
 
