@@ -36,8 +36,10 @@ echo "** system:"
 # https://unix.stackexchange.com/questions/75750/how-can-i-find-the-hardware-model-in-linux
 pushd /sys/devices/virtual/dmi/id/ >/dev/null
 for f in *; do
-  printf "$f : "
-  cat $f 2>/dev/null || echo "***_Unavailable_***"
+  if [ $f != power -a $f != subsystem -a $f != modalias -a $f != uevent ]; then
+    printf "$f : "
+    cat $f 2>/dev/null || echo "***_Unavailable_***"
+  fi
 done
 popd >/dev/null
 #echo "** manufacturer:"
@@ -51,6 +53,14 @@ echo "** memory:"
 echo "memory          : `free -g |awk '/^Mem:/{print $2}'` GiB"
 echo "** Disks:"
 lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | egrep 'NAME|disk'
+echo "** Logical Volumes:"
+pvs
+echo
+vgs
+echo
+lvs
+echo "** Filesystems:"
+df -h -t ext2 -t ext3 -t ext4 -t xfs
 
 echo "****************************************"
 echo "*** vm.swappiness"

@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2016
 
 yum -y -e1 -d1 install httpd
 service httpd start
 chkconfig httpd on
-
-mkdir -p /var/www/html/navigator-encrypt-3.8.0
 
