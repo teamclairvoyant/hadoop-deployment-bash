@@ -45,7 +45,7 @@ fi
 echo "** End of possible errors."
 
 yum -y -e1 -d1 install epel-release
-wget -q http://${YUMHOST}/navigator-encrypt-3.8.0/cloudera-navencrypt.repo -O /etc/yum.repos.d/cloudera-navencrypt.repo
+wget -q http://${YUMHOST}/navigator-encrypt/latest/cloudera-navencrypt.repo -O /etc/yum.repos.d/cloudera-navencrypt.repo
 yum -y -e1 -d1 install navencrypt
 chkconfig navencrypt-mount on
 
