@@ -43,14 +43,14 @@ if [ "$USECLOUDERA" = yes ]; then
 elif [ "$USECLOUDERA" = 7 ]; then
   pushd /tmp
   wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-    http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.rpm -O jdk-7u79-linux-x64.rpm
-  rpm -Uvh jdk-7u79-linux-x64.rpm
+    http://download.oracle.com/otn/java/jdk/7u80-b15/jdk-7u80-linux-x64.rpm -O jdk-7u80-linux-x64.rpm
+  rpm -Uvh jdk-7u80-linux-x64.rpm
   popd
 elif [ "$USECLOUDERA" = 8 ]; then
   pushd /tmp
   wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-    http://download.oracle.com/otn-pub/java/jdk/8u65-b17/jdk-8u65-linux-x64.rpm -O jdk-8u65-linux-x64.rpm
-  rpm -Uvh jdk-8u65-linux-x64.rpm
+    http://download.oracle.com/otn-pub/java/jdk/8u91-b14/jdk-8u91-linux-x64.rpm -O jdk-8u91-linux-x64.rpm
+  rpm -Uvh jdk-8u91-linux-x64.rpm
   popd
 else
   echo "ERROR: Unknown Java version.  Please choose 7 or 8."
