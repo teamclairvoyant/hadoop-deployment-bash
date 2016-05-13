@@ -124,7 +124,11 @@ fi
 echo "****************************************"
 echo "*** Filesystems"
 echo "** noatime"
+echo "** running config:"
+mount | grep noatime || echo "none"
+echo "** startup config:"
 grep noatime /etc/fstab || echo "none"
+grep noatime /etc/navencrypt/ztab || echo "none"
 #grep noatime /etc/fstab || echo "WARNING: No filesystems mounted with noatime."
 #tune2fs -l /dev/sda |grep blah
 
