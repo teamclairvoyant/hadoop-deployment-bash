@@ -27,8 +27,9 @@ echo "****************************************"
 echo `hostname`
 echo "****************************************"
 echo "*** OS details"
-cat /etc/redhat-release
+if [ -f /etc/redhat-release ]; then cat /etc/redhat-release; fi
 if [ -f /etc/centos-release ]; then cat /etc/centos-release; fi
+if [ -f /etc/lsb-release ]; then /usr/bin/lsb_release -ds; fi
 
 echo "****************************************"
 echo "*** Hardware details"
@@ -61,6 +62,10 @@ echo
 lvs
 echo "** Filesystems:"
 df -h -t ext2 -t ext3 -t ext4 -t xfs
+echo "** Network:"
+ip addr
+echo ""
+ip route
 
 echo "****************************************"
 echo "*** vm.swappiness"
@@ -89,7 +94,7 @@ java -version 2>&1 || ${JAVA_HOME}/java -version 2>&1
 
 echo "****************************************"
 echo "*** Firewall"
-if [ $OSREL == 6 ]; then
+if [ "$OSREL" == 6 ]; then
   echo "** running config:"
   service iptables status
   echo "** startup config:"
@@ -115,7 +120,7 @@ echo "*** Transparent Huge Pages"
 echo "** running config:"
 cat /sys/kernel/mm/transparent_hugepage/defrag
 echo "** startup config:"
-if [ $OSREL == 6 ]; then
+if [ "$OSREL" == 6 ]; then
   grep transparent_hugepage /etc/rc.local
 else
   grep transparent_hugepage /etc/rc.d/rc.local
@@ -164,6 +169,7 @@ rpm -qa | egrep 'jdk|jre|^java-|j2sdk' | sort
 echo "** default java version:"
 java -version 2>&1
 # Which is our standard?
+which java
 
 echo "****************************************"
 echo "*** Kerberos"
@@ -183,14 +189,14 @@ service ntpd status
 echo "** startup config:"
 RETVAL=0
 chkconfig --list ntpd
-if [ $OSREL == 7 ]; then
+if [ "$OSREL" == 7 ]; then
   systemctl status chronyd.service
   RETVAL=$?
   # Do we want to support chrony? Does CM?
 fi
 echo "** timesync status:"
 ntpq -p
-if [ $OSREL == 7 -a $RETVAL == 0 ]; then
+if [ "$OSREL" == 7 -a $RETVAL == 0 ]; then
   chronyc sources
 fi
 
@@ -209,7 +215,7 @@ host $(echo $DNS | awk '{print $NF}')
 
 echo "****************************************"
 echo "*** Cloudera Software"
-rpm -qa | grep ^cloudera
+rpm -qa ^cloudera\*
 
 #echo "****************************************"
 #echo "*** "
