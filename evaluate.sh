@@ -62,6 +62,10 @@ echo
 lvs
 echo "** Filesystems:"
 df -h -t ext2 -t ext3 -t ext4 -t xfs
+echo "** Network:"
+ip addr
+echo ""
+ip route
 
 echo "****************************************"
 echo "*** vm.swappiness"
