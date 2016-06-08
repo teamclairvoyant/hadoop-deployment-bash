@@ -2,13 +2,19 @@
 
 This script can be run on machines that will become a part of a Hadoop cluster before a Hadoop Installation Team arrives onsite (or is provided remote access) in order to help answer some of the questions that the Installation Team may have.  The bash script `evaluate.sh` can be downloaded or copied to each cluster node and executed, it's output saved and then transmitted to the Installation Team.
 
-Note: This script does not require root level privileges and should be run as a non-root user.
+Note: This script mostly does not require root level privileges and can be run as a non-root user.  Only the logical volume commands use sudo.
 
-There are several ways to provide some baseline data to the Hadoop Installation Team.
-
+First, download the `evaluate.sh` script to a local system and set the execute bits.  This local system could be a Linux workstation, Windows machine with a Cygwin installation, OS X laptop, or one of the Linux machines that will become a part of the cluster.  It does not matter so long as it has SSH access to the cluster nodes.
 ```
 wget https://raw.githubusercontent.com/teamclairvoyant/hadoop-deployment-bash/master/evaluate.sh
 chmod 0755 evaluate.sh
+```
+
+Create the file HOSTLIST in the same directory.  You can use an editor like `vi` or `nano`.  Populate it with a list of hosts, one per line, upon which the script will be run.  Preceed each host with the username to use to log in and '@' symbol.  You can also use IP addresses if that is easier.  Example:
+```
+centos@host1.localdomain
+centos@host2.localdomain
+root@192.168.0.3
 ```
 
 Run the evaluation script to gather the configuration of all the nodes of the cluster.  Save the output in the directory "evaluate-pre".

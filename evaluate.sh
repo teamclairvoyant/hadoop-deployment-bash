@@ -55,16 +55,16 @@ echo "memory          : `free -g |awk '/^Mem:/{print $2}'` GiB"
 echo "** Disks:"
 lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | egrep 'NAME|disk'
 echo "** Logical Volumes:"
-pvs
+sudo -n pvs
 echo
-vgs
+sudo -n vgs
 echo
-lvs
+sudo -n lvs
 echo "** Filesystems:"
 df -h -t ext2 -t ext3 -t ext4 -t xfs
-echo "** Network:"
+echo "** Network interfaces:"
 ip addr
-echo ""
+echo "** Network routes:"
 ip route
 
 echo "****************************************"
@@ -169,6 +169,7 @@ rpm -qa | egrep 'jdk|jre|^java-|j2sdk' | sort
 echo "** default java version:"
 java -version 2>&1
 # Which is our standard?
+echo "** which java:"
 which java
 
 echo "****************************************"
