@@ -13,33 +13,122 @@
 # limitations under the License.
 #
 # Copyright Clairvoyant 2015
+#
+if [ $DEBUG ]; then set -x; fi
+if [ $DEBUG ]; then ECHO=echo; fi
+#
+##### START CONFIG ###################################################
 
-MYSQL_HOST=localhost
-MYSQL_USER=root
-MYSQL_PASSWORD=""
+##### STOP CONFIG ####################################################
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 
+# Function to print the help screen.
+print_help () {
+  echo "Usage:  $1"
+  echo "        $1 [-h|--help]"
+  echo "        $1 [-v|--version]"
+  echo "   ex.  $1"
+  exit 1
+}
+
+# Function to check for root priviledges.
+check_root () {
+  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+    echo "You must have root priviledges to run this program."
+    exit 2
+  fi
+}
+
+# If the variable DEBUG is set, then turn on tracing.
+# http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
+if [ $DEBUG ]; then
+  # This will turn on the ksh xtrace option for mainline code
+  set -x
+
+  # This will turn on the ksh xtrace option for all functions
+  typeset +f |
+  while read F junk
+  do
+    typeset -ft $F
+  done
+  unset F junk
+fi
+
+# Process arguments.
+while [[ $1 = -* ]]; do
+  case $1 in
+    -h|--host)
+      shift
+      MYSQL_HOST=$1
+      ;;
+    -u|--user)
+      shift
+      MYSQL_USER=$1
+      ;;
+    -p|--password)
+      shift
+      MYSQL_PASSWORD=$1
+      ;;
+    -H|--help)
+      print_help "$(basename $0)"
+      ;;
+    -v|--version)
+      echo "\tScript"
+      echo "\tVersion: $VERSION"
+      echo "\tWritten by: $AUTHOR"
+      exit 0
+      ;;
+    *)
+      print_help "$(basename $0)"
+      ;;
+  esac
+  shift
+done
+
+# Check to see if we have no parameters.
+#if [[ ! $# -eq 1 ]]; then print_help "$(basename $0)"; fi
+
+# Lets not bother continuing unless we have the privs to do something.
+#check_root
+
+# main
 if rpm -q redhat-lsb-core; then
   OSREL=`lsb_release -rs | awk -F. '{print $1}'`
 else
   OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
 fi
+$ECHO sudo yum -y -e1 -d1 install epel-release
 if [ $OSREL == 6 ]; then
-  yum -y -e1 -d1 install mysql
+  $ECHO sudo yum -y -e1 -d1 install mysql apg || exit 4
 else
-  yum -y -e1 -d1 install mariadb
+  $ECHO sudo yum -y -e1 -d1 install mariadb apg || exit 4
 fi
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE rman DEFAULT CHARACTER SET utf8;'
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY 'RMANDB_PASSWORD';"
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE nav DEFAULT CHARACTER SET utf8;'
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON nav.* TO 'nav'@'%' IDENTIFIED BY 'NAVDB_PASSWORD';"
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE navms DEFAULT CHARACTER SET utf8;'
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON navms.* TO 'navms'@'%' IDENTIFIED BY 'NAVMSDB_PASSWORD';"
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE metastore DEFAULT CHARACTER SET utf8;'
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY 'METASTOREDB_PASSWORD';"
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE oozie DEFAULT CHARACTER SET utf8;'
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY 'OOZIEDB_PASSWORD';"
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE sentry DEFAULT CHARACTER SET utf8;'
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON sentry.* TO 'sentry'@'%' IDENTIFIED BY 'SENTRYDB_PASSWORD';"
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
-echo mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY 'HUEDB_PASSWORD';"
+RMANDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+NAVDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+NAVMSDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+METASTOREDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+OOZIEDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+SENTRYDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+HUEDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE rman DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY '$RMANDB_PASSWORD';"
+echo "rman : $RMANDB_PASSWORD"
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE nav DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON nav.* TO 'nav'@'%' IDENTIFIED BY '$NAVDB_PASSWORD';"
+echo "nav : $NAVDB_PASSWORD"
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE navms DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON navms.* TO 'navms'@'%' IDENTIFIED BY '$NAVMSDB_PASSWORD';"
+echo "navms : $NAVMSDB_PASSWORD"
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE metastore DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY '$METASTOREDB_PASSWORD';"
+echo "hive : $METASTOREDB_PASSWORD"
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE oozie DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY '$OOZIEDB_PASSWORD';"
+echo "oozie : $OOZIEDB_PASSWORD"
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE sentry DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON sentry.* TO 'sentry'@'%' IDENTIFIED BY '$SENTRYDB_PASSWORD';"
+echo "sentry : $SENTRYDB_PASSWORD"
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '$HUEDB_PASSWORD';"
+echo "hue : $HUEDB_PASSWORD"
 
