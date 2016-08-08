@@ -157,6 +157,9 @@ fi
 if [ -d /usr/java/jdk1.8.0_*/jre/lib/security/ ]; then
   ls -l /usr/java/jdk1.8.0_*/jre/lib/security/*.jar
 fi
+if [ -d /usr/java/default/jre/lib/security/ ]; then
+  ls -l /usr/java/default/jre/lib/security/*.jar
+fi
 
 echo "****************************************"
 echo "*** JDBC"
@@ -213,6 +216,8 @@ echo "** forward:"
 echo $DNS
 echo "** reverse:"
 host $(echo $DNS | awk '{print $NF}')
+#python -c 'import socket; print socket.getfqdn(), socket.gethostbyname(socket.getfqdn())'
+
 
 echo "****************************************"
 echo "*** Cloudera Software"
