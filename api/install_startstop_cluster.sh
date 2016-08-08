@@ -12,7 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2016
 
-yum -y -e1 -d1 install epel-release wget unzip deltarpm
+yum -y -e1 -d1 install jq
+cp -p ~centos/{start,stop}_cluster.sh /usr/local/sbin/
+chown 0:0 /usr/local/sbin/{start,stop}_cluster.sh
+chmod 700 /usr/local/sbin/{start,stop}_cluster.sh
+rm -f /tmp/$$
+crontab -l | egrep -v 'stop_cluster.sh|start_cluster.sh' >/tmp/$$
+echo '00 08 * * * /usr/local/sbin/start_cluster.sh >/dev/null'>>/tmp/$$
+echo '00 18 * * * /usr/local/sbin/stop_cluster.sh >/dev/null'>>/tmp/$$
+crontab /tmp/$$
+rm -f /tmp/$$
 

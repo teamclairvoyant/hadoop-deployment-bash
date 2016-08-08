@@ -12,7 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2016
 
-yum -y -e1 -d1 install epel-release wget unzip deltarpm
+##### START CONFIG ###################################################
+
+APIUSER=
+APIPASS=
+CMHOST=
+CMPORT=7180
+#CURLDEBUG="-i"
+
+##### STOP CONFIG ####################################################
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+CMSCHEME=http
+
+if [ "$CMPORT" -eq 7183 ]; then
+  CMSCHEME=https
+fi
+
+BASEURL=$CMSCHEME://$CMHOST:$CMPORT
+API=v5
+
+curl -s -u "${APIUSER}:${APIPASS}" $CURLDEBUG "${BASEURL}/api/${API}/cm/deployment?view=export_redacted"
 

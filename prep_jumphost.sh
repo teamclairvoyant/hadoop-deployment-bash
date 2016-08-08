@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2016
 
-yum -y -e1 -d1 install epel-release wget unzip deltarpm
+yum -y -d1 -e1 install mpssh tmux screen bind-utils
 
