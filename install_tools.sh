@@ -14,5 +14,5 @@
 #
 # Copyright Clairvoyant 2015
 
-yum -y -e1 -d1 install wget unzip deltarpm
+yum -y -e1 -d1 install epel-release wget unzip deltarpm
 

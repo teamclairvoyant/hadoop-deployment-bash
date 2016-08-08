@@ -14,6 +14,5 @@
 #
 # Copyright Clairvoyant 2016
 
-yum -y -e1 -d1 install epel-release
-yum -y -d1 -e1 install mpssh tmux screen
+yum -y -d1 -e1 install mpssh tmux screen bind-utils
 
