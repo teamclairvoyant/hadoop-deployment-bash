@@ -67,6 +67,18 @@ ip addr
 echo "** Network routes:"
 ip route
 
+# A stability bug is especially seen on hosts running kernel versions between
+# 2.6.32-491.el6 and 2.6.32-504.16.2.el6(exclusive), and mostly reported on
+# machines with Haswell; upgrading kernel version to 2.6.32-504.16.2.el6 or
+# later is recommended.
+# https://www.cloudera.com/documentation/enterprise/release-notes/topics/cdh_rn_os_ki.html
+echo "****************************************"
+echo "*** kernel"
+echo "** running config:"
+uname -r
+echo "** startup config:"
+rpm -q kernel
+
 echo "****************************************"
 echo "*** vm.swappiness"
 echo "** running config:"
