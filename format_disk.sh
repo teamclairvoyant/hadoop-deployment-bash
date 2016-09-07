@@ -38,6 +38,7 @@ if [ -b /dev/${DISK} -a ! -b /dev/${DISK}1 ]; then
   sed -i -e '/^\/dev\/${DISK}1/d' /etc/fstab && \
   echo "/dev/${DISK}1 /data/${NUM} $FS defaults,noatime 1 2" >>/etc/fstab && \
   mkdir -p /data/${NUM} && \
+  chattr +i /data/${NUM} && \
   mount /data/${NUM}
 fi
 

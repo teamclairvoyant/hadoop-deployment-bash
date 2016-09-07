@@ -14,9 +14,20 @@
 #
 # Copyright Clairvoyant 2016
 
-rpm -e java-1.6.0-openjdk
-rpm -e java-1.7.0-openjdk
-rpm -e java-1.8.0-openjdk
-rpm -e java-1.8.0-openjdk-headless
-rpm -e java-1.5.0-gcj
+if ! rpm -q tuned; then exit 0; fi
+
+if rpm -q redhat-lsb-core; then
+  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
+else
+  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+fi
+if [ "$OSREL" == 6 ]; then
+  PROFILE=`tuned-adm active | awk '{print $NF}' | head -1`
+  sed -e '/^vm.swappiness/s|= .*|= 1|' -i /etc/tune-profiles/${PROFILE}/sysctl.ktune
+fi
+if [ "$OSREL" == 7 ]; then
+  PROFILE=`tuned-adm active | awk '{print $NF}'`
+  mkdir /etc/tuned/${PROFILE}
+  sed -e '/^vm.swappiness/s|= .*|= 1|' /usr/lib/tuned/${PROFILE}/tuned.conf >/etc/tuned/${PROFILE}/tuned.conf
+fi
 
