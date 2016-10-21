@@ -22,7 +22,12 @@ CMHOST=localhost
 CMPORT=7180
 API=v5
 
-if curl -s -X GET -u "admin:admin" http://localhost:7180/api/${API}/users/${APIUSER} | grep -q "does not exist"; then
+if ! (exec 6<>/dev/tcp/${CMHOST}/${CMPORT}) ; do
+  echo 'ERROR: cloudera-scm-server not listening...'
+  exit 1
+done
+
+if curl -s -X GET -u "admin:admin" http://${CMHOST}:${CMPORT}/api/${API}/users/${APIUSER} | grep -q "does not exist"; then
   curl -s -X POST -u "admin:admin" -H "content-type:application/json" -d \
   "{
     \"items\" : [ {
@@ -30,12 +35,11 @@ if curl -s -X GET -u "admin:admin" http://localhost:7180/api/${API}/users/${APIU
       \"password\" : \"$APIPASS\",
       \"roles\" : [ \"ROLE_ADMIN\" ]
     } ]
-  }" http://localhost:7180/api/${API}/users
+  }" http://${CMHOST}:${CMPORT}/api/${API}/users
   echo ""
-  echo "APIUSER: $APIUSER"
-  echo "APIPASS: $APIPASS"
+  echo "APIUSER : $APIUSER"
+  echo "APIPASS : $APIPASS"
 
-  #cp -p ~centos/dump_cm_config.sh /usr/local/sbin/
   sed -e "/^APIUSER=/s|=.*|=${APIUSER}|" \
       -e "/^APIPASS=/s|=.*|=${APIPASS}|" \
       -e "/^CMHOST=/s|=.*|=${CMHOST}|" \
