@@ -14,10 +14,10 @@
 #
 # Copyright Clairvoyant 2016
 
-#yum -y -e1 -d1 install openssl-devel
+yum -y -e1 -d1 install openssl-devel
 
 #ln -s libcrypto.so.1.0.1e /usr/lib64/libcrypto.so
 #ln -s libssl.so.1.0.1e /usr/lib64/libssl.so
-ln -s libcrypto.so.10 /usr/lib64/libcrypto.so
-ln -s libssl.so.10 /usr/lib64/libssl.so
+#ln -s libcrypto.so.10 /usr/lib64/libcrypto.so
+#ln -s libssl.so.10 /usr/lib64/libssl.so
 
