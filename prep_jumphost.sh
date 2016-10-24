@@ -14,5 +14,5 @@
 #
 # Copyright Clairvoyant 2016
 
-yum -y -d1 -e1 install mpssh tmux screen bind-utils
+yum -y -d1 -e1 install mpssh tmux screen bind-utils apg
 
