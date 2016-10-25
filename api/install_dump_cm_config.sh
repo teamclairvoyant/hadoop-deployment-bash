@@ -14,18 +14,21 @@
 #
 # Copyright Clairvoyant 2015
 
+# https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
+PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-20};echo'
 if ! rpm -q apg; then echo "Installing apg. Please wait...";yum -y -d1 -e1 install apg; fi
+if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 
 APIUSER=api
-APIPASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+APIPASS=`eval $PWCMD`
 CMHOST=localhost
 CMPORT=7180
 API=v5
 
-if ! (exec 6<>/dev/tcp/${CMHOST}/${CMPORT}) ; do
+if ! (exec 6<>/dev/tcp/${CMHOST}/${CMPORT}); then
   echo 'ERROR: cloudera-scm-server not listening...'
   exit 1
-done
+fi
 
 if curl -s -X GET -u "admin:admin" http://${CMHOST}:${CMPORT}/api/${API}/users/${APIUSER} | grep -q "does not exist"; then
   curl -s -X POST -u "admin:admin" -H "content-type:application/json" -d \
