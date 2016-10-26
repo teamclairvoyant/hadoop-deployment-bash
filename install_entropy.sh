@@ -28,6 +28,12 @@ else
   RDRAND=false
 fi
 
+if [ -f /dev/hwrng ]; then
+  HWRNG=true
+else
+  HWRNG=false
+fi
+
 if [ -n "$USEHAVEGED" ]; then
   yum -y -e1 -d1 install epel-release
   yum -y -e1 -d1 install haveged
@@ -37,7 +43,7 @@ else
   # https://www.cloudera.com/content/www/en-us/downloads/navigator/encrypt/3-8-0.html
   # http://www.certdepot.net/rhel7-get-started-random-number-generator/
   yum -y -d1 -e1 install rng-tools
-  if [ $RDRAND == false ]; then
+  if [ $RDRAND == false  -a $HWRNG == false ]; then
     if [ $OSREL == 6 ]; then
       sed -i -e 's|^EXTRAOPTIONS=.*|EXTRAOPTIONS="-r /dev/urandom"|' /etc/sysconfig/rngd
     else

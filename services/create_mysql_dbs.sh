@@ -21,6 +21,8 @@ if [ $DEBUG ]; then ECHO=echo; fi
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+# https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
+PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-20};echo'
 
 # Function to print the help screen.
 print_help () {
@@ -37,6 +39,13 @@ check_root () {
     echo "You must have root priviledges to run this program."
     exit 2
   fi
+}
+
+# Function to print and error message and exit.
+err_msg () {
+  local CODE=$1
+  echo "ERROR: Could not install required package. Exiting."
+  exit $CODE
 }
 
 # If the variable DEBUG is set, then turn on tracing.
@@ -99,17 +108,18 @@ else
 fi
 $ECHO sudo yum -y -e1 -d1 install epel-release
 if [ $OSREL == 6 ]; then
-  $ECHO sudo yum -y -e1 -d1 install mysql apg || exit 4
+  $ECHO sudo yum -y -e1 -d1 install mysql apg || err_msg 4
 else
-  $ECHO sudo yum -y -e1 -d1 install mariadb apg || exit 4
+  $ECHO sudo yum -y -e1 -d1 install mariadb apg || err_msg 4
 fi
-RMANDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
-NAVDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
-NAVMSDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
-METASTOREDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
-OOZIEDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
-SENTRYDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
-HUEDB_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
+RMANDB_PASSWORD=`eval $PWCMD`
+NAVDB_PASSWORD=`eval $PWCMD`
+NAVMSDB_PASSWORD=`eval $PWCMD`
+METASTOREDB_PASSWORD=`eval $PWCMD`
+OOZIEDB_PASSWORD=`eval $PWCMD`
+SENTRYDB_PASSWORD=`eval $PWCMD`
+HUEDB_PASSWORD=`eval $PWCMD`
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE rman DEFAULT CHARACTER SET utf8;'
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY '$RMANDB_PASSWORD';"
 echo "rman : $RMANDB_PASSWORD"

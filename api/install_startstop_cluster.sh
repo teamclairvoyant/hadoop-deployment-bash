@@ -14,14 +14,17 @@
 #
 # Copyright Clairvoyant 2016
 
-yum -y -e1 -d1 install jq
-cp -p ~centos/{start,stop}_cluster.sh /usr/local/sbin/
-chown 0:0 /usr/local/sbin/{start,stop}_cluster.sh
-chmod 700 /usr/local/sbin/{start,stop}_cluster.sh
+yum -y -e1 -d1 install jq ksh
+
+#cp -p {start,stop}_cluster.ksh /usr/local/sbin/
+#chown 0:0 /usr/local/sbin/{start,stop}_cluster.ksh
+#chmod 700 /usr/local/sbin/{start,stop}_cluster.ksh
+install -o root -g root -m 0700 start_cluster.ksh /usr/local/sbin/start_cluster.ksh
+install -o root -g root -m 0700 stop_cluster.ksh /usr/local/sbin/stop_cluster.ksh
 rm -f /tmp/$$
-crontab -l | egrep -v 'stop_cluster.sh|start_cluster.sh' >/tmp/$$
-echo '00 08 * * * /usr/local/sbin/start_cluster.sh >/dev/null'>>/tmp/$$
-echo '00 18 * * * /usr/local/sbin/stop_cluster.sh >/dev/null'>>/tmp/$$
+crontab -l | egrep -v 'stop_cluster.ksh|start_cluster.ksh' >/tmp/$$
+echo '00 08 * * * /usr/local/sbin/start_cluster.ksh >/dev/null'>>/tmp/$$
+echo '00 18 * * * /usr/local/sbin/stop_cluster.ksh >/dev/null'>>/tmp/$$
 crontab /tmp/$$
 rm -f /tmp/$$
 
