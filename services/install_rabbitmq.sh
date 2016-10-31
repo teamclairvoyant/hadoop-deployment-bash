@@ -17,7 +17,8 @@
 yum -y -e1 -d1 install epel-release
 yum -y -e1 -d1 install rabbitmq-server
 
+rabbitmq-plugins enable rabbitmq_management
+
 service rabbitmq-server start
 chkconfig rabbitmq-server on
-rabbitmq-plugins enable rabbitmq_management
 
