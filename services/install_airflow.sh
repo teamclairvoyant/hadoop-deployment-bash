@@ -164,7 +164,7 @@ echo "** Installing Airflow[hive]."
 pip $PIPOPTS install airflow[hive]
 #pip $PIPOPTS install airflow[hdfs]
 #pip $PIPOPTS install airflow[ldap]
-#pip $PIPOPTS install airflow[password]
+pip $PIPOPTS install airflow[password]
 echo "** Installing Airflow[rabbitmq]."
 pip $PIPOPTS install airflow[rabbitmq]
 #pip $PIPOPTS install airflow[s3]
@@ -181,6 +181,7 @@ install -o root -g root -m0644 ${FILEPATH}/airflow/airflow.conf /etc/tmpfiles.d/
 install -o root -g root -m0644 ${FILEPATH}/airflow/airflow.cfg /var/lib/airflow/
 install -o root -g root -m0644 ${FILEPATH}/airflow/unittests.cfg /var/lib/airflow/
 install -o root -g root -m0644 ${FILEPATH}/airflow/airflow.logrotate /etc/logrotate.d/
+install -o root -g root -m0755 ${FILEPATH}/airflow/mkuser.sh /tmp/mkuser.sh
 
 systemd-tmpfiles --create --prefix=/run
 
@@ -198,6 +199,7 @@ sed -e "s|USERNAME|$MYSQL_USER|" \
 
 echo "** Initializing Airflow database."
 su - airflow -c 'airflow initdb'
+su - airflow -c '/tmp/mkuser.sh'
 
 echo "** Starting Airflow services."
 service airflow-webserver start

@@ -1,5 +1,8 @@
 #!/usr/bin/python
 # https://airflow.incubator.apache.org/security.html
+username = 'admin'
+email = 'admin@example.com'
+#####
 
 import airflow
 from airflow import models, settings
@@ -11,17 +14,16 @@ from random import sample, choice
 chars = string.letters + string.digits
 length = 20
 password = ''.join(choice(chars) for _ in range(length))
+print "%s : %s" % (username, password)
 
 user = PasswordUser(models.User())
-user.username = 'admin'
-user.email = 'admin@example.com'
-#user.password = 'set_the_password'
+user.username = username
+user.email = email
 user.password = password
 session = settings.Session()
 session.add(user)
 session.commit()
 session.close()
 
-print "%s : %s" % (user.username, password)
 exit()
 
