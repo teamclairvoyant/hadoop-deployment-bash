@@ -115,6 +115,7 @@ fi
 if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 AIRFLOWDB_PASSWORD=`eval $PWCMD`
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE airflow DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;'
+$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON airflow.* TO 'airflow'@'localhost' IDENTIFIED BY '$AIRFLOWDB_PASSWORD';"
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON airflow.* TO 'airflow'@'%' IDENTIFIED BY '$AIRFLOWDB_PASSWORD';"
 echo "airflow : $AIRFLOWDB_PASSWORD"
 
