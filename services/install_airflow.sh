@@ -24,7 +24,7 @@ if [ $DEBUG ]; then ECHO=echo; fi
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-20};echo'
 FILEPATH=`dirname $0`
-PIPOPTS="-q"
+#PIPOPTS="-q"
 YUMOPTS="-y -e1 -d1"
 
 # Function to print the help screen.
