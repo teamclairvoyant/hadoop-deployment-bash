@@ -129,15 +129,21 @@ yum $YUMOPTS install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-d
 #yum $YUMOPTS install epel-release
 #yum $YUMOPTS install python-pip
 
-echo "** Installing python setuptools."
+#echo "** Installing python setuptools."
 #yum $YUMOPTS install python-setuptools
 #easy_install pip
+
+echo "** Installing python easy_install."
 pushd /tmp
 wget -q https://bootstrap.pypa.io/ez_setup.py
 python ez_setup.py
 popd
-echo "** Installing python pip."
-easy_install pip
+if [ ! -f /usr/bin/pip ]; then
+  echo "** Installing python pip."
+  easy_install pip || \
+  ( yum $YUMOPTS reinstall python-setuptools && \
+  easy_install pip )
+fi
 
 echo "** Installing Airflow."
 pip $PIPOPTS install airflow${VERSION}
