@@ -16,7 +16,7 @@ chkconfig mariadb on
 mysqladmin password hahaha
 ```
 
-# Example
+# Installation
 
 Run the script to create the Airflow database.
 ```
@@ -31,7 +31,7 @@ ssh -t centos@${CMSERVER} "sudo bash -x /home/centos/create_mysql_dbs-airflow.sh
 ```
 
 Grab the password that is output from the above command and assign it to the AFPASSWORD variable.
-Run the script to install RabbitMQ.
+Run the script to install RabbitMQ.  This will install the WebUI which has a default login of guest:guest at http://localhost:15672 .
 ```
 AFPASSWORD=
 AIRFLOWSERVER=localhost
@@ -45,3 +45,19 @@ Run the script to install Airflow.
 ssh -t centos@${AIRFLOWSERVER} "sudo bash -x /home/centos/install_airflow.sh --mysqlhost $MYSQL_HOST --mysqluser airflow --mysqlpassword $AFPASSWORD --rabbitmqhost localhost"
 ```
 Grab the password for the admin user to the Airflow WebUI.
+This will install the WebUI which has a login of admin:$AFPASSWORD at http://localhost:8080 .
+
+# Use
+
+The AIRFLOW_HOME is in /var/lib/airflow .  Airflow job logs are stored in /var/logs/airflow.  Airflow daemon logs are inside systemd.
+
+# Troubleshooting
+
+Since this is EL7, use `journalctl` to find the daemon logs.
+```
+journalctl -u airflow-webserver.service
+journalctl -u airflow-worker.service
+journalctl -u airflow-kerberos.service
+journalctl -u airflow-flower.service
+journalctl -u airflow-scheduler.service
+```
