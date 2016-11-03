@@ -16,6 +16,7 @@
 
 install -m 0440 -o root -g hadoop /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/hdfsyarn-keystore.jks
 install -m 0440 -o root -g hbase /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/hbase-keystore.jks
+install -m 0440 -o root -g hive /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/hive-keystore.jks
 install -m 0440 -o root -g oozie /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/oozie-keystore.jks
 install -m 0440 -o root -g solr /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/solr-keystore.jks
 install -m 0440 -o root -g httpfs /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/httpfs-keystore.jks
