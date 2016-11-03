@@ -164,7 +164,7 @@ echo "** startup config:"
 if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
   grep transparent_hugepage /etc/rc.d/rc.local
 else
-  grep transparent_hugepage /etc/rc.local
+  grep transparent_hugepage /etc/rc.d/rc.local
 fi
 
 echo "****************************************"
