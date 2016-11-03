@@ -22,8 +22,8 @@ if [ $DEBUG ]; then ECHO=echo; fi
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-20};echo'
 FILEPATH=`dirname $0`
+PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 #PIPOPTS="-q"
 YUMOPTS="-y -e1 -d1"
 

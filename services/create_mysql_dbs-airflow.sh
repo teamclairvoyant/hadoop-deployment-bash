@@ -22,7 +22,7 @@ if [ $DEBUG ]; then ECHO=echo; fi
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 # https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
-PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-20};echo'
+PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 
 # Function to print the help screen.
 print_help () {
