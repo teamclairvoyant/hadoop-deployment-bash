@@ -204,12 +204,12 @@ su - airflow -c '/tmp/mkuser.sh'
 echo "** Starting Airflow services."
 service airflow-webserver start
 service airflow-worker start
-service airflow-kerberos start
+#service airflow-kerberos start
 service airflow-scheduler start
 service airflow-flower start
 chkconfig airflow-webserver on
 chkconfig airflow-worker on
-chkconfig airflow-kerberos on
+#chkconfig airflow-kerberos on
 chkconfig airflow-scheduler on
 chkconfig airflow-flower on
 
