@@ -14,9 +14,16 @@
 #
 # Copyright Clairvoyant 2015
 
+VERSION=5.1.31
+
 INSTALLDB=$1
 if [ -z "$INSTALLDB" ]; then
   INSTALLDB=yes
+fi
+if rpm -q redhat-lsb-core; then
+  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
+else
+  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
 fi
 if rpm -q jdk >/dev/null; then
   HAS_JDK=yes
@@ -28,12 +35,27 @@ if [ "$INSTALLDB" = yes ]; then
   if [ $HAS_JDK = no ]; then yum -y -e1 -d1 remove jdk; fi
 else
   if [ "$INSTALLDB" = mysql ]; then
-    yum -y -e1 -d1 install mysql-connector-java
-    if [ $HAS_JDK = no ]; then yum -y -e1 -d1 remove jdk; fi
+    if [ $OSREL = 6 ]; then
+      PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
+      eval $PROXY
+      export http_proxy
+      export https_proxy
+
+      wget -q -O /tmp/mysql-connector-java-${VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${VERSION}.tar.gz
+      tar xf /tmp/mysql-connector-java-${VERSION}.tar.gz -C /tmp
+      if [ ! -d /usr/share/java ]; then
+        install -o root -g root -m 0755 -d /usr/share/java
+      fi
+      install -o root -g root -m 0644 /tmp/mysql-connector-java-${VERSION}/mysql-connector-java-${VERSION}-bin.jar /usr/share/java/
+      ln -sf mysql-connector-java-${VERSION}-bin.jar /usr/share/java/mysql-connector-java.jar
+      ls -l /usr/share/java/*sql*
+    else
+      yum -y -e1 -d1 install mysql-connector-java
+      if [ $HAS_JDK = no ]; then yum -y -e1 -d1 remove jdk; fi
+    fi
   elif [ "$INSTALLDB" = postgresql ]; then
     yum -y -e1 -d1 install postgresql-jdbc
   else
     echo "** ERROR: Argument must be either mysql or postgresql."
   fi
 fi
-
