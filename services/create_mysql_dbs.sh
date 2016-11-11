@@ -22,11 +22,11 @@ if [ $DEBUG ]; then ECHO=echo; fi
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 # https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
-PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-20};echo'
+PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 
 # Function to print the help screen.
 print_help () {
-  echo "Usage:  $1"
+  echo "Usage:  $1 --host <hostname> --user <username> --password <password>"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
   echo "   ex.  $1"
@@ -94,8 +94,8 @@ while [[ $1 = -* ]]; do
   shift
 done
 
-# Check to see if we have no parameters.
-#if [[ ! $# -eq 1 ]]; then print_help "$(basename $0)"; fi
+# Check to see if we have the required parameters.
+if [ -z "$MYSQL_HOST" -o -z "$MYSQL_USER" -o -z "$MYSQL_PASSWORD" ]; then print_help "$(basename $0)"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
