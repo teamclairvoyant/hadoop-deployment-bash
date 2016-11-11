@@ -73,3 +73,6 @@ if [ -f /etc/netconfig ]; then
   sed -e '/inet6/d' -i /etc/netconfig
 fi
 
+service ip6tables stop
+chkconfig ip6tables off
+
