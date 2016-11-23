@@ -12,24 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2016
 
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
-fi
-if [ $OSREL == 6 ]; then
-  service iptables stop
-  chkconfig iptables off
-  service ip6tables stop
-  chkconfig ip6tables off
-else
-  service firewalld stop
-  chkconfig firewalld off
-  service iptables stop
-  chkconfig iptables off
-  service ip6tables stop
-  chkconfig ip6tables off
-fi
+install -m 0440 -o root -g kafka /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/kafka-keystore.jks
 

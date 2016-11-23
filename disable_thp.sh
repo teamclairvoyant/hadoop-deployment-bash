@@ -21,8 +21,8 @@ else
 fi
 if [ $OSREL == 6 ]; then
   echo never >/sys/kernel/mm/transparent_hugepage/defrag
-  sed -i '/transparent_hugepage/d' /etc/rc.local
-  echo 'echo never >/sys/kernel/mm/transparent_hugepage/defrag' >>/etc/rc.local
+  sed -i '/transparent_hugepage/d' /etc/rc.d/rc.local
+  echo 'echo never >/sys/kernel/mm/transparent_hugepage/defrag' >>/etc/rc.d/rc.local
 else
   # http://www.certdepot.net/rhel7-rc-local-service/
   sed -i '/transparent_hugepage/d' /etc/rc.d/rc.local
