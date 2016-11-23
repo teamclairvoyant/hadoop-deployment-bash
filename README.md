@@ -51,19 +51,24 @@ Copy several of the scripts to the nodes.
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
   scp -p ${GITREPO}/install_{tools,nscd,ntp,jdk,jce,clouderamanageragent}.sh \
-  ${GITREPO}/change_swappiness.sh ${GITREPO}/configure_javahome.sh \
+  ${GITREPO}/install_{entropy,jdbc,krb5}.sh ${GITREPO}/link_openssl.sh \
+  ${GITREPO}/change_swappiness.sh ${GITREPO}/configure_{javahome,tuned}.sh \
   ${GITREPO}/disable_{iptables,selinux,thp}.sh $HOST:
 done
 ```
 
-Run the scripts to prep the system for Cloudera Manager installation.
+Run the scripts to prep the system for Cloudera Manager installation.  Pin the version of Cloudera Manager to the value in $CMVER.  Also deploy Oracle JDK 8.
 ```
+#CMVER=5.9.0
 CMVER=5
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
   ssh -t $HOST "for Y in install_tools.sh change_swappiness.sh disable_iptables.sh \
   disable_selinux.sh disable_thp.sh install_ntp.sh install_nscd.sh install_jdk.sh \
-  configure_javahome.sh install_jce.sh; do sudo bash -x /home/centos/\${Y} 8 $CMVER;done"
+  configure_javahome.sh install_jce.sh install_krb5.sh configure_tuned.sh \
+  link_openssl.sh install_entropy.sh; do \
+  sudo bash -x /home/centos/\${Y} 8 $CMVER;done"
+
 done
 ```
 
