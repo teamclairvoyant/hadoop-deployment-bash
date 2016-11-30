@@ -26,7 +26,7 @@ MYSQL_USER=root
 MYSQL_PASSWORD=hahaha
 MYSQL_HOST=localhost
 
-scp -p -o StrictHostKeyChecking=no ${GITREPO}/create_mysql_dbs-airflow.sh centos@${CMSERVER}:
+scp -p -o StrictHostKeyChecking=no ${GITREPO}/services/create_mysql_dbs-airflow.sh centos@${CMSERVER}:
 ssh -t centos@${CMSERVER} "sudo bash -x /home/centos/create_mysql_dbs-airflow.sh --host $MYSQL_HOST \
  --user $MYSQL_USER --password $MYSQL_PASSWORD"
 ```
