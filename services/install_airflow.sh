@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 # Copyright Clairvoyant 2016
+#
 if [ $DEBUG ]; then set -x; fi
 if [ $DEBUG ]; then ECHO=echo; fi
 #
@@ -51,20 +52,42 @@ err_msg () {
   exit $CODE
 }
 
-# If the variable DEBUG is set, then turn on tracing.
-# http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
-if [ $DEBUG ]; then
-  # This will turn on the ksh xtrace option for mainline code
-  set -x
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
 
-  # This will turn on the ksh xtrace option for all functions
-  typeset +f |
-  while read F junk
-  do
-    typeset -ft $F
-  done
-  unset F junk
-fi
+## If the variable DEBUG is set, then turn on tracing.
+## http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
+#if [ $DEBUG ]; then
+#  # This will turn on the ksh xtrace option for mainline code
+#  set -x
+#
+#  # This will turn on the ksh xtrace option for all functions
+#  typeset +f |
+#  while read F junk
+#  do
+#    typeset -ft $F
+#  done
+#  unset F junk
+#fi
 
 # Process arguments.
 while [[ $1 = -* ]]; do
@@ -100,6 +123,14 @@ while [[ $1 = -* ]]; do
   esac
   shift
 done
+
+# Check to see if we are on a supported OS.
+# Currently only EL7.
+discover_os
+if [ \( "$OS" != RedHat -o "$OS" != CentOS \) -a "$OSREL" != 7 ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
+fi
 
 # Check to see if we have the required parameters.
 if [ -z "$MYSQL_HOST" -o -z "$MYSQL_USER" -o -z "$MYSQL_PASSWORD" -o -z "$RABBITMQ_HOST" ]; then print_help "$(basename $0)"; fi
