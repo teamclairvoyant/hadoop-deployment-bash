@@ -14,25 +14,35 @@
 #
 # Copyright Clairvoyant 2016
 
-SCMVERSION=$1
-if [ -z "$SCMVERSION" ]; then
-  echo "ERROR: Missing SCM version."
-  exit 1
-fi
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
-fi
-PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
-eval $PROXY
-export http_proxy
-export https_proxy
-if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
-  wget -q https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
-fi
-sed -e "s|/cm/5[0-9.]*/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
+if rpm -q cloudera-manager-agent; then
+  SCMVERSION=$1
+  if [ -z "$SCMVERSION" ]; then
+    echo "ERROR: Missing SCM version."
+    exit 1
+  fi
+  if rpm -q redhat-lsb-core; then
+    OSREL=`lsb_release -rs | awk -F. '{print $1}'`
+  else
+    OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+  fi
+  PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
+  eval $PROXY
+  export http_proxy
+  export https_proxy
 
-yum -y -e1 -d1 update cloudera-manager-agent
-service cloudera-scm-agent condrestart
+  if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
+    wget -q https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+  fi
+  sed -e "s|/cm/5[0-9.]*/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
+
+  service cloudera-scm-agent stop
+  yum -y -e1 -d1 update cloudera-manager-agent
+  if rpm -q cloudera-manager-server-db-2; then
+    service cloudera-scm-server-db start
+  fi
+  if rpm -q cloudera-manager-server; then
+    service cloudera-scm-server start
+  fi
+  service cloudera-scm-agent start
+fi
 
