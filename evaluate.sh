@@ -130,15 +130,19 @@ echo "*** Firewall"
 if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
   echo "** running config:"
   service iptables status
+  service ip6tables status
   echo "** startup config:"
   chkconfig --list iptables
+  chkconfig --list ip6tables
 elif [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
   echo "** running config:"
   service firewalld status
   service iptables status
+  service ip6tables status
   echo "** startup config:"
   chkconfig --list firewalld
   chkconfig --list iptables
+  chkconfig --list ip6tables
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   echo "** running config:"
   service ufw status
