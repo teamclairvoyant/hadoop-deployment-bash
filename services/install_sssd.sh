@@ -23,6 +23,7 @@ if [ $DEBUG ]; then ECHO=echo; fi
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 YUMOPTS="-y -e1 -d1"
+DATE=`date '+%Y%m%d%H%M%S'`
 
 # Function to print the help screen.
 print_help () {
@@ -160,7 +161,7 @@ elif [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
   echo "** Installing software."
   yum $YUMOPTS install sssd oddjob oddjob-mkhomedir adcli
 
-  echo "** Joining domain..."
+  echo "** Discovering and joining domain..."
   adcli info $_DOMAIN_LOWER && \
   adcli join $_DOMAIN_LOWER $OPTS || exit $?
 
@@ -185,7 +186,7 @@ elif [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
 [domain_realm]
 EOF
 
-cat <<EOF >/etc/sssd/sssd.conf
+  cat <<EOF >/etc/sssd/sssd.conf
 [sssd]
 domains = $_DOMAIN_LOWER
 config_file_version = 2
@@ -211,5 +212,19 @@ EOF
   chkconfig sssd on
   service oddjobd start
   chkconfig oddjobd on
+fi
+
+if [ -f /etc/nscd.conf ]; then
+  echo "*** Disabling NSCD caching of passwd/group/netgroup/services..."
+  if [ ! -f /etc/nscd.conf-orig ]; then
+    cp -p /etc/nscd.conf /etc/nscd.conf-orig
+  else
+    cp -p /etc/nscd.conf /etc/nscd.conf.${DATE}
+  fi
+  sed -e '/enable-cache[[:blank:]]*passwd/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*group/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*services/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*netgroup/s|yes|no|' -i /etc/nscd.conf
+  service nscd condrestart
 fi
 
