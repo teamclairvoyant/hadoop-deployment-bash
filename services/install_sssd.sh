@@ -105,7 +105,7 @@ while [[ $1 = -* ]]; do
       shift
       _ID="--automatic-id-mapping=no"
       ;;
-    -H|--help)
+    -h|--help)
       print_help "$(basename $0)"
       ;;
     -v|--version)
