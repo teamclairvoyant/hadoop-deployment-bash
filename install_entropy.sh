@@ -109,7 +109,7 @@ else
   HWRNG=false
 fi
 
-if [ -n "$USEHAVEGED" ]; then
+if [ "$USEHAVEGED" == "yes" ]; then
   yum -y -e1 -d1 install epel-release
   yum -y -e1 -d1 install haveged
   service haveged start
