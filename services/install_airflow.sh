@@ -108,7 +108,7 @@ while [[ $1 = -* ]]; do
       shift
       MYSQL_PASSWORD=$1
       ;;
-    -H|--help)
+    -h|--help)
       print_help "$(basename $0)"
       ;;
     -v|--version)
