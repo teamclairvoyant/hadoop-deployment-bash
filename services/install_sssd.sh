@@ -27,6 +27,8 @@ DATE=`date '+%Y%m%d%H%M%S'`
 
 # Function to print the help screen.
 print_help () {
+  echo "Joins the node to an Active Directory domain."
+  echo ""
   echo "Usage:  $1 --domain <AD domain>"
   echo "        $1 [-u|--user <User name to use for enrollment>]"
   echo "        $1 [-o|--computer-ou <Computer OU DN to join>]"
