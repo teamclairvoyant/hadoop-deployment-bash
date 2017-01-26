@@ -18,7 +18,7 @@
 DN="$1"
 SP="$2"
 KP="$3"
-#"SAN=DNS:`hostname`,dns:my-lb.domain.com"
+#"SAN=DNS:`hostname`,DNS:my-lb.domain.com"
 EXT="$4"
 if [ -z "$DN" ]; then
   echo "ERROR: Missing distinguished name."
