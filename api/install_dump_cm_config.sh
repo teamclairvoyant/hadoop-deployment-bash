@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 # https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
-PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-20};echo'
+PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 #if ! rpm -q apg; then echo "Installing apg. Please wait...";yum -y -d1 -e1 install apg; fi
 #if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 if ! rpm -q apg >/dev/null; then
