@@ -18,6 +18,8 @@
 DN="$1"
 SP="$2"
 KP="$3"
+#"SAN=DNS:`hostname`,dns:my-lb.domain.com"
+EXT="$4"
 if [ -z "$DN" ]; then
   echo "ERROR: Missing distinguished name."
   exit 1
@@ -30,6 +32,9 @@ if [ -z "$KP" ]; then
   echo "ERROR: Missing private key password."
   exit 3
 fi
+if [ -n "$EXT" ]; then
+  EXT="-ext $EXT"
+fi
 
 . /etc/profile.d/java.sh
 
@@ -40,7 +45,7 @@ keytool -genkeypair -alias localhost -keyalg RSA \
 keytool -certreq -alias localhost \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -file /opt/cloudera/security/x509/localhost.csr -storepass $SP \
--keypass $KP
+-keypass $KP $EXT
 
 rm -f /tmp/localhost-keystore.p12.$$
 
