@@ -163,7 +163,10 @@ fi
 echo "****************************************"
 echo "*** Transparent Huge Pages defrag"
 echo "** running config:"
+echo "* defrag:"
 cat /sys/kernel/mm/transparent_hugepage/defrag
+echo "* enabled:"
+cat /sys/kernel/mm/transparent_hugepage/enabled
 echo "** startup config:"
 if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
   grep transparent_hugepage /etc/rc.d/rc.local
