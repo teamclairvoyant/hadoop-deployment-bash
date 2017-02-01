@@ -130,15 +130,19 @@ echo "*** Firewall"
 if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
   echo "** running config:"
   service iptables status
+  service ip6tables status
   echo "** startup config:"
   chkconfig --list iptables
+  chkconfig --list ip6tables
 elif [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
   echo "** running config:"
   service firewalld status
   service iptables status
+  service ip6tables status
   echo "** startup config:"
   chkconfig --list firewalld
   chkconfig --list iptables
+  chkconfig --list ip6tables
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   echo "** running config:"
   service ufw status
@@ -159,7 +163,10 @@ fi
 echo "****************************************"
 echo "*** Transparent Huge Pages defrag"
 echo "** running config:"
+echo "* defrag:"
 cat /sys/kernel/mm/transparent_hugepage/defrag
+echo "* enabled:"
+cat /sys/kernel/mm/transparent_hugepage/enabled
 echo "** startup config:"
 if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
   grep transparent_hugepage /etc/rc.d/rc.local
@@ -297,6 +304,12 @@ if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
   rpm -qa ^cloudera\*
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l \*cloudera\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+fi
+echo "*** Cloudera Hadoop Packages"
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  rpm -qa ^hadoop\*
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 
 #echo "****************************************"

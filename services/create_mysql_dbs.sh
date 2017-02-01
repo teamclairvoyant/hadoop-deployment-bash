@@ -48,20 +48,20 @@ err_msg () {
   exit $CODE
 }
 
-# If the variable DEBUG is set, then turn on tracing.
-# http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
-if [ $DEBUG ]; then
-  # This will turn on the ksh xtrace option for mainline code
-  set -x
-
-  # This will turn on the ksh xtrace option for all functions
-  typeset +f |
-  while read F junk
-  do
-    typeset -ft $F
-  done
-  unset F junk
-fi
+## If the variable DEBUG is set, then turn on tracing.
+## http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
+#if [ $DEBUG ]; then
+#  # This will turn on the ksh xtrace option for mainline code
+#  set -x
+#
+#  # This will turn on the ksh xtrace option for all functions
+#  typeset +f |
+#  while read F junk
+#  do
+#    typeset -ft $F
+#  done
+#  unset F junk
+#fi
 
 # Process arguments.
 while [[ $1 = -* ]]; do

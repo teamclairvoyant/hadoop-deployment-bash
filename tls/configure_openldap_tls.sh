@@ -19,19 +19,15 @@ if [ $DEBUG ]; then ECHO=echo; fi
 #
 ##### START CONFIG ###################################################
 
-# http://injustfiveminutes.com/2014/10/28/how-to-initialize-openldap-2-4-x-server-with-olc-on-centos-7/
-# http://www.server-world.info/en/note?os=CentOS_7&p=openldap&f=1
-_ROOTDN="Manager"
+# https://www.server-world.info/en/note?os=CentOS_7&p=openldap&f=4
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-YUMOPTS="-y -e1 -d1"
 DATE=`date '+%Y%m%d%H%M%S'`
 
 # Function to print the help screen.
 print_help () {
-  echo "Usage:  $1 --domain <dns domain or kerberos realm>"
-  echo "        $1 [-r|--rootdn <LDAP superuser>]"
+  echo "Usage:  $1"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
   echo "   ex.  $1"
@@ -119,73 +115,74 @@ if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
 fi
 
 # Check to see if we have the required parameters.
-if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
+#if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
 
 # main
-_SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
-_ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
-_ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
-
-yum $YUMOPTS install openldap-servers openldap-clients
-
-_PASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
-if [ -z "$_PASS" ]; then
-  _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+if [ ! -f /opt/cloudera/security/x509/localhost.pem ]; then
+  echo "ERROR: Missing TLS certificate."
+  exit 4
 fi
-_ROOTPW=${_PASS}
-_LDAPPASS=`slappasswd -s $_ROOTPW`
-cp -p /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
-chown -R ldap:ldap /var/lib/ldap
-restorecon -rv /var/lib/ldap
-systemctl start slapd
-systemctl enable slapd
+if [ ! -f /opt/cloudera/security/x509/localhost.key ]; then
+  echo "ERROR: Missing TLS key."
+  exit 5
+fi
+if [ ! -f /opt/cloudera/security/x509/ca-chain.cert.pem ]; then
+  echo "ERROR: Missing TLS certificate chain."
+  exit 6
+fi
 
-#ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/core.ldif
-ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/cosine.ldif
-ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/nis.ldif
-ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/inetorgperson.ldif
+install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/localhost.pem /etc/openldap/certs/server.crt
+install -m 0440 -o ldap -g ldap /opt/cloudera/security/x509/localhost.key /etc/openldap/certs/server.key
+#install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/ca-chain.cert.pem /etc/openldap/certs/ca-bundle.crt
 
 ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-dn: olcDatabase={2}hdb,cn=config
+dn: cn=config
 changetype: modify
-replace: olcSuffix
-olcSuffix: $_SUFFIX
-EOF
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-dn: olcDatabase={2}hdb,cn=config
-changetype: modify
-replace: olcRootDN
-olcRootDN: $_ROOTDN
-EOF
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-dn: olcDatabase={1}monitor,cn=config
-changetype: modify
-replace: olcAccess
-olcAccess: {0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" read by dn.base="${_ROOTDN}" read by * none
-EOF
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-dn: olcDatabase={2}hdb,cn=config
-changetype: modify
-add: olcAccess
-olcAccess: {0}to attrs=userPassword,shadowLastChange by dn="${_ROOTDN}" write by anonymous auth by self write by * none
-olcAccess: {1}to dn.base="" by * read
-olcAccess: {2}to * by dn="${_ROOTDN}" write by * read
-EOF
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-dn: olcDatabase={2}hdb,cn=config
-changetype: modify
-add: olcRootPW
-olcRootPW: $_LDAPPASS
+add: olcTLSCACertificateFile
+#olcTLSCACertificateFile: /etc/openldap/certs/ca-bundle.crt
+olcTLSCACertificateFile: /opt/cloudera/security/x509/ca-chain.cert.pem
+-
+replace: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/openldap/certs/server.crt
+-
+replace: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/openldap/certs/server.key
+-
+# the following directive is the default but
+# is explicitly included for visibility reasons
+add: olcTLSVerifyClient
+olcTLSVerifyClient: never
+#EOF
+# To require TLSv1.0 or higher with 128bit and longer ciphers you probably just want:
+#  olcTLSProtocolMin: 3.1
+#  olcTLSCipherSuite: HIGH
+#ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
+#dn: cn=config
+#changetype: modify
+-
+add: olcSecurity
+olcSecurity: tls=1
+-
+add: olcTLSProtocolMin
+olcTLSProtocolMin: 3.1
+-
+add: olcTLSCipherSuite
+olcTLSCipherSuite: HIGH
 EOF
 
-echo "${_ROOTDN} : ${_ROOTPW}"
+cp -p /etc/sysconfig/slapd /etc/sysconfig/slapd.${DATE}
+sed -e '/^SLAPD_URLS=/s|=.*|="ldapi:/// ldaps:///"|' \
+    -i /etc/sysconfig/slapd
 
 cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf.${DATE}
 cat <<EOF >>/etc/openldap/ldap.conf
-BASE            ${_SUFFIX}
-URI             ldap://$(hostname -f)
+TLS_REQCERT     allow
 EOF
+sed -e '/^URI/s|ldap://|ldaps://|' \
+    -i /etc/openldap/ldap.conf
+
+systemctl restart slapd
 
