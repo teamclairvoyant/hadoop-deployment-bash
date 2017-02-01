@@ -305,6 +305,12 @@ if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l \*cloudera\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
+echo "*** Cloudera Hadoop Packages"
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  rpm -qa ^hadoop\*
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+fi
 
 #echo "****************************************"
 #echo "*** "
