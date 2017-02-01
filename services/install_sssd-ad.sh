@@ -122,7 +122,7 @@ while [[ $1 = -* ]]; do
 done
 
 # Check to see if we are on a supported OS.
-# Currently only EL7.
+# Currently only EL.
 discover_os
 if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
   echo "ERROR: Unsupported OS."
