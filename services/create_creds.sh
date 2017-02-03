@@ -13,49 +13,165 @@
 # limitations under the License.
 #
 # Copyright Clairvoyant 2015
+#
+if [ $DEBUG ]; then set -x; fi
+if [ $DEBUG ]; then ECHO=echo; fi
+#
+##### START CONFIG ###################################################
 
-DOMAIN1=com
-DOMAIN2=clairvoyantsoft
-ROOTDN="cn=Manager,dc=${DOMAIN2},dc=${DOMAIN1}"
-ROOTPW=password
-LDAPPASS=`slappasswd -s $ROOTPW`
+# http://injustfiveminutes.com/2014/10/28/how-to-initialize-openldap-2-4-x-server-with-olc-on-centos-7/
+# http://www.server-world.info/en/note?os=CentOS_7&p=openldap&f=1
+_ROOTDN="Manager"
 
-#ldapadd -x -w $ROOTPW -D $ROOTDN -H ldapi:/// <<EOF
-#dn: dc=${DOMAIN2},dc=${DOMAIN1}
+##### STOP CONFIG ####################################################
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+YUMOPTS="-y -e1 -d1"
+DATE=`date '+%Y%m%d%H%M%S'`
+
+# Function to print the help screen.
+print_help () {
+  echo "Usage:  $1 --domain <dns domain or kerberos realm>"
+  echo "        [-r|--rootdn <LDAP superuser>]"
+  echo "        [-p|--passwd <LDAP superuser password>]"
+  echo "        [-h|--help]"
+  echo "        [-v|--version]"
+  echo "   ex.  $1"
+  exit 1
+}
+
+# Function to check for root priviledges.
+check_root () {
+  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+    echo "You must have root priviledges to run this program."
+    exit 2
+  fi
+}
+
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+## If the variable DEBUG is set, then turn on tracing.
+## http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
+#if [ $DEBUG ]; then
+#  # This will turn on the ksh xtrace option for mainline code
+#  set -x
+#
+#  # This will turn on the ksh xtrace option for all functions
+#  typeset +f |
+#  while read F junk
+#  do
+#    typeset -ft $F
+#  done
+#  unset F junk
+#fi
+
+# Process arguments.
+while [[ $1 = -* ]]; do
+  case $1 in
+    -d|--domain)
+      shift
+      _DOMAIN_LOWER=`echo $1 | tr '[:upper:]' '[:lower:]'`
+      ;;
+    -r|--rootdn)
+      shift
+      _ROOTDN="$1"
+      ;;
+    -p|--passwd)
+      shift
+      _ROOTPW="$1"
+      ;;
+    -h|--help)
+      print_help "$(basename $0)"
+      ;;
+    -v|--version)
+      echo "Script"
+      echo "Version: $VERSION"
+      echo "Written by: $AUTHOR"
+      exit 0
+      ;;
+    *)
+      print_help "$(basename $0)"
+      ;;
+  esac
+  shift
+done
+
+# Check to see if we are on a supported OS.
+# Currently only EL.
+#discover_os
+#if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#  echo "ERROR: Unsupported OS."
+#  exit 3
+#fi
+
+# Check to see if we have the required parameters.
+if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
+
+# Lets not bother continuing unless we have the privs to do something.
+#check_root
+
+# main
+_SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
+_ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
+_ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
+#_LDAPPASS=`slappasswd -s $_ROOTPW`
+
+#ldapadd -x -w $_ROOTPW -D $_ROOTDN -H ldapi:/// <<EOF
+#dn: $_SUFFIX
 #objectClass: dcObject
 #objectClass: organization
-#dc: $DOMAIN2
-#o: $DOMAIN2
+#dc: $_DOMAIN_LOWER
+#o: $_DOMAIN_LOWER
 #structuralObjectClass: organization
 #EOF
 
-ldapadd -x -w $ROOTPW -D $ROOTDN -H ldapi:/// <<EOF
+ldapadd -x -w $_ROOTPW -D $_ROOTDN -H ldapi:/// <<EOF
 # Creates a base for DIT
-dn: dc=${DOMAIN2},dc=${DOMAIN1}
+dn: $_SUFFIX
 objectClass: top
 objectClass: dcObject
 objectclass: organization
-o: $DOMAIN2
-dc: $DOMAIN2
-description: $DOMAIN2
-
-dn: $ROOTDN
-objectclass: organizationalRole
-cn: Manager
-
+o: $_DOMAIN_LOWER
+dc: $_DOMAIN_LOWER
+description: $_DOMAIN_LOWER
+-
+#dn: $_ROOTDN
+#objectclass: organizationalRole
+#cn: Manager
+-
 # Creates a People OU (Organizational Unit)
-dn: ou=People,dc=${DOMAIN2},dc=${DOMAIN1}
+dn: ou=People,${_SUFFIX}
 objectClass: organizationalUnit
 ou: People
-
+-
 # Creates a Groups OU
-dn: ou=Groups,dc=${DOMAIN2},dc=${DOMAIN1}
+dn: ou=Groups,${_SUFFIX}
 objectClass: organizationalUnit
 ou: Groups
 EOF
 
-ldapadd -x -w $ROOTPW -D $ROOTDN -H ldapi:/// <<EOF
-dn: uid=user00,ou=People,dc=${DOMAIN2},dc=${DOMAIN1}
+# Create test users and groups.
+ldapadd -x -w $_ROOTPW -D $_ROOTDN -H ldapi:/// <<EOF
+dn: uid=user00,ou=People,${_SUFFIX}
 uid: user00
 cn: User 00
 givenName: User
@@ -67,11 +183,11 @@ loginShell: /bin/bash
 homeDirectory: /home/user00
 uidNumber: 15000
 gidNumber: 10000
-userPassword: ${LDAPPASS}
-mail: user00@${DOMAIN2}.${DOMAIN1}
+userPassword: PASSWORD1
+mail: user00@${_DOMAIN_LOWER}
 gecos: user00 User
-
-dn: uid=user01,ou=People,dc=${DOMAIN2},dc=${DOMAIN1}
+-
+dn: uid=user01,ou=People,${_SUFFIX}
 uid: user01
 cn: User 01
 givenName: User
@@ -83,11 +199,11 @@ loginShell: /bin/bash
 homeDirectory: /home/user01
 uidNumber: 15001
 gidNumber: 10001
-userPassword: ${LDAPPASS}
-mail: user01@${DOMAIN2}.${DOMAIN1}
+userPassword: PASSWORD1
+mail: user01@${_DOMAIN_LOWER}
 gecos: user01 User
 
-dn: uid=user02,ou=People,dc=${DOMAIN2},dc=${DOMAIN1}
+dn: uid=user02,ou=People,${_SUFFIX}
 uid: user02
 cn: User 02
 givenName: User
@@ -99,33 +215,31 @@ loginShell: /bin/bash
 homeDirectory: /home/user02
 uidNumber: 15002
 gidNumber: 10002
-userPassword: ${LDAPPASS}
-mail: user02@${DOMAIN2}.${DOMAIN1}
+userPassword: PASSWORD1
+mail: user02@${_DOMAIN_LOWER}
 gecos: user02 User
 
-dn: cn=group00,ou=Groups,dc=${DOMAIN2},dc=${DOMAIN1}
+dn: cn=group00,ou=Groups,${_SUFFIX}
 objectClass: posixGroup
 objectClass: top
 cn: group00
-userPassword: {crypt}x
 gidNumber: 10000
-memberuid: uid=user00
+memberuid: user00
 
-dn: cn=group01,ou=Groups,dc=${DOMAIN2},dc=${DOMAIN1}
+dn: cn=group01,ou=Groups,${_SUFFIX}
 objectClass: posixGroup
 objectClass: top
 cn: group01
-userPassword: {crypt}x
 gidNumber: 10001
-memberuid: uid=user01
+memberuid: user01
 
-dn: cn=group02,ou=Groups,dc=${DOMAIN2},dc=${DOMAIN1}
+dn: cn=group02,ou=Groups,${_SUFFIX}
 objectClass: groupOfNames
-member: uid=user02,ou=People,dc=${DOMAIN2},dc=${DOMAIN1}
+member: uid=user02,ou=People,${_SUFFIX}
 cn: group02
 EOF
 
-ldapsearch -x -D $ROOTDN -w $ROOTPW
+ldapsearch -x -D $_ROOTDN -w $_ROOTPW
 
 if [ -x /usr/sbin/kadmin.local ]; then
   kadmin.local <<EOF
@@ -136,4 +250,3 @@ EOF
   echo
 fi
 
-exit 0
