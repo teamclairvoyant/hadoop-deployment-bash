@@ -137,7 +137,11 @@ setsebool -P httpd_can_connect_ldap=on
 yum $YUMOPTS install epel-release
 yum $YUMOPTS install httpd phpldapadmin
 
-cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf-orig
+if [ ! -f /etc/httpd/conf.d/phpldapadmin.conf-orig ]; then
+  cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf-orig
+else
+  cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf.${DATE}
+fi
 #cat <<EOF >/etc/httpd/conf.d/phpldapadmin.conf
 ##
 ##  Web-based tool for managing LDAP servers
@@ -157,7 +161,11 @@ sed -e '/Require/s|Require local|Require all granted|' \
     -e '/Allow from/d' \
     -e '/Deny from all/s|Deny|Allow|' \
     -i /etc/httpd/conf.d/phpldapadmin.conf
-cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php-orig
+if [ ! -f /etc/phpldapadmin/config.php-orig ]; then
+  cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php-orig
+else
+  cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php.${DATE}
+fi
 sed -e '/# CLAIRVOYANT$/d' \
     -e "/Local LDAP Server/a\
 \$servers->setValue('server','host','ldaps://127.0.0.1'); # CLAIRVOYANT\\
