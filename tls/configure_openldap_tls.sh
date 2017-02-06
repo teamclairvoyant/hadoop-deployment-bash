@@ -94,9 +94,9 @@ while [[ $1 = -* ]]; do
       print_help "$(basename $0)"
       ;;
     -v|--version)
-      echo "\tScript"
-      echo "\tVersion: $VERSION"
-      echo "\tWritten by: $AUTHOR"
+      echo "Script"
+      echo "Version: $VERSION"
+      echo "Written by: $AUTHOR"
       exit 0
       ;;
     *)
@@ -184,5 +184,5 @@ EOF
 sed -e '/^URI/s|ldap://|ldaps://|' \
     -i /etc/openldap/ldap.conf
 
-systemctl restart slapd
+service slapd restart
 
