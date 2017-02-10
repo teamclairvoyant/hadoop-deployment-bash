@@ -203,6 +203,8 @@ fi
 
 echo "** Installing Airflow."
 pip $PIPOPTS install airflow${VERSION}
+# Fix a bug in celery 4
+pip $PIPOPTS install 'celery<4'
 pip $PIPOPTS install airflow[celery]
 
 if [ "$DB_TYPE" == "mysql" ]; then
