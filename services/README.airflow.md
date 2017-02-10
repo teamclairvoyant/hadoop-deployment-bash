@@ -48,8 +48,7 @@ Run the script to install Airflow.
 ssh -t centos@${AIRFLOWSERVER} "sudo bash -x /home/centos/install_airflow.sh --dbtype mysql \
 --dbhost $MYSQL_HOST --dbuser airflow --dbpassword $AFPASSWORD --rabbitmqhost localhost"
 ```
-Grab the password for the admin user to the Airflow WebUI.
-This will install the WebUI which has a login of admin:$AFPASSWORD at [http://localhost:8080/](http://localhost:8080/) .
+Grab the password that is output from the above command.  This is to login to the Airflow WebUI at [http://localhost:8080/](http://localhost:8080/) as the admin user.
 
 Note: `install_airflow.sh` will take an arguement that is the version number of Airflow which you would like to install.  Otherwise, it will install the latest version.
 
@@ -105,8 +104,7 @@ Run the script to install Airflow.
 ssh -t centos@${AIRFLOWSERVER} "sudo bash -x /home/centos/install_airflow.sh --dbtype postgresql \
 --dbhost $PSQL_HOST --dbuser airflow --dbpassword $AFPASSWORD --rabbitmqhost localhost"
 ```
-Grab the password for the admin user to the Airflow WebUI.
-This will install the WebUI which has a login of admin:$AFPASSWORD at [http://localhost:8080/](http://localhost:8080/) .
+Grab the password that is output from the above command.  This is to login to the Airflow WebUI at [http://localhost:8080/](http://localhost:8080/) as the admin user.
 
 Note: `install_airflow.sh` will take an arguement that is the version number of Airflow which you would like to install.  Otherwise, it will install the latest version.
 

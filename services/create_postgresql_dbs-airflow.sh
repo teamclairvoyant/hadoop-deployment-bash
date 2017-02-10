@@ -117,8 +117,9 @@ $ECHO sudo yum -y -e1 -d1 install epel-release
 $ECHO sudo yum -y -e1 -d1 install postgresql apg || err_msg 4
 if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 AIRFLOWDB_PASSWORD=`eval $PWCMD`
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE airflow LOGIN ENCRYPTED PASSWORD '$AIRFLOWDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c 'ALTER ROLE airflow SET search_path = airflow, "$user", public;'
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE airflow WITH OWNER = airflow ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER postgres -c "CREATE ROLE airflow LOGIN ENCRYPTED PASSWORD '$AIRFLOWDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER postgres -c 'ALTER ROLE airflow SET search_path = airflow, "$user", public;'
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER postgres -c "CREATE DATABASE airflow WITH OWNER = airflow ENCODING = 'UTF8' TABLESPACE = pg_default CONNECTION LIMIT = -1;"
+#$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER postgres -c "CREATE DATABASE airflow WITH OWNER = airflow ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "airflow : $AIRFLOWDB_PASSWORD"
 

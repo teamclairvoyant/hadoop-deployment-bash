@@ -37,7 +37,7 @@ print_help () {
   echo ""
   echo "          -t|--dbtype        <mysql|postgresql>"
   echo "          -d|--dbhost        <hostname>"
-  echo "          -P|--dbport        <port>"
+  echo "          [-P|--dbport       <port>]"
   echo "          -u|--dbuser        <username>"
   echo "          -p|--dbpassword    <password>"
   echo "          -r|--rabbitmqhost  <hostname>"
