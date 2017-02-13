@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2017
 #
 if [ $DEBUG ]; then set -x; fi
 if [ $DEBUG ]; then ECHO=echo; fi
 #
 ##### START CONFIG ###################################################
-
-# https://www.server-world.info/en/note?os=CentOS_7&p=openldap&f=4
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
@@ -82,14 +80,6 @@ discover_os () {
 # Process arguments.
 while [[ $1 = -* ]]; do
   case $1 in
-    -d|--domain)
-      shift
-      _DOMAIN_LOWER=`echo $1 | tr '[:upper:]' '[:lower:]'`
-      ;;
-    -r|--rootdn)
-      shift
-      _ROOTDN="$1"
-      ;;
     -h|--help)
       print_help "$(basename $0)"
       ;;
@@ -134,55 +124,16 @@ if [ ! -f /opt/cloudera/security/x509/ca-chain.cert.pem ]; then
   exit 6
 fi
 
-install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/localhost.pem /etc/openldap/certs/server.crt
-install -m 0440 -o ldap -g ldap /opt/cloudera/security/x509/localhost.key /etc/openldap/certs/server.key
-#install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/ca-chain.cert.pem /etc/openldap/certs/ca-bundle.crt
+#install -m 0444 -o root -g root /opt/cloudera/security/x509/localhost.pem /etc/pki/tls/certs/localhost.crt
+#install -m 0440 -o root -g root /opt/cloudera/security/x509/localhost.key /etc/pki/tls/private/localhost.key
+#ln -sf /opt/cloudera/security/x509/localhost.pem /etc/pki/tls/certs/localhost.crt
+#ln -sf /opt/cloudera/security/x509/localhost.key /etc/pki/tls/private/localhost.key
 
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-dn: cn=config
-changetype: modify
-add: olcTLSCACertificateFile
-#olcTLSCACertificateFile: /etc/openldap/certs/ca-bundle.crt
-olcTLSCACertificateFile: /opt/cloudera/security/x509/ca-chain.cert.pem
--
-replace: olcTLSCertificateFile
-olcTLSCertificateFile: /etc/openldap/certs/server.crt
--
-replace: olcTLSCertificateKeyFile
-olcTLSCertificateKeyFile: /etc/openldap/certs/server.key
--
-# the following directive is the default but
-# is explicitly included for visibility reasons
-add: olcTLSVerifyClient
-olcTLSVerifyClient: never
-#EOF
-# To require TLSv1.0 or higher with 128bit and longer ciphers you probably just want:
-#  olcTLSProtocolMin: 3.1
-#  olcTLSCipherSuite: HIGH
-#ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-#dn: cn=config
-#changetype: modify
--
-add: olcSecurity
-olcSecurity: tls=1
--
-add: olcTLSProtocolMin
-olcTLSProtocolMin: 3.1
--
-add: olcTLSCipherSuite
-olcTLSCipherSuite: HIGH
-EOF
+cp -p /etc/httpd/conf.d/ssl.conf /etc/httpd/conf.d/ssl.conf.${DATE}
+sed -e 's|^SSLProtocol .*|SSLProtocol all -SSLv3 -SSLv2|' \
+    -e 's|^SSLCertificateFile .*|SSLCertificateFile /opt/cloudera/security/x509/localhost.pem|' \
+    -e 's|^SSLCertificateKeyFile .*|SSLCertificateKeyFile /opt/cloudera/security/x509/localhost.key|' \
+    -i /etc/httpd/conf.d/ssl.conf
 
-cp -p /etc/sysconfig/slapd /etc/sysconfig/slapd.${DATE}
-sed -e '/^SLAPD_URLS=/s|=.*|="ldapi:/// ldaps:///"|' \
-    -i /etc/sysconfig/slapd
-
-cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf.${DATE}
-cat <<EOF >>/etc/openldap/ldap.conf
-TLS_REQCERT     allow
-EOF
-sed -e '/^URI/s|ldap://|ldaps://|' \
-    -i /etc/openldap/ldap.conf
-
-service slapd restart
+service httpd restart
 

@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2017
 #
 if [ $DEBUG ]; then set -x; fi
 if [ $DEBUG ]; then ECHO=echo; fi
 #
 ##### START CONFIG ###################################################
+
+PG_PORT=5432
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
@@ -26,10 +28,11 @@ PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 
 # Function to print the help screen.
 print_help () {
-  echo "Usage:  $1 --host <hostname> --user <username> --password <password>"
+  echo "Usage:  $1 --host <hostname> [--port <port>] --user <username> --password <password>"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
-  echo "   ex.  $1"
+  echo ""
+  echo "   ex.  $1 --host dbhost --user foo --password bar"
   exit 1
 }
 
@@ -68,15 +71,19 @@ while [[ $1 = -* ]]; do
   case $1 in
     -h|--host)
       shift
-      MYSQL_HOST=$1
+      PG_HOST=$1
+      ;;
+    -P|--port)
+      shift
+      PG_PORT=$1
       ;;
     -u|--user)
       shift
-      MYSQL_USER=$1
+      PG_USER=$1
       ;;
     -p|--password)
       shift
-      MYSQL_PASSWORD=$1
+      export PGPASSWORD=$1
       ;;
     -H|--help)
       print_help "$(basename $0)"
@@ -95,7 +102,7 @@ while [[ $1 = -* ]]; do
 done
 
 # Check to see if we have the required parameters.
-if [ -z "$MYSQL_HOST" -o -z "$MYSQL_USER" -o -z "$MYSQL_PASSWORD" ]; then print_help "$(basename $0)"; fi
+if [ -z "$PG_HOST" -o -z "$PG_USER" -o -z "$PGPASSWORD" ]; then print_help "$(basename $0)"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
@@ -107,11 +114,7 @@ else
   OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
 fi
 $ECHO sudo yum -y -e1 -d1 install epel-release
-if [ $OSREL == 6 ]; then
-  $ECHO sudo yum -y -e1 -d1 install mysql apg || err_msg 4
-else
-  $ECHO sudo yum -y -e1 -d1 install mariadb apg || err_msg 4
-fi
+$ECHO sudo yum -y -e1 -d1 install postgresql apg || err_msg 4
 if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 RMANDB_PASSWORD=`eval $PWCMD`
 NAVDB_PASSWORD=`eval $PWCMD`
@@ -120,25 +123,25 @@ METASTOREDB_PASSWORD=`eval $PWCMD`
 OOZIEDB_PASSWORD=`eval $PWCMD`
 SENTRYDB_PASSWORD=`eval $PWCMD`
 HUEDB_PASSWORD=`eval $PWCMD`
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE rman DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY '$RMANDB_PASSWORD';"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE rman LOGIN ENCRYPTED PASSWORD '$RMANDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE rman WITH OWNER = rman ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "rman : $RMANDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE nav DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON nav.* TO 'nav'@'%' IDENTIFIED BY '$NAVDB_PASSWORD';"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE nav LOGIN ENCRYPTED PASSWORD '$NAVDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE nav WITH OWNER = nav ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "nav : $NAVDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE navms DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON navms.* TO 'navms'@'%' IDENTIFIED BY '$NAVMSDB_PASSWORD';"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE navms LOGIN ENCRYPTED PASSWORD '$NAVMSDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE navms WITH OWNER = navms ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "navms : $NAVMSDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE metastore DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY '$METASTOREDB_PASSWORD';"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE hive LOGIN ENCRYPTED PASSWORD '$METASTOREDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE metastore WITH OWNER = hive ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "hive : $METASTOREDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE oozie DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY '$OOZIEDB_PASSWORD';"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE oozie LOGIN ENCRYPTED PASSWORD '$OOZIEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE oozie WITH OWNER = oozie ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "oozie : $OOZIEDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE sentry DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON sentry.* TO 'sentry'@'%' IDENTIFIED BY '$SENTRYDB_PASSWORD';"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE sentry LOGIN ENCRYPTED PASSWORD '$SENTRYDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE sentry WITH OWNER = sentry ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "sentry : $SENTRYDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '$HUEDB_PASSWORD';"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE hue LOGIN ENCRYPTED PASSWORD '$HUEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE hue WITH OWNER = hue ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "hue : $HUEDB_PASSWORD"
 

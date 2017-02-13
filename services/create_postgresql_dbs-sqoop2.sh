@@ -12,23 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2017
 #
 if [ $DEBUG ]; then set -x; fi
 if [ $DEBUG ]; then ECHO=echo; fi
 #
 ##### START CONFIG ###################################################
 
+PG_PORT=5432
+
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-USEHAVEGED=no
+# https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
+PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 
 # Function to print the help screen.
 print_help () {
-  echo "Usage:  $1 [-H|--haveged]"
+  echo "Usage:  $1 --host <hostname> [--port <port>] --user <username> --password <password>"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
-  echo "   ex.  $1"
+  echo ""
+  echo "   ex.  $1 --host dbhost --user foo --password bar"
   exit 1
 }
 
@@ -65,10 +69,23 @@ err_msg () {
 # Process arguments.
 while [[ $1 = -* ]]; do
   case $1 in
-    -H|--haveged)
-      USEHAVEGED=yes
+    -h|--host)
+      shift
+      PG_HOST=$1
       ;;
-    -h|--help)
+    -P|--port)
+      shift
+      PG_PORT=$1
+      ;;
+    -u|--user)
+      shift
+      PG_USER=$1
+      ;;
+    -p|--password)
+      shift
+      export PGPASSWORD=$1
+      ;;
+    -H|--help)
       print_help "$(basename $0)"
       ;;
     -v|--version)
@@ -85,10 +102,10 @@ while [[ $1 = -* ]]; do
 done
 
 # Check to see if we have the required parameters.
-#if [ -z "$USEHAVEGED" ]; then print_help "$(basename $0)"; fi
+if [ -z "$PG_HOST" -o -z "$PG_USER" -o -z "$PGPASSWORD" ]; then print_help "$(basename $0)"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
-check_root
+#check_root
 
 # main
 if rpm -q redhat-lsb-core; then
@@ -96,38 +113,11 @@ if rpm -q redhat-lsb-core; then
 else
   OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
 fi
-
-if grep -q rdrand /proc/cpuinfo; then
-  RDRAND=true
-else
-  RDRAND=false
-fi
-
-if [ -f /dev/hwrng ]; then
-  HWRNG=true
-else
-  HWRNG=false
-fi
-
-if [ "$USEHAVEGED" == "yes" ]; then
-  yum -y -e1 -d1 install epel-release
-  yum -y -e1 -d1 install haveged
-  service haveged start
-  chkconfig haveged on
-else
-  # https://www.cloudera.com/content/www/en-us/downloads/navigator/encrypt/3-8-0.html
-  # http://www.certdepot.net/rhel7-get-started-random-number-generator/
-  yum -y -d1 -e1 install rng-tools
-  if [ $RDRAND == false  -a $HWRNG == false ]; then
-    if [ $OSREL == 6 ]; then
-      sed -i -e 's|^EXTRAOPTIONS=.*|EXTRAOPTIONS="-r /dev/urandom"|' /etc/sysconfig/rngd
-    else
-      cp -p /usr/lib/systemd/system/rngd.service /etc/systemd/system/
-      sed -i -e 's|^ExecStart=.*|ExecStart=/sbin/rngd -f -r /dev/urandom|' /etc/systemd/system/rngd.service
-      systemctl daemon-reload
-    fi
-  fi
-  service rngd start
-  chkconfig rngd on
-fi
+$ECHO sudo yum -y -e1 -d1 install epel-release
+$ECHO sudo yum -y -e1 -d1 install postgresql apg || err_msg 4
+if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
+SQOOPDB_PASSWORD=`eval $PWCMD`
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE sqoop LOGIN ENCRYPTED PASSWORD '$SQOOPDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE sqoop WITH OWNER = sqoop ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+echo "sqoop : $SQOOPDB_PASSWORD"
 

@@ -12,25 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2016
 #
 if [ $DEBUG ]; then set -x; fi
 if [ $DEBUG ]; then ECHO=echo; fi
 #
 ##### START CONFIG ###################################################
 
-# https://www.server-world.info/en/note?os=CentOS_7&p=openldap&f=4
-
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+YUMOPTS="-y -e1 -d1"
 DATE=`date '+%Y%m%d%H%M%S'`
+_TLS=no
 
 # Function to print the help screen.
 print_help () {
-  echo "Usage:  $1"
-  echo "        $1 [-h|--help]"
-  echo "        $1 [-v|--version]"
-  echo "   ex.  $1"
+  echo "Authenticate and indentify via LDAP."
+  echo ""
+  echo "Usage:  $1 --ldapserver <host> --suffix <search base>"
+  echo ""
+  echo "        -l|--ldapserver    <LDAP server>"
+  echo "        -s|--suffix        <LDAP search base>"
+  echo "        [-L|--ldaps]       # use LDAPS on port 636 instead of STARTTLS"
+  echo "        [-h|--help]"
+  echo "        [-v|--version]"
+  echo ""
+  echo "   ex.  $1 --ldapserver hostname --suffix dc=mydomain,dc=local"
   exit 1
 }
 
@@ -82,13 +89,16 @@ discover_os () {
 # Process arguments.
 while [[ $1 = -* ]]; do
   case $1 in
-    -d|--domain)
+    -l|--ldapserver)
       shift
-      _DOMAIN_LOWER=`echo $1 | tr '[:upper:]' '[:lower:]'`
+      _LDAPSERVER=$1
       ;;
-    -r|--rootdn)
+    -s|--suffix)
       shift
-      _ROOTDN="$1"
+      _LDAPSUFFIX=$1
+      ;;
+    -L|--ldaps)
+      _TLS=yes
       ;;
     -h|--help)
       print_help "$(basename $0)"
@@ -115,74 +125,71 @@ if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
 fi
 
 # Check to see if we have the required parameters.
-#if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
+if [ -z "$_LDAPSERVER" -o -z "$_LDAPSUFFIX" ]; then print_help "$(basename $0)"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
 
 # main
-if [ ! -f /opt/cloudera/security/x509/localhost.pem ]; then
-  echo "ERROR: Missing TLS certificate."
-  exit 4
-fi
-if [ ! -f /opt/cloudera/security/x509/localhost.key ]; then
-  echo "ERROR: Missing TLS key."
-  exit 5
-fi
-if [ ! -f /opt/cloudera/security/x509/ca-chain.cert.pem ]; then
-  echo "ERROR: Missing TLS certificate chain."
-  exit 6
-fi
+if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a \( "$OSREL" == 6 -o "$OSREL" == 7 \) ]; then
+  echo "** Installing software."
+  yum $YUMOPTS install sssd-ldap oddjob oddjob-mkhomedir
 
-install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/localhost.pem /etc/openldap/certs/server.crt
-install -m 0440 -o ldap -g ldap /opt/cloudera/security/x509/localhost.key /etc/openldap/certs/server.key
-#install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/ca-chain.cert.pem /etc/openldap/certs/ca-bundle.crt
+  echo "** Writing configs..."
+  if [ "$_TLS" == yes ]; then
+    _LDAPURI="ldaps://${_LDAPSERVER}:636/"
+  else
+    _LDAPURI="ldap://${_LDAPSERVER}/"
+  fi
+  cp -p /etc/sssd/sssd.conf /etc/sssd/sssd.conf.${DATE}
+  cat <<EOF >/etc/sssd/sssd.conf
+[sssd]
+domains = default
+config_file_version = 2
+services = nss, pam
 
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-dn: cn=config
-changetype: modify
-add: olcTLSCACertificateFile
-#olcTLSCACertificateFile: /etc/openldap/certs/ca-bundle.crt
-olcTLSCACertificateFile: /opt/cloudera/security/x509/ca-chain.cert.pem
--
-replace: olcTLSCertificateFile
-olcTLSCertificateFile: /etc/openldap/certs/server.crt
--
-replace: olcTLSCertificateKeyFile
-olcTLSCertificateKeyFile: /etc/openldap/certs/server.key
--
-# the following directive is the default but
-# is explicitly included for visibility reasons
-add: olcTLSVerifyClient
-olcTLSVerifyClient: never
-#EOF
-# To require TLSv1.0 or higher with 128bit and longer ciphers you probably just want:
-#  olcTLSProtocolMin: 3.1
-#  olcTLSCipherSuite: HIGH
-#ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-#dn: cn=config
-#changetype: modify
--
-add: olcSecurity
-olcSecurity: tls=1
--
-add: olcTLSProtocolMin
-olcTLSProtocolMin: 3.1
--
-add: olcTLSCipherSuite
-olcTLSCipherSuite: HIGH
+[domain/default]
+id_provider = ldap
+access_provider = simple
+#access_provider = ldap
+auth_provider = ldap
+chpass_provider = ldap
+min_id = 10000
+cache_credentials = true
+# sssd does not support authentication over an unencrypted channel.
+ldap_uri = $_LDAPURI
+ldap_tls_cacert = /etc/pki/tls/certs/ca-bundle.crt
+ldap_id_use_start_tls = true
+ldap_tls_reqcert = demand
+ldap_search_base = $_LDAPSUFFIX
+#ldap_schema = rfc2307bis
+ldap_access_filter = memberOf=cn=admin,ou=Groups,${_LDAPSUFFIX}
+simple_allow_groups = admin, developer
+
 EOF
+  chmod 0600 /etc/sssd/sssd.conf
 
-cp -p /etc/sysconfig/slapd /etc/sysconfig/slapd.${DATE}
-sed -e '/^SLAPD_URLS=/s|=.*|="ldapi:/// ldaps:///"|' \
-    -i /etc/sysconfig/slapd
+  authconfig --enablesssd --enablesssdauth --enablemkhomedir --update
+  service sssd start
+  chkconfig sssd on
+  service oddjobd start
+  chkconfig oddjobd on
+fi
 
-cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf.${DATE}
-cat <<EOF >>/etc/openldap/ldap.conf
-TLS_REQCERT     allow
-EOF
-sed -e '/^URI/s|ldap://|ldaps://|' \
-    -i /etc/openldap/ldap.conf
-
-service slapd restart
+if [ -f /etc/nscd.conf ]; then
+  echo "*** Disabling NSCD caching of passwd/group/netgroup/services..."
+  if [ ! -f /etc/nscd.conf-orig ]; then
+    cp -p /etc/nscd.conf /etc/nscd.conf-orig
+  else
+    cp -p /etc/nscd.conf /etc/nscd.conf.${DATE}
+  fi
+  sed -e '/enable-cache[[:blank:]]*passwd/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*group/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*services/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*netgroup/s|yes|no|' -i /etc/nscd.conf
+  service nscd condrestart
+  if ! service sssd status >/dev/null 2>&1; then
+    service sssd restart
+  fi
+fi
 

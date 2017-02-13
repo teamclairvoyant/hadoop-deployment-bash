@@ -98,9 +98,9 @@ while [[ $1 = -* ]]; do
       print_help "$(basename $0)"
       ;;
     -v|--version)
-      echo "\tScript"
-      echo "\tVersion: $VERSION"
-      echo "\tWritten by: $AUTHOR"
+      echo "Script"
+      echo "Version: $VERSION"
+      echo "Written by: $AUTHOR"
       exit 0
       ;;
     *)
@@ -140,8 +140,8 @@ _LDAPPASS=`slappasswd -s $_ROOTPW`
 cp -p /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
 chown -R ldap:ldap /var/lib/ldap
 restorecon -rv /var/lib/ldap
-systemctl start slapd
-systemctl enable slapd
+service slapd start
+chkconfig slapd on
 
 #ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/core.ldif
 ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/cosine.ldif

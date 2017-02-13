@@ -29,17 +29,17 @@ _TLS=no
 print_help () {
   echo "Authenticate via Kerberos and indentify via LDAP."
   echo ""
-  echo "Usage:  $1 --domain --ldapserver --krbserver"
+  echo "Usage:  $1 --realm <realm> --krbserver <host> --ldapserver <host> --suffix <search base>"
   echo ""
-  echo "        -s|--suffix        <LDAP search base>"
-  echo "        -l|--ldapserver    <LDAP server>"
-  echo "        -t|--tls           # use TLS for LDAP"
-  echo "        -d|--domain        <Kerberos Domain>"
+  echo "        -r|--realm         <Kerberos realm>"
   echo "        -k|--krbserver     <Kerberos server>"
+  echo "        -l|--ldapserver    <LDAP server>"
+  echo "        -s|--suffix        <LDAP search base>"
+  echo "        [-L|--ldaps]       # use LDAPS on port 636"
   echo "        [-h|--help]"
   echo "        [-v|--version]"
   echo ""
-  echo "   ex.  $1"
+  echo "   ex.  $1 --realm MYREALM --krbserver hostA --ldapserver hostB --suffix dc=mydomain,dc=local"
   exit 1
 }
 
@@ -91,10 +91,10 @@ discover_os () {
 # Process arguments.
 while [[ $1 = -* ]]; do
   case $1 in
-    -d|--domain)
+    -r|--realm)
       shift
-      _DOMAIN_UPPER=`echo $1 | tr '[:lower:]' '[:upper:]'`
-      _DOMAIN_LOWER=`echo $1 | tr '[:upper:]' '[:lower:]'`
+      _REALM_UPPER=`echo $1 | tr '[:lower:]' '[:upper:]'`
+      _REALM_LOWER=`echo $1 | tr '[:upper:]' '[:lower:]'`
       ;;
     -k|--krbserver)
       shift
@@ -108,7 +108,7 @@ while [[ $1 = -* ]]; do
       shift
       _LDAPSUFFIX=$1
       ;;
-    -t|--tls)
+    -L|--ldaps)
       _TLS=yes
       ;;
     -h|--help)
@@ -136,13 +136,13 @@ if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
 fi
 
 # Check to see if we have the required parameters.
-if [ -z "$_DOMAIN_LOWER" -o -z "$_KRBSERVER" -o -z "$_LDAPSERVER" ]; then print_help "$(basename $0)"; fi
+if [ -z "$_REALM_LOWER" -o -z "$_KRBSERVER" -o -z "$_LDAPSERVER" -o -z "$_LDAPSUFFIX" ]; then print_help "$(basename $0)"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
 
 # main
-if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a \( i"$OSREL" == 6 -o "$OSREL" == 7 \) ]; then
+if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a \( "$OSREL" == 6 -o "$OSREL" == 7 \) ]; then
   echo "** Installing software."
   yum $YUMOPTS install sssd-ldap sssd-krb5 oddjob oddjob-mkhomedir
 
@@ -155,39 +155,41 @@ if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a \( i"$OSREL" == 6 -o "$OSREL" =
  admin_server = FILE:/var/log/kadmind.log
 
 [libdefaults]
- default_realm = $_DOMAIN_UPPER
+ default_realm = $_REALM_UPPER
  dns_lookup_realm = true
  ticket_lifetime = 24h
  renew_lifetime = 7d
  forwardable = true
  rdns = false
- default_ccache_name = KEYRING:persistent:%{uid}
+ # We have to use FILE: until JVM can support something better.
+ # https://community.hortonworks.com/questions/11288/kerberos-cache-in-ipa-redhat-idm-keyring-solved.html
+ default_ccache_name = FILE:/tmp/krb5cc_%{uid}
 
 [realms]
-$_DOMAIN_UPPER = {
+$_REALM_UPPER = {
  kdc = ${_KRBSERVER}
  admin_server = ${_KRBSERVER}
 }
 
 [domain_realm]
- .${_DOMAIN_LOWER} = $_DOMAIN_UPPER
- $_DOMAIN_LOWER = $_DOMAIN_UPPER
+ .${_REALM_LOWER} = $_REALM_UPPER
+ $_REALM_LOWER = $_REALM_UPPER
 EOF
 
   cp -p /etc/sssd/sssd.conf /etc/sssd/sssd.conf.${DATE}
   cat <<EOF >/etc/sssd/sssd.conf
 [sssd]
-domains = $_DOMAIN_LOWER
+domains = $_REALM_LOWER
 config_file_version = 2
 services = nss, pam
 
-[domain/${_DOMAIN_LOWER}]
+[domain/${_REALM_LOWER}]
 id_provider = ldap
 access_provider = simple
 #access_provider = ldap
 auth_provider = krb5
 chpass_provider = krb5
-min_id = 1000
+min_id = 10000
 cache_credentials = true
 EOF
   if [ "$_TLS" == yes ]; then
@@ -195,10 +197,12 @@ EOF
 ldap_uri = ldaps://${_LDAPSERVER}:636/
 ldap_tls_cacert = /etc/pki/tls/certs/ca-bundle.crt
 ldap_id_use_start_tls = true
+ldap_tls_reqcert = demand
 EOF
   else
     cat <<EOF >>/etc/sssd/sssd.conf
 ldap_uri = ldap://${_LDAPSERVER}/
+ldap_id_use_start_tls = false
 ldap_tls_reqcert = never
 EOF
   fi
@@ -208,13 +212,16 @@ ldap_search_base = $_LDAPSUFFIX
 ldap_pwd_policy = mit_kerberos
 ldap_access_filter = memberOf=cn=admin,ou=Groups,${_LDAPSUFFIX}
 simple_allow_groups = admin, developer
-krb5_realm = $_DOMAIN_UPPER
+krb5_realm = $_REALM_UPPER
 krb5_server = $_KRBSERVER
 krb5_lifetime = 24h
 krb5_renewable_lifetime = 7d
 krb5_renew_interval = 1h
-krb5_ccname_template = KEYRING:persistent:%U
+# We have to use FILE: until JVM can support something better.
+# https://community.hortonworks.com/questions/11288/kerberos-cache-in-ipa-redhat-idm-keyring-solved.html
+krb5_ccname_template = FILE:/tmp/krb5cc_%U
 krb5_store_password_if_offline = true
+
 EOF
   chmod 0600 /etc/sssd/sssd.conf
 

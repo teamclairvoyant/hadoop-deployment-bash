@@ -19,17 +19,20 @@ if [ $DEBUG ]; then ECHO=echo; fi
 #
 ##### START CONFIG ###################################################
 
-# https://www.server-world.info/en/note?os=CentOS_7&p=openldap&f=4
+_ROOTDN="Manager"
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+YUMOPTS="-y -e1 -d1"
 DATE=`date '+%Y%m%d%H%M%S'`
 
 # Function to print the help screen.
 print_help () {
-  echo "Usage:  $1"
-  echo "        $1 [-h|--help]"
-  echo "        $1 [-v|--version]"
+  echo "Usage:  $1 --domain <dns domain or kerberos realm>"
+  echo "        [-r|--rootdn <LDAP superuser>]"
+  echo "        [-p|--passwd <LDAP superuser password>]"
+  echo "        [-h|--help]"
+  echo "        [-v|--version]"
   echo "   ex.  $1"
   exit 1
 }
@@ -90,6 +93,10 @@ while [[ $1 = -* ]]; do
       shift
       _ROOTDN="$1"
       ;;
+    -p|--passwd)
+      shift
+      _ROOTPW="$1"
+      ;;
     -h|--help)
       print_help "$(basename $0)"
       ;;
@@ -121,68 +128,63 @@ fi
 check_root
 
 # main
-if [ ! -f /opt/cloudera/security/x509/localhost.pem ]; then
-  echo "ERROR: Missing TLS certificate."
-  exit 4
-fi
-if [ ! -f /opt/cloudera/security/x509/localhost.key ]; then
-  echo "ERROR: Missing TLS key."
-  exit 5
-fi
-if [ ! -f /opt/cloudera/security/x509/ca-chain.cert.pem ]; then
-  echo "ERROR: Missing TLS certificate chain."
-  exit 6
-fi
+#_SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
+#_ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
+#_ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
 
-install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/localhost.pem /etc/openldap/certs/server.crt
-install -m 0440 -o ldap -g ldap /opt/cloudera/security/x509/localhost.key /etc/openldap/certs/server.key
-#install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/ca-chain.cert.pem /etc/openldap/certs/ca-bundle.crt
+setsebool -P httpd_can_connect_ldap=on
 
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-dn: cn=config
-changetype: modify
-add: olcTLSCACertificateFile
-#olcTLSCACertificateFile: /etc/openldap/certs/ca-bundle.crt
-olcTLSCACertificateFile: /opt/cloudera/security/x509/ca-chain.cert.pem
--
-replace: olcTLSCertificateFile
-olcTLSCertificateFile: /etc/openldap/certs/server.crt
--
-replace: olcTLSCertificateKeyFile
-olcTLSCertificateKeyFile: /etc/openldap/certs/server.key
--
-# the following directive is the default but
-# is explicitly included for visibility reasons
-add: olcTLSVerifyClient
-olcTLSVerifyClient: never
+yum $YUMOPTS install epel-release
+yum $YUMOPTS install httpd phpldapadmin
+
+if [ ! -f /etc/httpd/conf.d/phpldapadmin.conf-orig ]; then
+  cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf-orig
+else
+  cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf.${DATE}
+fi
+#cat <<EOF >/etc/httpd/conf.d/phpldapadmin.conf
+##
+##  Web-based tool for managing LDAP servers
+##
+#Alias /phpldapadmin /usr/share/phpldapadmin/htdocs
+#Alias /ldapadmin /usr/share/phpldapadmin/htdocs
+#
+#<Directory /usr/share/phpldapadmin/htdocs>
+#  Order Allow,Deny
+#  Allow from all
+#</Directory>
+#
 #EOF
-# To require TLSv1.0 or higher with 128bit and longer ciphers you probably just want:
-#  olcTLSProtocolMin: 3.1
-#  olcTLSCipherSuite: HIGH
-#ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
-#dn: cn=config
-#changetype: modify
--
-add: olcSecurity
-olcSecurity: tls=1
--
-add: olcTLSProtocolMin
-olcTLSProtocolMin: 3.1
--
-add: olcTLSCipherSuite
-olcTLSCipherSuite: HIGH
-EOF
+sed -e '/Require/s|Require local|Require all granted|' \
+    -e '/Order/s|Deny,Allow|Allow,Deny|' \
+    -e '/Order/s|deny,allow|Allow,Deny|' \
+    -e '/Allow from/d' \
+    -e '/Deny from all/s|Deny|Allow|' \
+    -i /etc/httpd/conf.d/phpldapadmin.conf
+if [ ! -f /etc/phpldapadmin/config.php-orig ]; then
+  cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php-orig
+else
+  cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php.${DATE}
+fi
+sed -e '/# CLAIRVOYANT$/d' \
+    -e "/Local LDAP Server/a\
+\$servers->setValue('server','host','ldaps://127.0.0.1'); # CLAIRVOYANT\\
+\$servers->setValue('server','port',636); # CLAIRVOYANT\\
+\$servers->setValue('login','fallback_dn',true); # CLAIRVOYANT\\
+\$servers->setValue('auto_number','min',array('uidNumber'=>10000,'gidNumber'=>10000)); # CLAIRVOYANT" \
+    -i /etc/phpldapadmin/config.php
 
-cp -p /etc/sysconfig/slapd /etc/sysconfig/slapd.${DATE}
-sed -e '/^SLAPD_URLS=/s|=.*|="ldapi:/// ldaps:///"|' \
-    -i /etc/sysconfig/slapd
+chkconfig httpd on
+service httpd restart
 
-cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf.${DATE}
-cat <<EOF >>/etc/openldap/ldap.conf
-TLS_REQCERT     allow
-EOF
-sed -e '/^URI/s|ldap://|ldaps://|' \
-    -i /etc/openldap/ldap.conf
+echo "Go to http://`hostname -f`/phpldapadmin/"
 
-service slapd restart
+exit 0
+
+
+#servie iptables save
+#sed -i -e '/--dport 22/i\
+#-A INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT\
+#-A INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT' /etc/sysconfig/iptables
+#service iptables restart
 
