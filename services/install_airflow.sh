@@ -21,6 +21,9 @@ if [ $DEBUG ]; then ECHO=echo; fi
 #AIRFLOWUID="-u 999"
 #AIRFLOWGID="-g 999"
 
+MYSQL_PORT=3306
+PGSQL_PORT=5432
+
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 FILEPATH=`dirname $0`
@@ -30,10 +33,19 @@ YUMOPTS="-y -e1 -d1"
 
 # Function to print the help screen.
 print_help () {
-  echo "Usage:  $1 --mysqlhost <hostname> --mysqluser <username> --mysqlpassword <password> --rabbitmqhost <hostname>"
-  echo "        $1 [-h|--help]"
-  echo "        $1 [-v|--version]"
-  echo "   ex.  $1"
+  echo "Usage:  $1 <args>"
+  echo ""
+  echo "          -t|--dbtype        <mysql|postgresql>"
+  echo "          -d|--dbhost        <hostname>"
+  echo "          [-P|--dbport       <port>]"
+  echo "          -u|--dbuser        <username>"
+  echo "          -p|--dbpassword    <password>"
+  echo "          -r|--rabbitmqhost  <hostname>"
+  echo "          [airflow version]"
+  echo "          [-h|--help]"
+  echo "          [-v|--version]"
+  echo ""
+  echo "   ex.  $1 --dbtype postgresql --dbhost hostA --dbuser airflow --dbpassword bar --rabbitmqhost hostB"
   exit 1
 }
 
@@ -92,29 +104,37 @@ discover_os () {
 # Process arguments.
 while [[ $1 = -* ]]; do
   case $1 in
-    -m|--mysqlhost)
+    -t|--dbtype)
       shift
-      MYSQL_HOST=$1
+      DB_TYPE=$1
+      ;;
+    -d|--dbhost)
+      shift
+      DB_HOST=$1
       ;;
     -r|--rabbitmqhost)
       shift
       RABBITMQ_HOST=$1
       ;;
-    -u|--mysqluser)
+    -u|--dbuser)
       shift
-      MYSQL_USER=$1
+      DB_USER=$1
       ;;
-    -p|--mysqlpassword)
+    -p|--dbpassword)
       shift
-      MYSQL_PASSWORD=$1
+      DB_PASSWORD=$1
+      ;;
+    -P|--dbport)
+      shift
+      DB_PORT=$1
       ;;
     -h|--help)
       print_help "$(basename $0)"
       ;;
     -v|--version)
-      echo "\tScript"
-      echo "\tVersion: $VERSION"
-      echo "\tWritten by: $AUTHOR"
+      echo "Script"
+      echo "Version: $VERSION"
+      echo "Written by: $AUTHOR"
       exit 0
       ;;
     *)
@@ -133,7 +153,12 @@ if [ \( "$OS" != RedHat -o "$OS" != CentOS \) -a "$OSREL" != 7 ]; then
 fi
 
 # Check to see if we have the required parameters.
-if [ -z "$MYSQL_HOST" -o -z "$MYSQL_USER" -o -z "$MYSQL_PASSWORD" -o -z "$RABBITMQ_HOST" ]; then print_help "$(basename $0)"; fi
+if [ -z "$DB_TYPE" -o -z "$DB_HOST" -o -z "$DB_USER" -o -z "$DB_PASSWORD" -o -z "$RABBITMQ_HOST" ]; then print_help "$(basename $0)"; fi
+if [ "$DB_TYPE" != "mysql" -a "$DB_TYPE" != "postgresql" ]; then
+  echo "** ERROR: --dbtype must be one of mysql or postgresql."
+  echo ""
+  print_help "$(basename $0)"
+fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
@@ -178,17 +203,26 @@ fi
 
 echo "** Installing Airflow."
 pip $PIPOPTS install airflow${VERSION}
+# Fix a bug in celery 4
+pip $PIPOPTS install 'celery<4'
 pip $PIPOPTS install airflow[celery]
 
-#####
-echo "** Installing Airflow[mysql]."
-yum $YUMOPTS install mysql-devel
-pip $PIPOPTS install airflow[mysql]
+if [ "$DB_TYPE" == "mysql" ]; then
+  if [ -z "$DB_PORT" ]; then DB_PORT=$MYSQL_PORT; fi
+  #####
+  echo "** Installing Airflow[mysql]."
+  yum $YUMOPTS install mysql-devel
+  pip $PIPOPTS install airflow[mysql]
+  DBCONNSTRING="mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/airflow"
 
-#####
-##yum $YUMOPTS install python-psycopg2
-#yum $YUMOPTS install postgresql-devel
-#pip $PIPOPTS install airflow[postgres]
+elif [ "$DB_TYPE" == "postgresql" ]; then
+  if [ -z "$DB_PORT" ]; then DB_PORT=$PGSQL_PORT; fi
+  #####
+  echo "** Installing Airflow[postgres]."
+  yum $YUMOPTS install postgresql-devel
+  pip $PIPOPTS install airflow[postgres]
+  DBCONNSTRING="postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/airflow"
+fi
 
 #####
 echo "** Installing Airflow[kerberos]."
@@ -225,11 +259,9 @@ systemd-tmpfiles --create --prefix=/run
 CRYPTOKEY=`eval $PWCMD`
 FERNETCRYPTOKEY=`python -c 'from cryptography.fernet import Fernet;key=Fernet.generate_key().decode();print key'`
 
-sed -e "s|USERNAME|$MYSQL_USER|" \
-    -e "s|PASSWORD|$MYSQL_PASSWORD|" \
-    -e "s|MYSQLHOST|$MYSQL_HOST|" \
+sed -e "s|RABBITMQHOST|$RABBITMQ_HOST|" \
     -e "s|LOCALHOST|`hostname`|" \
-    -e "s|RABBITMQHOST|$RABBITMQ_HOST|" \
+    -e "s|DBCONNSTRING|$DBCONNSTRING|" \
     -e "s|temporary_key|$CRYPTOKEY|" \
     -e "s|cryptography_not_found_storing_passwords_in_plain_text|$FERNETCRYPTOKEY|" \
     -i /var/lib/airflow/airflow.cfg
