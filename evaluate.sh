@@ -312,6 +312,10 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 
+echo "****************************************"
+echo "*** Native Code"
+hadoop checknative
+
 #echo "****************************************"
 #echo "*** "
 #echo "** running config:"
