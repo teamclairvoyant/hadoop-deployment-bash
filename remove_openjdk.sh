@@ -14,9 +14,49 @@
 #
 # Copyright Clairvoyant 2016
 
-rpm -e java-1.6.0-openjdk
-rpm -e java-1.7.0-openjdk
-rpm -e java-1.8.0-openjdk
-rpm -e java-1.8.0-openjdk-headless
-rpm -e java-1.5.0-gcj
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
+fi
+
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  rpm -e java-1.6.0-openjdk
+  rpm -e java-1.7.0-openjdk
+  rpm -e java-1.8.0-openjdk
+  rpm -e java-1.8.0-openjdk-headless
+  rpm -e java-1.5.0-gcj
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  apt-get -y -q remove openjdk-6-jre
+  apt-get -y -q remove openjdk-6-jre-headless
+  apt-get -y -q remove openjdk-6-jdk
+  apt-get -y -q remove openjdk-7-jre
+  apt-get -y -q remove openjdk-7-jre-headless
+  apt-get -y -q remove openjdk-7-jdk
+fi
 

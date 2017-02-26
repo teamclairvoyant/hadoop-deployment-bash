@@ -16,21 +16,54 @@
 
 VAL=1
 
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
 fi
 
 sysctl -w vm.swappiness=$VAL
 
-if [ $OSREL == 6 ]; then
-  if grep -q vm.swappiness /etc/sysctl.conf; then
-    sed -i -e "/^vm.swappiness/s|=.*|= $VAL|" /etc/sysctl.conf
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  if [ $OSREL == 6 ]; then
+    if grep -q vm.swappiness /etc/sysctl.conf; then
+      sed -i -e "/^vm.swappiness/s|=.*|= $VAL|" /etc/sysctl.conf
+    else
+      echo "vm.swappiness = $VAL" >>/etc/sysctl.conf
+    fi
   else
-    echo "vm.swappiness = $VAL" >>/etc/sysctl.conf
+    if grep -q vm.swappiness /etc/sysctl.conf; then
+      sed -i -e '/^vm.swappiness/d' /etc/sysctl.conf
+    fi
+    echo "# Tuning for Hadoop installation." >/etc/sysctl.d/cloudera.conf
+    echo "vm.swappiness = $VAL" >>/etc/sysctl.d/cloudera.conf
   fi
-else
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   if grep -q vm.swappiness /etc/sysctl.conf; then
     sed -i -e '/^vm.swappiness/d' /etc/sysctl.conf
   fi

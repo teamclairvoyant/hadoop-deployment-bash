@@ -14,55 +14,129 @@
 #
 # Copyright Clairvoyant 2015
 
+# ARGV:
+# 1 - SCM server database type : embedded, postgresql, or mysql - optional
+# 2 - SCM server version - optional
+
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
+fi
+
 # TODO
 INSTALLDB=$1
 if [ -z "$INSTALLDB" ]; then
   INSTALLDB=embedded
 fi
 SCMVERSION=$2
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
-fi
-if rpm -q jdk >/dev/null; then
-  HAS_JDK=yes
-else
-  HAS_JDK=no
-fi
+
 PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
 eval $PROXY
 export http_proxy
 export https_proxy
-if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
-  wget -q https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
-  if [ -n "$SCMVERSION" ]; then
-    sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
-  fi
-fi
-if [ "$INSTALLDB" = embedded ]; then
-  yum -y -e1 -d1 install cloudera-manager-server-db-2
-  service cloudera-scm-server-db start
-  chkconfig cloudera-scm-server-db on
-fi
-yum -y -e1 -d1 install cloudera-manager-server openldap-clients
-if [ "$INSTALLDB" = embedded ]; then
-  service cloudera-scm-server start
-  chkconfig cloudera-scm-server on
-else
-  if [ "$INSTALLDB" = mysql ]; then
-    yum -y -e1 -d1 install mysql-connector-java
-    if [ $HAS_JDK = no ]; then yum -y -e1 -d1 remove jdk; fi
-  elif [ "$INSTALLDB" = postgresql ]; then
-    yum -y -e1 -d1 install postgresql-jdbc
+
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  if rpm -q jdk >/dev/null; then
+    HAS_JDK=yes
   else
-    echo "** ERROR: Argument must be either embedded, mysql, or postgresql."
+    HAS_JDK=no
   fi
-  echo "** Now you must configure the Cloudera Manager server to connect to the external"
-  echo "** database.  Please run:"
-  echo "/usr/share/cmf/schema/scm_prepare_database.sh"
-  echo "** and then:"
-  echo "service cloudera-scm-server start"
-  echo "chkconfig cloudera-scm-server on"
+  # Because it may have been put there by some other process.
+  if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
+    wget -q https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+    if [ -n "$SCMVERSION" ]; then
+      sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
+    fi
+  fi
+  if [ "$INSTALLDB" == embedded ]; then
+    yum -y -e1 -d1 install cloudera-manager-server-db-2
+    service cloudera-scm-server-db start
+    chkconfig cloudera-scm-server-db on
+  fi
+  yum -y -e1 -d1 install cloudera-manager-server openldap-clients
+  if [ "$INSTALLDB" == embedded ]; then
+    service cloudera-scm-server start
+    chkconfig cloudera-scm-server on
+  else
+    if [ "$INSTALLDB" == mysql ]; then
+      yum -y -e1 -d1 install mysql-connector-java
+      if [ $HAS_JDK = no ]; then yum -y -e1 -d1 remove jdk; fi
+    elif [ "$INSTALLDB" == postgresql ]; then
+      yum -y -e1 -d1 install postgresql-jdbc
+    else
+      echo "** ERROR: Argument must be either embedded, mysql, or postgresql."
+    fi
+    echo "** Now you must configure the Cloudera Manager server to connect to the external"
+    echo "** database.  Please run:"
+    echo "/usr/share/cmf/schema/scm_prepare_database.sh"
+    echo "** and then:"
+    echo "service cloudera-scm-server start"
+    echo "chkconfig cloudera-scm-server on"
+  fi
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  # Because it may have been put there by some other process.
+  if [ ! -f /etc/apt/sources.list.d/cloudera-manager.list ]; then
+    if [ "$OS" == Debian ]; then
+      OS_LOWER=debian
+    elif [ "$OS" == Ubuntu ]; then
+      OS_LOWER=ubuntu
+    fi
+    wget -q https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list -O /etc/apt/sources.list.d/cloudera-manager.list
+    if [ -n "$SCMVERSION" ]; then
+      sed -e "s|-cm5 |-cm${SCMVERSION} |" -i /etc/apt/sources.list.d/cloudera-manager.list
+    fi
+    curl -s http://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/archive.key | apt-key add -
+  fi
+  apt-get -y -q update
+  if [ "$INSTALLDB" == embedded ]; then
+    apt-get -y -q install cloudera-manager-server-db-2
+    service cloudera-scm-server-db start
+    update-rc.d cloudera-scm-server-db defaults
+  fi
+  apt-get -y -q install cloudera-manager-server ldap-utils
+  if [ "$INSTALLDB" == embedded ]; then
+    service cloudera-scm-server start
+    update-rc.d cloudera-scm-server defaults
+  else
+    if [ "$INSTALLDB" == mysql ]; then
+      apt-get -y -q install libmysql-java
+    elif [ "$INSTALLDB" == postgresql ]; then
+      apt-get -y -q install libpostgresql-jdbc-java
+    else
+      echo "** ERROR: Argument must be either embedded, mysql, or postgresql."
+    fi
+    echo "** Now you must configure the Cloudera Manager server to connect to the external"
+    echo "** database.  Please run:"
+    echo "/usr/share/cmf/schema/scm_prepare_database.sh"
+    echo "** and then:"
+    echo "service cloudera-scm-server start"
+    echo "update-rc.d cloudera-scm-server-db defaults"
+  fi
 fi
 

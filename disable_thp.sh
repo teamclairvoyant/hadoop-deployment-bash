@@ -14,23 +14,59 @@
 #
 # Copyright Clairvoyant 2015
 
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
 fi
-if [ $OSREL == 6 ]; then
+
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  if [ $OSREL == 6 ]; then
+    echo never >/sys/kernel/mm/transparent_hugepage/defrag
+    echo never >/sys/kernel/mm/transparent_hugepage/enabled
+    sed -i '/transparent_hugepage/d' /etc/rc.d/rc.local
+    echo 'echo never >/sys/kernel/mm/transparent_hugepage/defrag' >>/etc/rc.d/rc.local
+    echo 'echo never >/sys/kernel/mm/transparent_hugepage/enabled' >>/etc/rc.d/rc.local
+  else
+    # http://www.certdepot.net/rhel7-rc-local-service/
+    sed -i '/transparent_hugepage/d' /etc/rc.d/rc.local
+    echo 'echo never >/sys/kernel/mm/transparent_hugepage/defrag' >>/etc/rc.d/rc.local
+    echo 'echo never >/sys/kernel/mm/transparent_hugepage/enabled' >>/etc/rc.d/rc.local
+    chmod +x /etc/rc.d/rc.local
+    systemctl start rc-local
+  fi
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   echo never >/sys/kernel/mm/transparent_hugepage/defrag
   echo never >/sys/kernel/mm/transparent_hugepage/enabled
-  sed -i '/transparent_hugepage/d' /etc/rc.d/rc.local
-  echo 'echo never >/sys/kernel/mm/transparent_hugepage/defrag' >>/etc/rc.d/rc.local
-  echo 'echo never >/sys/kernel/mm/transparent_hugepage/enabled' >>/etc/rc.d/rc.local
-else
-  # http://www.certdepot.net/rhel7-rc-local-service/
-  sed -i '/transparent_hugepage/d' /etc/rc.d/rc.local
-  echo 'echo never >/sys/kernel/mm/transparent_hugepage/defrag' >>/etc/rc.d/rc.local
-  echo 'echo never >/sys/kernel/mm/transparent_hugepage/enabled' >>/etc/rc.d/rc.local
-  chmod +x /etc/rc.d/rc.local
-  systemctl start rc-local
+  sed -e '/transparent_hugepage/d' \
+      -e '/^exit 0/i \
+echo never >/sys/kernel/mm/transparent_hugepage/defrag\
+echo never >/sys/kernel/mm/transparent_hugepage/enabled' \
+  -i /etc/rc.local
 fi
 
