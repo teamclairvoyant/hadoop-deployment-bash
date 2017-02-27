@@ -168,10 +168,10 @@ cat /sys/kernel/mm/transparent_hugepage/defrag
 echo "* enabled:"
 cat /sys/kernel/mm/transparent_hugepage/enabled
 echo "** startup config:"
-if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
   grep transparent_hugepage /etc/rc.d/rc.local
 else
-  grep transparent_hugepage /etc/rc.d/rc.local
+  grep transparent_hugepage /etc/rc.local
 fi
 
 echo "****************************************"
@@ -191,8 +191,7 @@ echo "** running config:"
 if [ "$OS" == CentOS -o "$OS" == RedHat ]; then
   service rngd status
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
-  #service rng-tools status
-  :
+  service rng-tools status || ps -o user,pid,command -C rngd
 fi
 echo "** startup config:"
 chkconfig --list rngd
@@ -221,6 +220,12 @@ if [ -d /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/ ]; then
 fi
 if [ -d /usr/lib/jvm/default-java/jre/lib/security/ ]; then
   ls -l /usr/lib/jvm/default-java/jre/lib/security/*.jar
+fi
+if [ -d /usr/lib/jvm/java-7-oracle/jre/lib/security/ ]; then
+  ls -l /usr/lib/jvm/java-7-oracle/jre/lib/security/*.jar
+fi
+if [ -d /usr/lib/jvm/java-8-oracle/jre/lib/security/ ]; then
+  ls -l /usr/lib/jvm/java-8-oracle/jre/lib/security/*.jar
 fi
 
 echo "****************************************"
