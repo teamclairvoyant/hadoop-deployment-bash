@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2017
 
+exit 1
+
 yum -y -d1 -e1 install haproxy
 
 cat <<EOF >/etc/haproxy/haproxy.cfg
