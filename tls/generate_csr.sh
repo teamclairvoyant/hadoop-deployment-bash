@@ -36,7 +36,11 @@ if [ -n "$EXT" ]; then
   EXT="-ext $EXT"
 fi
 
-. /etc/profile.d/java.sh
+if [ -f /etc/profile.d/jdk.sh ]; then
+  . /etc/profile.d/jdk.sh
+elif [ -f /etc/profile.d/java.sh ]; then
+  . /etc/profile.d/java.sh
+fi
 
 keytool -genkeypair -alias localhost -keyalg RSA \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
