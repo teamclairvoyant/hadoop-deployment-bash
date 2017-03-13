@@ -52,11 +52,15 @@ if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
   rpm -e java-1.8.0-openjdk-headless
   rpm -e java-1.5.0-gcj
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
-  apt-get -y -q remove openjdk-6-jre
-  apt-get -y -q remove openjdk-6-jre-headless
-  apt-get -y -q remove openjdk-6-jdk
-  apt-get -y -q remove openjdk-7-jre
-  apt-get -y -q remove openjdk-7-jre-headless
-  apt-get -y -q remove openjdk-7-jdk
+  #apt-get -y -q remove openjdk-6-jre
+  #apt-get -y -q remove openjdk-6-jre-headless
+  #apt-get -y -q remove openjdk-6-jdk
+  #apt-get -y -q remove openjdk-7-jre
+  #apt-get -y -q remove openjdk-7-jre-headless
+  #apt-get -y -q remove openjdk-7-jdk
+  #apt-get -y -q remove openjdk-8-jre
+  #apt-get -y -q remove openjdk-8-jre-headless
+  #apt-get -y -q remove openjdk-8-jdk
+  apt-get -y -q remove openjdk\*
 fi
 
