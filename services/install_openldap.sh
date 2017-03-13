@@ -55,6 +55,8 @@ discover_os () {
     OSVER=`lsb_release -rs`
     # 7, 14
     OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -114,6 +116,7 @@ done
 # Currently only EL.
 discover_os
 if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -129,44 +132,45 @@ _SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
 _ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
 _ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
 
-yum $YUMOPTS install openldap-servers openldap-clients
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  yum $YUMOPTS install openldap-servers openldap-clients
 
-_PASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
-if [ -z "$_PASS" ]; then
-  _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
-fi
-_ROOTPW=${_PASS}
-_LDAPPASS=`slappasswd -s $_ROOTPW`
-cp -p /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
-chown -R ldap:ldap /var/lib/ldap
-restorecon -rv /var/lib/ldap
-service slapd start
-chkconfig slapd on
+  _PASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+  if [ -z "$_PASS" ]; then
+    _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+  fi
+  _ROOTPW=${_PASS}
+  _LDAPPASS=`slappasswd -s $_ROOTPW`
+  cp -p /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
+  chown -R ldap:ldap /var/lib/ldap
+  restorecon -rv /var/lib/ldap
+  service slapd start
+  chkconfig slapd on
 
-#ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/core.ldif
-ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/cosine.ldif
-ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/nis.ldif
-ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/inetorgperson.ldif
+  #ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/core.ldif
+  ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/cosine.ldif
+  ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/nis.ldif
+  ldapadd -Q -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/inetorgperson.ldif
 
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
+  ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
 dn: olcDatabase={2}hdb,cn=config
 changetype: modify
 replace: olcSuffix
 olcSuffix: $_SUFFIX
 EOF
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
+  ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
 dn: olcDatabase={2}hdb,cn=config
 changetype: modify
 replace: olcRootDN
 olcRootDN: $_ROOTDN
 EOF
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
+  ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
 dn: olcDatabase={1}monitor,cn=config
 changetype: modify
 replace: olcAccess
 olcAccess: {0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth" read by dn.base="${_ROOTDN}" read by * none
 EOF
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
+  ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
 dn: olcDatabase={2}hdb,cn=config
 changetype: modify
 add: olcAccess
@@ -174,18 +178,21 @@ olcAccess: {0}to attrs=userPassword,shadowLastChange by dn="${_ROOTDN}" write by
 olcAccess: {1}to dn.base="" by * read
 olcAccess: {2}to * by dn="${_ROOTDN}" write by * read
 EOF
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
+  ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
 dn: olcDatabase={2}hdb,cn=config
 changetype: modify
 add: olcRootPW
 olcRootPW: $_LDAPPASS
 EOF
 
-echo "${_ROOTDN} : ${_ROOTPW}"
+  echo "${_ROOTDN} : ${_ROOTPW}"
 
-cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf.${DATE}
-cat <<EOF >>/etc/openldap/ldap.conf
+  cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf.${DATE}
+  cat <<EOF >>/etc/openldap/ldap.conf
 BASE            ${_SUFFIX}
 URI             ldap://$(hostname -f)
 EOF
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  :
+fi
 

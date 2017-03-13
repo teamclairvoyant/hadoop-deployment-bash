@@ -51,6 +51,29 @@ err_msg () {
   exit $CODE
 }
 
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
 ## If the variable DEBUG is set, then turn on tracing.
 ## http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
 #if [ $DEBUG ]; then
@@ -107,15 +130,22 @@ if [ -z "$PG_HOST" -o -z "$PG_USER" -o -z "$PGPASSWORD" ]; then print_help "$(ba
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
 
-# main
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
 fi
-$ECHO sudo yum -y -e1 -d1 install epel-release
-$ECHO sudo yum -y -e1 -d1 install postgresql apg || err_msg 4
-if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
+
+# main
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  $ECHO sudo yum -y -e1 -d1 install epel-release
+  $ECHO sudo yum -y -e1 -d1 install postgresql apg || err_msg 4
+  if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  $ECHO sudo apt-get -y -q install postgresql-client apg || err_msg 4
+  if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
+fi
 AIRFLOWDB_PASSWORD=`eval $PWCMD`
 $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER postgres -c "CREATE ROLE airflow LOGIN ENCRYPTED PASSWORD '$AIRFLOWDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
 $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER postgres -c 'ALTER ROLE airflow SET search_path = airflow, "$user", public;'

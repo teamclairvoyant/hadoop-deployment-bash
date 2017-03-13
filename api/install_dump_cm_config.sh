@@ -14,16 +14,59 @@
 #
 # Copyright Clairvoyant 2015
 
-# https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
-PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
-#if ! rpm -q apg; then echo "Installing apg. Please wait...";yum -y -d1 -e1 install apg; fi
-#if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
-if ! rpm -q apg >/dev/null; then
-  echo "Installing apg. Please wait..."
-  yum -y -d1 -e1 install apg
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
 fi
-if rpm -q apg >/dev/null; then
-  export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'
+
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  # https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
+  PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
+  #if ! rpm -q apg; then echo "Installing apg. Please wait...";yum -y -d1 -e1 install apg; fi
+  #if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
+  if ! rpm -q apg >/dev/null; then
+    echo "Installing apg. Please wait..."
+    yum -y -d1 -e1 install apg
+  fi
+  if rpm -q apg >/dev/null; then
+    export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'
+  fi
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  # https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
+  PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
+  if ! dpkg -l apg >/dev/null; then
+    echo "Installing apg. Please wait..."
+    apt-get -y -q install apg
+  fi
+  if dpkg -l apg >/dev/null; then
+    export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'
+  fi
 fi
 
 APIUSER=api

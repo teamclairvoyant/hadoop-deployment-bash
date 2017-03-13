@@ -14,19 +14,47 @@
 #
 # Copyright Clairvoyant 2016
 
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
-fi
-if [ $OSREL == 6 ]; then
-  yum -y -e1 -d1 install mysql-server
-  mkdir /etc/my.cnf.d
-else
-  yum -y -e1 -d1 install mariadb-server
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
 fi
 
-cat <<EOF >/etc/my.cnf.d/cloudera.cnf
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  if [ $OSREL == 6 ]; then
+    yum -y -e1 -d1 install mysql-server
+    mkdir /etc/my.cnf.d
+  else
+    yum -y -e1 -d1 install mariadb-server
+  fi
+
+  cat <<EOF >/etc/my.cnf.d/cloudera.cnf
 [mysqld]
 transaction-isolation = READ-COMMITTED
 # Disabling symbolic-links is recommended to prevent assorted security risks;
@@ -73,7 +101,7 @@ innodb_log_file_size = 512M
 #sql_mode=STRICT_ALL_TABLES
 EOF
 
-cat <<EOF >/etc/my.cnf.d/replication.cnf
+  cat <<EOF >/etc/my.cnf.d/replication.cnf
 [mysqld]
 # replication config START
 server-id=$(printf "%d\n" 0x`hostid`)
@@ -85,21 +113,21 @@ sync_binlog=1
 innodb_flush_log_at_trx_commit=1
 EOF
 
-if [ $OSREL == 6 ]; then
-  service mysql start
-  chkconfig mysql on
-else
-  service mariadb start
-  chkconfig mariadb on
-fi
+  if [ $OSREL == 6 ]; then
+    service mysql start
+    chkconfig mysql on
+  else
+    service mariadb start
+    chkconfig mariadb on
+  fi
 
-_PASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
-if [ -z "$_PASS" ]; then
-  _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
-fi
-echo "root : ${_PASS}"
+  _PASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+  if [ -z "$_PASS" ]; then
+    _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+  fi
+  echo "root : ${_PASS}"
 
-mysql_secure_installation <<EOF
+  mysql_secure_installation <<EOF
 
 y
 $_PASS
@@ -109,4 +137,7 @@ n
 y
 y
 EOF
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  :
+fi
 

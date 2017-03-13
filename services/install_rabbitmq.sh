@@ -14,11 +14,51 @@
 #
 # Copyright Clairvoyant 2016
 
-yum -y -e1 -d1 install epel-release
-yum -y -e1 -d1 install rabbitmq-server
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
 
-rabbitmq-plugins enable rabbitmq_management
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
+fi
 
-service rabbitmq-server start
-chkconfig rabbitmq-server on
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  yum -y -e1 -d1 install epel-release
+  yum -y -e1 -d1 install rabbitmq-server
+
+  rabbitmq-plugins enable rabbitmq_management
+
+  service rabbitmq-server start
+  chkconfig rabbitmq-server on
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  apt-get -y -q install rabbitmq-server
+
+  rabbitmq-plugins enable rabbitmq_management
+
+  service rabbitmq-server start
+  update-rc.d rabbitmq-server defaults
+fi
 

@@ -54,6 +54,8 @@ discover_os () {
     OSVER=`lsb_release -rs`
     # 7, 14
     OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -117,6 +119,7 @@ done
 # Currently only EL.
 discover_os
 if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -132,17 +135,18 @@ check_root
 #_ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
 #_ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
 
-setsebool -P httpd_can_connect_ldap=on
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  setsebool -P httpd_can_connect_ldap=on
 
-yum $YUMOPTS install epel-release
-yum $YUMOPTS install httpd phpldapadmin
+  yum $YUMOPTS install epel-release
+  yum $YUMOPTS install httpd phpldapadmin
 
-if [ ! -f /etc/httpd/conf.d/phpldapadmin.conf-orig ]; then
-  cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf-orig
-else
-  cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf.${DATE}
-fi
-#cat <<EOF >/etc/httpd/conf.d/phpldapadmin.conf
+  if [ ! -f /etc/httpd/conf.d/phpldapadmin.conf-orig ]; then
+    cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf-orig
+  else
+    cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf.${DATE}
+  fi
+#  cat <<EOF >/etc/httpd/conf.d/phpldapadmin.conf
 ##
 ##  Web-based tool for managing LDAP servers
 ##
@@ -155,27 +159,30 @@ fi
 #</Directory>
 #
 #EOF
-sed -e '/Require/s|Require local|Require all granted|' \
-    -e '/Order/s|Deny,Allow|Allow,Deny|' \
-    -e '/Order/s|deny,allow|Allow,Deny|' \
-    -e '/Allow from/d' \
-    -e '/Deny from all/s|Deny|Allow|' \
-    -i /etc/httpd/conf.d/phpldapadmin.conf
-if [ ! -f /etc/phpldapadmin/config.php-orig ]; then
-  cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php-orig
-else
-  cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php.${DATE}
-fi
-sed -e '/# CLAIRVOYANT$/d' \
-    -e "/Local LDAP Server/a\
+  sed -e '/Require/s|Require local|Require all granted|' \
+      -e '/Order/s|Deny,Allow|Allow,Deny|' \
+      -e '/Order/s|deny,allow|Allow,Deny|' \
+      -e '/Allow from/d' \
+      -e '/Deny from all/s|Deny|Allow|' \
+      -i /etc/httpd/conf.d/phpldapadmin.conf
+  if [ ! -f /etc/phpldapadmin/config.php-orig ]; then
+    cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php-orig
+  else
+    cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php.${DATE}
+  fi
+  sed -e '/# CLAIRVOYANT$/d' \
+      -e "/Local LDAP Server/a\
 \$servers->setValue('server','host','ldaps://127.0.0.1'); # CLAIRVOYANT\\
 \$servers->setValue('server','port',636); # CLAIRVOYANT\\
 \$servers->setValue('login','fallback_dn',true); # CLAIRVOYANT\\
 \$servers->setValue('auto_number','min',array('uidNumber'=>10000,'gidNumber'=>10000)); # CLAIRVOYANT" \
-    -i /etc/phpldapadmin/config.php
+      -i /etc/phpldapadmin/config.php
 
-chkconfig httpd on
-service httpd restart
+  chkconfig httpd on
+  service httpd restart
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  :
+fi
 
 echo "Go to http://`hostname -f`/phpldapadmin/"
 
