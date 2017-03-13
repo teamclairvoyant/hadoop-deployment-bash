@@ -27,13 +27,15 @@ else
 fi
 
 cat <<EOF >/etc/my.cnf.d/cloudera.cnf
+# CLAIRVOYANT
+# https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_mysql.html
 [mysqld]
 transaction-isolation = READ-COMMITTED
 # Disabling symbolic-links is recommended to prevent assorted security risks;
 # to do so, uncomment this line:
 # symbolic-links = 0
 
-key_buffer = 16M
+key_buffer = 32M
 key_buffer_size = 32M
 max_allowed_packet = 32M
 thread_stack = 256K
@@ -74,15 +76,16 @@ innodb_log_file_size = 512M
 EOF
 
 cat <<EOF >/etc/my.cnf.d/replication.cnf
+# CLAIRVOYANT
 [mysqld]
 # replication config START
-server-id=$(printf "%d\n" 0x`hostid`)
-log-bin=mysql-bin
-relay-log=mysql-relay-bin
-expire_logs_days=10
-sync_binlog=1
+#server-id=$(printf "%d\n" 0x`hostid`)
+#log-bin=mysql-bin
+#relay-log=mysql-relay-bin
+#expire_logs_days=10
+#sync_binlog=1
 # replication config END
-innodb_flush_log_at_trx_commit=1
+#innodb_flush_log_at_trx_commit=1
 EOF
 
 if [ $OSREL == 6 ]; then
