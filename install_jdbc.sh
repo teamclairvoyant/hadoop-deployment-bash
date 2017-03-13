@@ -68,6 +68,10 @@ if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
         eval $PROXY
         export http_proxy
         export https_proxy
+        if [ -z $http_proxy ]; then
+          PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
+          . $PROXY
+        fi
 
         wget -q -O /tmp/mysql-connector-java-${VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${VERSION}.tar.gz
         tar xf /tmp/mysql-connector-java-${VERSION}.tar.gz -C /tmp

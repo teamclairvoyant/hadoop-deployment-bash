@@ -60,6 +60,10 @@ PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
 eval $PROXY
 export http_proxy
 export https_proxy
+if [ -z $http_proxy ]; then
+  PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
+  . $PROXY
+fi
 
 if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
   # Because it may have been put there by some other process.
@@ -92,5 +96,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   sed -i -e "/server_host/s|=.*|=${SCMHOST}|" /etc/cloudera-scm-agent/config.ini
   service cloudera-scm-agent start
   update-rc.d cloudera-scm-agent defaults
+  update-rc.d apache2 disable
+  service apache2 stop
 fi
 
