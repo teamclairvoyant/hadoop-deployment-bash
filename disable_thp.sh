@@ -67,6 +67,6 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
       -e '/^exit 0/i \
 echo never >/sys/kernel/mm/transparent_hugepage/defrag\
 echo never >/sys/kernel/mm/transparent_hugepage/enabled' \
-  -i /etc/rc.local
+      -i /etc/rc.local
 fi
 
