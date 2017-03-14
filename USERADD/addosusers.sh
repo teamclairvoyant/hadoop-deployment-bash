@@ -1,3 +1,5 @@
+
+#!/bin/bash
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -10,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
-
-#Create user Script
+# Copyright Clairvoyant 2017
 #########################################
-#Create a shell script (NOT Ansible) that will take a data file containing username, crypted password, Full Name/GECOS, home directory, UID, #GID, groups, email, and SSH public key and use that data to create the following:
+# Useradd Script
+#########################################
+# Bash script (NOT Ansible) that will take 2 data files as input 1st(groups.yaml) containing groupname,group ID from a yaml file and 2nd(users.yaml) containing username, crypted password, Full Name/GECOS, home directory, UID, #GID, groups, email, and SSH public key and use that data to create the following:
 #1) A Linux group named for the user in /etc/group.
 #2) The Linux user in /etc/passwd.
 #3) Add the user to any additional group(s).
@@ -22,42 +24,52 @@
 #The data file should be structured (JSON or YAML). The script should not require user interaction.
 
 
-# Modify the source location of the $DATAFILE 
-DATAFILE='/tmp/datafile'
 
-for USERNAME in $(grep -v '^\ ' $DATAFILE | grep -v '^#' | sed 's/://g')
+# Modify the source location of the $DATAFILE
+GROUP_DATAFILE='/path/to/groups.yaml'
+
+for GROUPNAME in $(grep -v '^\ ' $GROUP_DATAFILE | grep -v '^#' | grep -v '^-'| sed 's/://g')
 do
-	COMMENT=`cat $DATAFILE | shyaml get-value ${USERNAME}.comment`
+	GID=$(cat $GROUP_DATAFILE | shyaml get-value ${GROUPNAME}.gid)
+	groupadd -g $GID $GROUPNAME
+done
+
+USER_DATAFILE='/path/to//users.yaml'
+
+for USERNAME in $(grep -v '^\ ' $USER_DATAFILE | grep -v '^#'  | grep -v '^-' | sed 's/://g')
+do
+
+	COMMENT=`cat $USER_DATAFILE | shyaml get-value ${USERNAME}.comment`
 #	HOMEDIR=
-	UID_NO=`cat $DATAFILE | shyaml get-value ${USERNAME}.uid` 
-	GID_NO=`cat $DATAFILE | shyaml get-value ${USERNAME}.gid`
-	GROUPS_NAME=`cat $DATAFILE | shyaml get-value ${USERNAME}.groups | sed 's/\-\ //g'`
+	UID_NO=`cat $USER_DATAFILE | shyaml get-value ${USERNAME}.uid`
+	GID_NO=`cat $USER_DATAFILE | shyaml get-value ${USERNAME}.gid`
+	GROUPS_NAME=`cat $USER_DATAFILE | shyaml get-value ${USERNAME}.groups | sed 's/\-\ //g'`
+ 	GROUPS_NAME=`echo $GROUPS_NAME | tr ' ' ','`
 #	EMAIL =
-	SSHKEY=`cat $DATAFILE | shyaml get-value ${USERNAME}.sshkeys | sed 's/\-\ //g'`
+	SSHKEY=`cat $USER_DATAFILE | shyaml get-value ${USERNAME}.sshkeys | sed 's/\-\ //g'`
 	OPTIONS=""
-	if [ "$USERNAME" == "" ]; then 
+	if [ "$USERNAME" == "" ]; then
 		echo"No username Found"
 	else
 		# if [ "$COMMENT" != "" ]; then OPTIONS="-c '$COMMENT' $OPTIONS" ; fi
-		if [ "$UID_NO" != "" ]; then OPTIONS="-u $UID_NO $OPTIONS" ; fi
-		if [ "$HOMEDIR" != "" ]; then OPTIONS="-d $HOMEDIR $OPTIONS" ; fi
+		if [ "$UID_NO" != "" ]; then OPTIONS="-u $UID_NO $Hiren" ; fi
+		if [ "$HOMEDIR" != "" ]; then OPTIONS="-d $HOMEDIR $Hiren" ; fi
 		if [ "$PASSWORD" != "" ]; then OPTIONS="-p $PASSWORD $OPTIONS" ; fi
-#   Adding user with respected critaria 	
+#   Adding user with respected critaria
 		useradd $USERNAME $OPTIONS -c "$COMMENT"
-		
 		if [ "$GROUPS_NAME" != "" ]
 		then
 			usermod -a -G $GROUPS_NAME $USERNAME
 		fi
-		
-		if [ "$GID_NO" != "" ] 
+
+		if [ "$GID_NO" != "" ]
 		then
 			 groupmod -g $GID_NO $USERNAME
 		fi
-		
+
 		if [ "$SSHKEY" != "" ]
 		then
-		#	Adding ssh key to user's home directory 	
+		#	Adding ssh key to user's home directory
 			su - $USERNAME -c "mkdir ~/.ssh && echo \"ssh-rsa $SSHKEY\" > ~/.ssh/authorized_keys"
 		#	Modifying permission of .ssh folder as it should be 700 only and default is 755
 			su - $USERNAME -c "chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
