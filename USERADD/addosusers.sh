@@ -34,7 +34,7 @@ do
 	groupadd -g $GID $GROUPNAME
 done
 
-USER_DATAFILE='/path/to//users.yaml'
+USER_DATAFILE='/path/to/users.yaml'
 
 for USERNAME in $(grep -v '^\ ' $USER_DATAFILE | grep -v '^#'  | grep -v '^-' | sed 's/://g')
 do
