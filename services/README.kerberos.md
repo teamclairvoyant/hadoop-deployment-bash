@@ -18,6 +18,8 @@ ssh -t $KDC "sudo bash -x install_kdc.sh --realm $REALM --cm_principal $PRINC"
 
 Grab the passwords that are output from the above command.
 
+```
 KDC : passsword1
 cloudera-scm@HADOOP.COM : passsword2
+```
 
