@@ -112,6 +112,33 @@ Note: `install_airflow.sh` will take an arguement that is the version number of 
 
 The AIRFLOW_HOME is in `/var/lib/airflow`.  Airflow job logs are stored in `/var/logs/airflow`.  Airflow daemon logs are inside systemd.
 
+## Control
+Use the `service` command to start, stop, or check status.
+```
+service airflow-webserver status
+service airflow-worker status
+service airflow-kerberos status
+service airflow-flower status
+service airflow-scheduler status
+```
+
+## Enabling Kerberos
+
+Create a keytab file with the Airflow service principal and place it in the file `/var/lib/airflow/airflow.keytab` on the airflow server.  The following code assumes that the principal name is "airflow/`hostname -f`".
+```
+chown airflow:airflow /var/lib/airflow/airflow.keytab
+chmod 0600 /var/lib/airflow/airflow.keytab
+DATE=`date +'%Y%m%d%H%M%S'`
+cp -p /var/lib/airflow/airflow.cfg /var/lib/airflow/airflow.cfg.${DATE}
+sed -e '/^security/s|=.*|= kerberos|' \
+    -e "/^principal/s|=.*|= airflow/`hostname -f`|" \
+    -e '/^kinit_path/s|=.*|= /usr/bin/kinit|' \
+    -e '/^keytab/s|=.*|= /var/lib/airflow/airflow.keytab|' \
+    -i /var/lib/airflow/airflow.cfg
+service airflow-kerberos start
+chkconfig airflow-kerberos on
+```
+
 # Troubleshooting
 
 Since this is EL7, use `journalctl` to find the daemon logs.
@@ -122,4 +149,3 @@ journalctl -u airflow-kerberos.service
 journalctl -u airflow-flower.service
 journalctl -u airflow-scheduler.service
 ```
-
