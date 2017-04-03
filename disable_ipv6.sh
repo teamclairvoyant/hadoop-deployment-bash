@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2016
 
+exit 1
+
 # Function to discover basic OS details.
 discover_os () {
   if command -v lsb_release >/dev/null; then
@@ -46,6 +48,7 @@ if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ];
 fi
 
 if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  # https://access.redhat.com/solutions/8709
   # https://wiki.centos.org/FAQ/CentOS7#head-8984faf811faccca74c7bcdd74de7467f2fcd8ee
   sysctl -w net.ipv6.conf.all.disable_ipv6=1
   sysctl -w net.ipv6.conf.default.disable_ipv6=1
@@ -73,6 +76,7 @@ if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
     echo "net.ipv6.conf.default.disable_ipv6 = 1" >>/etc/sysctl.d/cloudera-ipv6.conf
   fi
 
+#mja needs work
   #sed -e '/^AddressFamily/s|^AddressFamily .*|AddressFamily inet|' \
   #    -e '/^#AddressFamily/a\
   #AddressFamily inet' \
@@ -80,21 +84,24 @@ if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
   #    -e '/^#ListenAddress/a\
   #ListenAddress 0.0.0.0' \
   #    -i /etc/ssh/sshd_config
-  sed -e '/^AddressFamily /d' \
+  sed -e '/# CLAIRVOYANT$/d' \
+      -e '/^AddressFamily /d' \
       -e '/^ListenAddress /d' \
       -i /etc/ssh/sshd_config
   echo <<EOF >>/etc/ssh/sshd_config
-# Hadoop: Disable IPv6 support
-AddressFamily inet
-ListenAddress 0.0.0.0
-# Hadoop: Disable IPv6 support
+# Hadoop: Disable IPv6 support # CLAIRVOYANT
+AddressFamily inet             # CLAIRVOYANT
+ListenAddress 0.0.0.0          # CLAIRVOYANT
+# Hadoop: Disable IPv6 support # CLAIRVOYANT
 EOF
 
+#mja needs work
   if rpm -q postfix; then
     postconf inet_interfaces
     postconf -e inet_interfaces=127.0.0.1
   fi
 
+#mja needs work
   if [ -f /etc/netconfig ]; then
     sed -e '/inet6/d' -i /etc/netconfig
   fi
@@ -108,5 +115,6 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   echo "net.ipv6.conf.default.disable_ipv6 = 1" >/etc/sysctl.d/cloudera-ipv6.conf
   echo "net.ipv6.conf.lo.disable_ipv6 = 1" >/etc/sysctl.d/cloudera-ipv6.conf
   sysctl -p
+#mja needs work
 fi
 
