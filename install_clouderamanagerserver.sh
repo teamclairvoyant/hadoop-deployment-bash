@@ -117,7 +117,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
     fi
     curl -s http://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/archive.key | apt-key add -
   fi
-  apt-get -y -q update
+  apt-get -y -qq update
   if [ "$INSTALLDB" == embedded ]; then
     apt-get -y -q install cloudera-manager-server-db-2
     service cloudera-scm-server-db start

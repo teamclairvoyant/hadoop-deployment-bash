@@ -103,11 +103,11 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
       curl -s http://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/archive.key | apt-key add -
     fi
     sed -e "s|-cm5 |-cm${SCMVERSION} |" -i /etc/apt/sources.list.d/cloudera-manager.list
-    apt-get -y -q update
+    apt-get -y -qq update
 
     service cloudera-scm-agent stop
     # This should update the -daemons and -server packages as well if they are present.
-    apt-get -y -q update cloudera-manager-agent
+    apt-get -y -qq update cloudera-manager-agent
     if dpkg -l cloudera-manager-server-db-2 >/dev/null; then
       service cloudera-scm-server-db start
       update-rc.d cloudera-scm-server-db defaults

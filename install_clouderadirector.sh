@@ -67,7 +67,7 @@ elif [ "$OS" == Ubuntu ]; then
     wget -q https://archive.cloudera.com/director/ubuntu/${OSNAME}/amd64/director/cloudera.list -O /etc/apt/sources.list.d/cloudera-director.list
     curl -s http://archive.cloudera.com/director/ubuntu/${OSNAME}/amd64/director/archive.key | apt-key add -
   fi
-  apt-get -y -q update
+  apt-get -y -qq update
   apt-get -y -q install cloudera-director-server cloudera-director-client
   update-rc.d cloudera-director-server defaults
 fi
