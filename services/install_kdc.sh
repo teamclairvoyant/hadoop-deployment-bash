@@ -271,7 +271,7 @@ EOF
   chkconfig kadmin on
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
-  apt-get -y -q install krb5-admin-server krb5-kdc
+  apt-get -y -q install krb5-admin-server krb5-kdc wamerican
 
   echo "** Writing configs..."
   if [ ! -f /etc/krb5kdc/kdc.conf-orig ]; then
