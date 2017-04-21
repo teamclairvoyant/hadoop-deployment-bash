@@ -289,6 +289,10 @@ if [ \( "$OS" == CentOS -o "$OS" == RedHat \) -a \( "$OSREL" == 7 -a "$RETVAL" =
 fi
 
 echo "****************************************"
+echo "*** Timezone"
+date +'%Z %z'
+
+echo "****************************************"
 echo "*** DNS"
 IP=`ip -4 a | awk '/inet/{print $2}' | grep -v 127.0.0.1 | sed -e 's|/[0-9].*||'`
 echo -n "** system IP is: "
