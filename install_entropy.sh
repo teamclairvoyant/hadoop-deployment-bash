@@ -47,6 +47,30 @@ err_msg () {
   exit $CODE
 }
 
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
 ## If the variable DEBUG is set, then turn on tracing.
 ## http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
 #if [ $DEBUG ]; then
@@ -84,6 +108,13 @@ while [[ $1 = -* ]]; do
   shift
 done
 
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
+fi
+
 # Check to see if we have the required parameters.
 #if [ -z "$USEHAVEGED" ]; then print_help "$(basename $0)"; fi
 
@@ -91,12 +122,6 @@ done
 check_root
 
 # main
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
-fi
-
 if grep -q rdrand /proc/cpuinfo; then
   RDRAND=true
 else
@@ -109,25 +134,42 @@ else
   HWRNG=false
 fi
 
-if [ "$USEHAVEGED" == "yes" ]; then
-  yum -y -e1 -d1 install epel-release
-  yum -y -e1 -d1 install haveged
-  service haveged start
-  chkconfig haveged on
-else
-  # https://www.cloudera.com/content/www/en-us/downloads/navigator/encrypt/3-8-0.html
-  # http://www.certdepot.net/rhel7-get-started-random-number-generator/
-  yum -y -d1 -e1 install rng-tools
-  if [ $RDRAND == false  -a $HWRNG == false ]; then
-    if [ $OSREL == 6 ]; then
-      sed -i -e 's|^EXTRAOPTIONS=.*|EXTRAOPTIONS="-r /dev/urandom"|' /etc/sysconfig/rngd
-    else
-      cp -p /usr/lib/systemd/system/rngd.service /etc/systemd/system/
-      sed -i -e 's|^ExecStart=.*|ExecStart=/sbin/rngd -f -r /dev/urandom|' /etc/systemd/system/rngd.service
-      systemctl daemon-reload
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  if [ "$USEHAVEGED" == "yes" ]; then
+    yum -y -e1 -d1 install epel-release
+    yum -y -e1 -d1 install haveged
+    service haveged start
+    chkconfig haveged on
+  else
+    # https://www.cloudera.com/content/www/en-us/downloads/navigator/encrypt/3-8-0.html
+    # http://www.certdepot.net/rhel7-get-started-random-number-generator/
+    yum -y -d1 -e1 install rng-tools
+    if [ $RDRAND == false -a $HWRNG == false ]; then
+      if [ $OSREL == 6 ]; then
+        sed -i -e 's|^EXTRAOPTIONS=.*|EXTRAOPTIONS="-r /dev/urandom"|' /etc/sysconfig/rngd
+      else
+        cp -p /usr/lib/systemd/system/rngd.service /etc/systemd/system/
+        sed -i -e 's|^ExecStart=.*|ExecStart=/sbin/rngd -f -r /dev/urandom|' /etc/systemd/system/rngd.service
+        systemctl daemon-reload
+      fi
     fi
+    service rngd start
+    chkconfig rngd on
   fi
-  service rngd start
-  chkconfig rngd on
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  if [ "$USEHAVEGED" == "yes" ]; then
+    apt-get -y -q install haveged
+    service haveged start
+    update-rc.d haveged defaults
+  else
+    # https://www.cloudera.com/content/www/en-us/downloads/navigator/encrypt/3-8-0.html
+    apt-get -y -q install rng-tools
+    if [ $RDRAND == false -a $HWRNG == false ]; then
+      sed -i -e '/^HRNGDEVICE=/d' /etc/default/rng-tools
+      echo "HRNGDEVICE=/dev/urandom" >>/etc/default/rng-tools
+    fi
+    service rng-tools start
+    update-rc.d rng-tools defaults
+  fi
 fi
 

@@ -14,18 +14,59 @@
 #
 # Copyright Clairvoyant 2015
 
-. /etc/profile.d/java.sh
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
+fi
+
+if [ -f /etc/profile.d/jdk.sh ]; then
+  . /etc/profile.d/jdk.sh
+elif [ -f /etc/profile.d/java.sh ]; then
+  . /etc/profile.d/java.sh
+fi
+
 if [ ! -f ${JAVA_HOME}/jre/lib/security/jssecacerts ]; then
   /bin/cp -p ${JAVA_HOME}/jre/lib/security/cacerts ${JAVA_HOME}/jre/lib/security/jssecacerts
 fi
 keytool -importcert -file /opt/cloudera/security/CAcerts/ca.cert.pem -alias CAcert -keystore ${JAVA_HOME}/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
 keytool -importcert -file /opt/cloudera/security/CAcerts/intermediate.cert.pem -alias CAcertint -keystore ${JAVA_HOME}/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
 
-if ! rpm -q openssl-perl; then yum -y -e1 -d1 install openssl-perl; fi
-c_rehash /opt/cloudera/security/CAcerts/
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  if ! rpm -q openssl-perl; then yum -y -e1 -d1 install openssl-perl; fi
+  c_rehash /opt/cloudera/security/CAcerts/
 
-if [ -d /etc/pki/ca-trust/source/anchors/ ]; then
-  cp -p /opt/cloudera/security/CAcerts/*.pem /etc/pki/ca-trust/source/anchors/
-  update-ca-trust extract
+  if [ -d /etc/pki/ca-trust/source/anchors/ ]; then
+    cp -p /opt/cloudera/security/CAcerts/*.pem /etc/pki/ca-trust/source/anchors/
+    update-ca-trust extract
+  fi
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  :
 fi
 

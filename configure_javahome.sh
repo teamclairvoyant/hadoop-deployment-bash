@@ -14,11 +14,53 @@
 #
 # Copyright Clairvoyant 2015
 
-JAVA_HOME=/usr/java/default
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
 
-cat <<EOF >/etc/profile.d/java.sh
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
+fi
+
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  JAVA_HOME=/usr/java/default
+
+  cat <<EOF >/etc/profile.d/java.sh
 export JAVA_HOME=$JAVA_HOME
 export PATH=\$JAVA_HOME/bin:\$PATH
 EOF
-chmod 0644 /etc/profile.d/java.sh
+  chmod 0644 /etc/profile.d/java.sh
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  if ! grep -q JAVA_HOME /etc/profile.d/*; then
+    JAVA_HOME=`dpkg -L oracle-j2sdk1.7|grep /usr/lib/jvm/java|head -1`
+
+    cat <<EOF >/etc/profile.d/java.sh
+export JAVA_HOME=$JAVA_HOME
+export PATH=\$JAVA_HOME/bin:\$PATH
+EOF
+  fi
+fi
 

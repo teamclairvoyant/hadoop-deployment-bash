@@ -60,6 +60,8 @@ discover_os () {
     OSVER=`lsb_release -rs`
     # 7, 14
     OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -131,6 +133,7 @@ done
 # Currently only EL.
 discover_os
 if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -142,7 +145,7 @@ if [ -z "$_REALM_LOWER" -o -z "$_KRBSERVER" -o -z "$_LDAPSERVER" -o -z "$_LDAPSU
 check_root
 
 # main
-if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a \( "$OSREL" == 6 -o "$OSREL" == 7 \) ]; then
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
   echo "** Installing software."
   yum $YUMOPTS install sssd-ldap sssd-krb5 oddjob oddjob-mkhomedir
 
@@ -230,22 +233,24 @@ EOF
   chkconfig sssd on
   service oddjobd start
   chkconfig oddjobd on
-fi
 
-if [ -f /etc/nscd.conf ]; then
-  echo "*** Disabling NSCD caching of passwd/group/netgroup/services..."
-  if [ ! -f /etc/nscd.conf-orig ]; then
-    cp -p /etc/nscd.conf /etc/nscd.conf-orig
-  else
-    cp -p /etc/nscd.conf /etc/nscd.conf.${DATE}
+  if [ -f /etc/nscd.conf ]; then
+    echo "*** Disabling NSCD caching of passwd/group/netgroup/services..."
+    if [ ! -f /etc/nscd.conf-orig ]; then
+      cp -p /etc/nscd.conf /etc/nscd.conf-orig
+    else
+      cp -p /etc/nscd.conf /etc/nscd.conf.${DATE}
+    fi
+    sed -e '/enable-cache[[:blank:]]*passwd/s|yes|no|' \
+        -e '/enable-cache[[:blank:]]*group/s|yes|no|' \
+        -e '/enable-cache[[:blank:]]*services/s|yes|no|' \
+        -e '/enable-cache[[:blank:]]*netgroup/s|yes|no|' -i /etc/nscd.conf
+    service nscd condrestart
+    if ! service sssd status >/dev/null 2>&1; then
+      service sssd restart
+    fi
   fi
-  sed -e '/enable-cache[[:blank:]]*passwd/s|yes|no|' \
-      -e '/enable-cache[[:blank:]]*group/s|yes|no|' \
-      -e '/enable-cache[[:blank:]]*services/s|yes|no|' \
-      -e '/enable-cache[[:blank:]]*netgroup/s|yes|no|' -i /etc/nscd.conf
-  service nscd condrestart
-  if ! service sssd status >/dev/null 2>&1; then
-    service sssd restart
-  fi
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  :
 fi
 

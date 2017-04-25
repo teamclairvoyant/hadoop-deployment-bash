@@ -49,6 +49,8 @@ discover_os () {
     OSVER=`lsb_release -rs`
     # 7, 14
     OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -100,6 +102,7 @@ done
 # Currently only EL.
 discover_os
 if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -124,16 +127,20 @@ if [ ! -f /opt/cloudera/security/x509/ca-chain.cert.pem ]; then
   exit 6
 fi
 
-#install -m 0444 -o root -g root /opt/cloudera/security/x509/localhost.pem /etc/pki/tls/certs/localhost.crt
-#install -m 0440 -o root -g root /opt/cloudera/security/x509/localhost.key /etc/pki/tls/private/localhost.key
-#ln -sf /opt/cloudera/security/x509/localhost.pem /etc/pki/tls/certs/localhost.crt
-#ln -sf /opt/cloudera/security/x509/localhost.key /etc/pki/tls/private/localhost.key
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  #install -m 0444 -o root -g root /opt/cloudera/security/x509/localhost.pem /etc/pki/tls/certs/localhost.crt
+  #install -m 0440 -o root -g root /opt/cloudera/security/x509/localhost.key /etc/pki/tls/private/localhost.key
+  #ln -sf /opt/cloudera/security/x509/localhost.pem /etc/pki/tls/certs/localhost.crt
+  #ln -sf /opt/cloudera/security/x509/localhost.key /etc/pki/tls/private/localhost.key
 
-cp -p /etc/httpd/conf.d/ssl.conf /etc/httpd/conf.d/ssl.conf.${DATE}
-sed -e 's|^SSLProtocol .*|SSLProtocol all -SSLv3 -SSLv2|' \
-    -e 's|^SSLCertificateFile .*|SSLCertificateFile /opt/cloudera/security/x509/localhost.pem|' \
-    -e 's|^SSLCertificateKeyFile .*|SSLCertificateKeyFile /opt/cloudera/security/x509/localhost.key|' \
-    -i /etc/httpd/conf.d/ssl.conf
+  cp -p /etc/httpd/conf.d/ssl.conf /etc/httpd/conf.d/ssl.conf.${DATE}
+  sed -e 's|^SSLProtocol .*|SSLProtocol all -SSLv3 -SSLv2|' \
+      -e 's|^SSLCertificateFile .*|SSLCertificateFile /opt/cloudera/security/x509/localhost.pem|' \
+      -e 's|^SSLCertificateKeyFile .*|SSLCertificateKeyFile /opt/cloudera/security/x509/localhost.key|' \
+      -i /etc/httpd/conf.d/ssl.conf
 
-service httpd restart
+  service httpd restart
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  :
+fi
 

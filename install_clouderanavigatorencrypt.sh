@@ -14,38 +14,67 @@
 #
 # Copyright Clairvoyant 2015
 
-YUMHOST=$1
-if [ -z "$YUMHOST" ]; then
-  echo "ERROR: Missing YUM hostname."
-  exit 1
-fi
-if rpm -q redhat-lsb-core; then
-  #OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-  OSVERSION=`lsb_release -rs`
-else
-  #OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
-  OSVERSION=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | sed -e 's|\.el.*||'`
-fi
-
-echo "** Find the correct kernel-headers and kernel-devel that match the running kernel."
-echo "** DON'T PANIC."
-echo "** This might look scary..."
-if ! yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r); then
-  cp -p /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo-orig
-  sed -e "s|\$releasever|$OSVERSION|" -i /etc/yum.repos.d/CentOS-Base.repo
-  yum clean metadata
-  if ! yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r); then
-    sed -e '/^mirrorlist/s|^|#|' -e '/#baseurl/s|^#||' -e '/^baseurl/s|mirror.centos.org/centos|vault.centos.org|' -i /etc/yum.repos.d/CentOS-Base.repo
-    yum clean metadata
-    yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r)
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
   fi
-  mv /etc/yum.repos.d/CentOS-Base.repo-orig /etc/yum.repos.d/CentOS-Base.repo
-  yum clean metadata
-fi
-echo "** End of possible errors."
+}
 
-yum -y -e1 -d1 install epel-release
-wget -q http://${YUMHOST}/navigator-encrypt/latest/cloudera-navencrypt.repo -O /etc/yum.repos.d/cloudera-navencrypt.repo
-yum -y -e1 -d1 install navencrypt
-chkconfig navencrypt-mount on
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
+fi
+
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  YUMHOST=$1
+  if [ -z "$YUMHOST" ]; then
+    echo "ERROR: Missing YUM hostname."
+    exit 1
+  fi
+
+  echo "** Find the correct kernel-headers and kernel-devel that match the running kernel."
+  echo "** DON'T PANIC."
+  echo "** This might look scary..."
+  if ! yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r); then
+    cp -p /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo-orig
+    sed -e "s|\$releasever|$OSVER|" -i /etc/yum.repos.d/CentOS-Base.repo
+    yum clean metadata
+    if ! yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r); then
+      sed -e '/^mirrorlist/s|^|#|' -e '/#baseurl/s|^#||' -e '/^baseurl/s|mirror.centos.org/centos|vault.centos.org|' -i /etc/yum.repos.d/CentOS-Base.repo
+      yum clean metadata
+      yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r)
+    fi
+    mv /etc/yum.repos.d/CentOS-Base.repo-orig /etc/yum.repos.d/CentOS-Base.repo
+    yum clean metadata
+  fi
+  echo "** End of possible errors."
+
+  yum -y -e1 -d1 install epel-release
+  wget -q http://${YUMHOST}/navigator-encrypt/latest/cloudera-navencrypt.repo -O /etc/yum.repos.d/cloudera-navencrypt.repo
+  yum -y -e1 -d1 install navencrypt
+  chkconfig navencrypt-mount on
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  :
+fi
 

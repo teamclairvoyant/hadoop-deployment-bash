@@ -14,44 +14,72 @@
 #
 # Copyright Clairvoyant 2017
 
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
+fi
+
 DATE=`date '+%Y%m%d%H%M%S'`
 
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
-fi
-yum -y -e1 -d1 install postgresql-server
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  yum -y -e1 -d1 install postgresql-server
 
-postgresql-setup initdb
+  postgresql-setup initdb
 
-if [ ! -f /var/lib/pgsql/data/pg_hba.conf-orig ]; then
-  cp -p /var/lib/pgsql/data/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf-orig
-else
-  cp -p /var/lib/pgsql/data/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf.${DATE}
-fi
-sed -e '/# CLAIRVOYANT$/d' \
-    -e '/^host\s*all\s*all\s*127.0.0.1\/32\s*\sident$/i\
+  if [ ! -f /var/lib/pgsql/data/pg_hba.conf-orig ]; then
+    cp -p /var/lib/pgsql/data/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf-orig
+  else
+    cp -p /var/lib/pgsql/data/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf.${DATE}
+  fi
+  sed -e '/# CLAIRVOYANT$/d' \
+      -e '/^host\s*all\s*all\s*127.0.0.1\/32\s*\sident$/i\
 host    all             all             0.0.0.0/0               md5 # CLAIRVOYANT' \
-    -i /var/lib/pgsql/data/pg_hba.conf
+      -i /var/lib/pgsql/data/pg_hba.conf
 #host    all             all             127.0.0.1/32            md5 # CLAIRVOYANT' \
 
-# https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_extrnl_pstgrs.html
-if [ ! -f /var/lib/pgsql/data/postgresql.conf-orig ]; then
-  cp -p /var/lib/pgsql/data/postgresql.conf /var/lib/pgsql/data/postgresql.conf-orig
-else
-  cp -p /var/lib/pgsql/data/postgresql.conf /var/lib/pgsql/data/postgresql.conf.${DATE}
-fi
-sed -e '/# CLAIRVOYANT$/d' \
-    -e '/^max_connections/d' \
-    -e '/^listen_addresses/d' \
-    -e '/^shared_buffers/d' \
-    -e '/^wal_buffers/d' \
-    -e '/^checkpoint_segments/d' \
-    -e '/^checkpoint_completion_target/d' \
-    -e '/^standard_conforming_strings/d' \
-    -i /var/lib/pgsql/data/postgresql.conf
-cat <<EOF >>/var/lib/pgsql/data/postgresql.conf
+  # https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_extrnl_pstgrs.html
+  if [ ! -f /var/lib/pgsql/data/postgresql.conf-orig ]; then
+    cp -p /var/lib/pgsql/data/postgresql.conf /var/lib/pgsql/data/postgresql.conf-orig
+  else
+    cp -p /var/lib/pgsql/data/postgresql.conf /var/lib/pgsql/data/postgresql.conf.${DATE}
+  fi
+  sed -e '/# CLAIRVOYANT$/d' \
+      -e '/^max_connections/d' \
+      -e '/^listen_addresses/d' \
+      -e '/^shared_buffers/d' \
+      -e '/^wal_buffers/d' \
+      -e '/^checkpoint_segments/d' \
+      -e '/^checkpoint_completion_target/d' \
+      -e '/^standard_conforming_strings/d' \
+      -i /var/lib/pgsql/data/postgresql.conf
+  cat <<EOF >>/var/lib/pgsql/data/postgresql.conf
 max_connections = 500                                            # CLAIRVOYANT
 listen_addresses = '*'                                           # CLAIRVOYANT
 shared_buffers = 256MB                                           # CLAIRVOYANT
@@ -63,19 +91,22 @@ checkpoint_completion_target = 0.9                               # CLAIRVOYANT
 standard_conforming_strings = off                                # CLAIRVOYANT
 EOF
 
-service postgresql restart
-chkconfig postgresql on
+  service postgresql restart
+  chkconfig postgresql on
 
-_PASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
-if [ -z "$_PASS" ]; then
-  _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
-fi
-echo "postgres : ${_PASS}"
+  _PASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+  if [ -z "$_PASS" ]; then
+    _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+  fi
+  echo "postgres : ${_PASS}"
 
-su - postgres -c 'psql' <<EOF
+  su - postgres -c 'psql' <<EOF
 \password
 $_PASS
 $_PASS
 \q
 EOF
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  :
+fi
 

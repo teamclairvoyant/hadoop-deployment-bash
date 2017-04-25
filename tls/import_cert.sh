@@ -20,7 +20,11 @@ if [ -z "$SP" ]; then
   exit 1
 fi
 
-. /etc/profile.d/java.sh
+if [ -f /etc/profile.d/jdk.sh ]; then
+  . /etc/profile.d/jdk.sh
+elif [ -f /etc/profile.d/java.sh ]; then
+  . /etc/profile.d/java.sh
+fi
 
 keytool -importcert -trustcacerts -noprompt -alias RootCA \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \

@@ -14,22 +14,65 @@
 #
 # Copyright Clairvoyant 2015
 
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Ubuntu ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
 fi
-if [ $OSREL == 6 ]; then
-  service iptables stop
-  chkconfig iptables off
-  service ip6tables stop
-  chkconfig ip6tables off
-else
-  service firewalld stop
-  chkconfig firewalld off
-  service iptables stop
-  chkconfig iptables off
-  service ip6tables stop
-  chkconfig ip6tables off
+
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  if [ $OSREL == 6 ]; then
+    service iptables stop
+    chkconfig iptables off
+    service ip6tables stop
+    chkconfig ip6tables off
+  else
+    service firewalld stop
+    chkconfig firewalld off
+    service iptables stop
+    chkconfig iptables off
+    service ip6tables stop
+    chkconfig ip6tables off
+  fi
+elif [ "$OS" == Ubuntu ]; then
+  service ufw stop
+  ufw disable
+elif [ "$OS" == Debian ]; then
+  # https://www.cyberciti.biz/faq/debian-iptables-stop/
+  iptables -F
+  iptables -X
+  iptables -t nat -F
+  iptables -t nat -X
+  iptables -t mangle -F
+  iptables -t mangle -X
+  iptables -P INPUT ACCEPT
+  iptables -P OUTPUT ACCEPT
+  iptables -P FORWARD ACCEPT
 fi
 

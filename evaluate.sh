@@ -243,7 +243,7 @@ if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
   rpm -qa | egrep 'jdk|jre|^java-|j2sdk' | sort
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   #dpkg -l | egrep 'jdk|jre|^java-|j2sdk'
-  dpkg -l \*jdk\* \*jre\* java-\* \*j2sdk\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+  dpkg -l \*jdk\* \*jre\* java-\* \*j2sdk\* oracle-java\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "** default java version:"
 java -version 2>&1
@@ -329,4 +329,6 @@ hadoop checknative
 #echo "*** "
 #echo "** running config:"
 #echo "** startup config:"
+
+exit 0
 

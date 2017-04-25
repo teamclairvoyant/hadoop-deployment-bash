@@ -2,8 +2,9 @@
 
 These are shell scripts to deploy Cloudera Manager and related Cloudera encryption products to a cluster.  The goal of these scripts are to be idempotent and to serve as a template for translation into other Configuration Management frameworks/languages.
 
-* Assumes RHEL/CentOS 6 or 7 x86_64.
-* Allows for installation of Oracle JDK 7 or 8 from Cloudera or Oracle.
+* Works with RHEL/CentOS 6 or 7 x86_64.
+* Works with Ubuntu Trusty 14.04 x86_64.
+* Allows for installation of Oracle JDK 7 from Cloudera or Oracle JDK 7 or 8 from Oracle.
 
 This is an example of some of the functionality.  Not everything is documented.  Some scripts have arguments that can be passed to them to change their internal operation.  Read the source to learn more.
 

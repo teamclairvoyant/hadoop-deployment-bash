@@ -51,6 +51,8 @@ discover_os () {
     OSVER=`lsb_release -rs`
     # 7, 14
     OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -110,6 +112,7 @@ done
 # Currently only EL.
 discover_os
 if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -134,11 +137,12 @@ if [ ! -f /opt/cloudera/security/x509/ca-chain.cert.pem ]; then
   exit 6
 fi
 
-install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/localhost.pem /etc/openldap/certs/server.crt
-install -m 0440 -o ldap -g ldap /opt/cloudera/security/x509/localhost.key /etc/openldap/certs/server.key
-#install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/ca-chain.cert.pem /etc/openldap/certs/ca-bundle.crt
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/localhost.pem /etc/openldap/certs/server.crt
+  install -m 0440 -o ldap -g ldap /opt/cloudera/security/x509/localhost.key /etc/openldap/certs/server.key
+  #install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/ca-chain.cert.pem /etc/openldap/certs/ca-bundle.crt
 
-ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
+  ldapmodify -Q -Y EXTERNAL -H ldapi:/// <<EOF
 dn: cn=config
 changetype: modify
 add: olcTLSCACertificateFile
@@ -173,16 +177,19 @@ add: olcTLSCipherSuite
 olcTLSCipherSuite: HIGH
 EOF
 
-cp -p /etc/sysconfig/slapd /etc/sysconfig/slapd.${DATE}
-sed -e '/^SLAPD_URLS=/s|=.*|="ldapi:/// ldaps:///"|' \
-    -i /etc/sysconfig/slapd
+  cp -p /etc/sysconfig/slapd /etc/sysconfig/slapd.${DATE}
+  sed -e '/^SLAPD_URLS=/s|=.*|="ldapi:/// ldaps:///"|' \
+      -i /etc/sysconfig/slapd
 
-cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf.${DATE}
-cat <<EOF >>/etc/openldap/ldap.conf
+  cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf.${DATE}
+  cat <<EOF >>/etc/openldap/ldap.conf
 TLS_REQCERT     allow
 EOF
-sed -e '/^URI/s|ldap://|ldaps://|' \
-    -i /etc/openldap/ldap.conf
+  sed -e '/^URI/s|ldap://|ldaps://|' \
+      -i /etc/openldap/ldap.conf
 
-service slapd restart
+  service slapd restart
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  :
+fi
 

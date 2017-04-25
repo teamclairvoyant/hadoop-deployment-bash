@@ -17,21 +17,52 @@
 # https://blog.stathat.com/2014/12/22/fix_ec2_network_issue_skb_rides_the_rocket.html
 # Fix EC2 Network Issue: skb rides the rocket: 19 slots
 
-if rpm -q redhat-lsb-core; then
-  OSREL=`lsb_release -rs | awk -F. '{print $1}'`
-else
-  OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+# Function to discover basic OS details.
+discover_os () {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    OS=`lsb_release -is`
+    # 7.2.1511, 14.04
+    OSVER=`lsb_release -rs`
+    # 7, 14
+    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # trusty, wheezy, Final
+    OSNAME=`lsb_release -cs`
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        OS=CentOS
+      else
+        OS=RedHat
+      fi
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
+    fi
+  fi
+}
+
+# Check to see if we are on a supported OS.
+discover_os
+if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+  echo "ERROR: Unsupported OS."
+  exit 3
 fi
-# https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1317811
-if [ $OSREL == 6 ]; then
-  /usr/sbin/ethtool -K eth0 sg off
-  sed -i '/ethtool -K eth0 sg off/d' /etc/rc.local
-  echo '/usr/sbin/ethtool -K eth0 sg off' >>/etc/rc.local
-else
-  # http://www.certdepot.net/rhel7-rc-local-service/
+
+if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+  # https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1317811
   sed -i '/ethtool -K eth0 sg off/d' /etc/rc.d/rc.local
   echo '/usr/sbin/ethtool -K eth0 sg off' >>/etc/rc.d/rc.local
-  chmod +x /etc/rc.d/rc.local
-  systemctl start rc-local
+  if [ $OSREL == 6 ]; then
+    /usr/sbin/ethtool -K eth0 sg off
+  else
+    # http://www.certdepot.net/rhel7-rc-local-service/
+    chmod +x /etc/rc.d/rc.local
+    systemctl start rc-local
+  fi
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  sed -e '/ethtool -K eth0 sg off/d' \
+      -e '/^exit 0/i \
+/usr/sbin/ethtool -K eth0 sg off' \
+      -i /etc/rc.local
 fi
 

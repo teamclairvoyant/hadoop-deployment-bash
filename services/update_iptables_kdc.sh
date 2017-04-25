@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2015
 
+exit 1
+
 # Function to discover basic OS details.
 discover_os () {
   if command -v lsb_release >/dev/null; then
@@ -40,16 +42,25 @@ discover_os () {
 
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
-  yum -y -e1 -d1 install krb5-workstation epel-release
-  yum -y -e1 -d1 install kstart k5start
+  service iptables save
+
+  sed -i -e '/--dport 22/i\
+  -A INPUT -p tcp -m state --state NEW -m tcp --dport 88  -j ACCEPT\
+  -A INPUT -p tcp -m state --state NEW -m tcp --dport 464 -j ACCEPT\
+  -A INPUT -p tcp -m state --state NEW -m tcp --dport 749 -j ACCEPT\
+  -A INPUT -p udp -m udp --dport 88  -j ACCEPT\
+  -A INPUT -p udp -m udp --dport 464 -j ACCEPT\
+  -A INPUT -p udp -m udp --dport 749 -j ACCEPT' /etc/sysconfig/iptables
+
+  service iptables restart
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get -y -q install krb5-user kstart
+  :
 fi
 
