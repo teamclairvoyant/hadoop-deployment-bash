@@ -213,8 +213,8 @@ EOF
 ldap_search_base = $_LDAPSUFFIX
 #ldap_schema = rfc2307bis
 ldap_pwd_policy = mit_kerberos
-ldap_access_filter = memberOf=cn=admin,ou=Groups,${_LDAPSUFFIX}
-simple_allow_groups = admin, developer
+ldap_access_filter = memberOf=cn=sysadmin,ou=Groups,${_LDAPSUFFIX}
+simple_allow_groups = sysadmin, hdpadmin, developer
 krb5_realm = $_REALM_UPPER
 krb5_server = $_KRBSERVER
 krb5_lifetime = 24h

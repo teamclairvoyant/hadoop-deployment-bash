@@ -166,8 +166,8 @@ ldap_id_use_start_tls = true
 ldap_tls_reqcert = demand
 ldap_search_base = $_LDAPSUFFIX
 #ldap_schema = rfc2307bis
-ldap_access_filter = memberOf=cn=admin,ou=Groups,${_LDAPSUFFIX}
-simple_allow_groups = admin, developer
+ldap_access_filter = memberOf=cn=sysadmin,ou=Groups,${_LDAPSUFFIX}
+simple_allow_groups = sysadmin, hdpadmin, developer
 
 EOF
   chmod 0600 /etc/sssd/sssd.conf
