@@ -143,7 +143,7 @@ if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
   # EL7
   OPTS="$_USER $_OU7 $_ID"
   echo "** Installing software."
-  yum $YUMOPTS install sssd adcli realmd
+  yum $YUMOPTS install sssd adcli realmd PackageKit
 
   cat <<EOF >/etc/realmd.conf
 [users]

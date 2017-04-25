@@ -95,6 +95,10 @@ Run the evaluation script again to gather the new configuration of all the nodes
 mpssh -f HOSTLIST -r ${GITREPO}/evaluate.sh -o evaluate-post
 ```
 
+# Contributing to this project
+
+Everyone is welcome to contribute. Please take a moment to review the [guidelines for contributing](CONTRIBUTING.md).
+
 # License
 
 Copyright (C) 2015 [Clairvoyant, LLC.](http://clairvoyantsoft.com/)
