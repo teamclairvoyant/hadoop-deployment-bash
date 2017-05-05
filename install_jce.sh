@@ -30,9 +30,9 @@ discover_os () {
       if [ -f /etc/centos-release ]; then
         OS=CentOS
       else
-        OS=RedHat
+        OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
       OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
     fi
   fi
@@ -40,7 +40,7 @@ discover_os () {
 
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -54,7 +54,7 @@ if [ -z $http_proxy ]; then
   . $PROXY
 fi
 
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if rpm -q jdk || test -d /usr/java/jdk1.6.0_*; then
     wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jce_policy/6/jce_policy-6.zip -O /tmp/jce_policy-6.zip

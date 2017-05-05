@@ -30,9 +30,9 @@ discover_os () {
       if [ -f /etc/centos-release ]; then
         OS=CentOS
       else
-        OS=RedHat
+        OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
       OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
     fi
   fi
@@ -40,7 +40,7 @@ discover_os () {
 
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -51,7 +51,7 @@ if [ -z "$H" ]; then
   exit 1
 fi
 
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ $OSREL == 6 ]; then
     sed -e "/^HOSTNAME=/s|=.*|=$H|" -i /etc/sysconfig/network
     hostname $H

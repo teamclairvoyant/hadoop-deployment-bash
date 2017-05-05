@@ -56,9 +56,9 @@ discover_os () {
       if [ -f /etc/centos-release ]; then
         OS=CentOS
       else
-        OS=RedHat
+        OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
       OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
     fi
   fi
@@ -101,8 +101,8 @@ done
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
-if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
-#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -127,7 +127,7 @@ if [ ! -f /opt/cloudera/security/x509/ca-chain.cert.pem ]; then
   exit 6
 fi
 
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   #install -m 0444 -o root -g root /opt/cloudera/security/x509/localhost.pem /etc/pki/tls/certs/localhost.crt
   #install -m 0440 -o root -g root /opt/cloudera/security/x509/localhost.key /etc/pki/tls/private/localhost.key
   #ln -sf /opt/cloudera/security/x509/localhost.pem /etc/pki/tls/certs/localhost.crt

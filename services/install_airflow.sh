@@ -80,9 +80,9 @@ discover_os () {
       if [ -f /etc/centos-release ]; then
         OS=CentOS
       else
-        OS=RedHat
+        OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
       OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
     fi
   fi
@@ -149,8 +149,8 @@ done
 # Check to see if we are on a supported OS.
 # Currently only EL7.
 discover_os
-if [ \( "$OS" != RedHat -o "$OS" != CentOS \) -a "$OSREL" != 7 ]; then
-#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ \( "$OS" != RedHatEnterpriseServer -o "$OS" != CentOS \) -a "$OSREL" != 7 ]; then
+#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -180,7 +180,7 @@ if ! getent passwd airflow >/dev/null; then
   useradd $AIRFLOWUID -g airflow -c "Airflow Daemon" -m -d /var/lib/airflow -k /dev/null -r airflow
 fi
 
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   echo "** Installing software dependencies via YUM."
   yum $YUMOPTS groupinstall "Development tools"
   yum $YUMOPTS install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel python-devel wget cyrus-sasl-devel.x86_64
