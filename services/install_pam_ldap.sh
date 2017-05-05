@@ -30,7 +30,7 @@ discover_os () {
       if [ -f /etc/centos-release ]; then
         OS=CentOS
       else
-        OS=RedHat
+        OS=RedHatEnterpriseServer
       fi
       OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
       OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
@@ -40,8 +40,8 @@ discover_os () {
 
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHat -a "$OS" != CentOS ]; then
-#if [ "$OS" != RedHat -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -59,7 +59,7 @@ fi
 #LDAPBASEDN="dc=clairvoyantsoft,dc=com"
 #LDAPSERVER=server.clairvoyantsoft.com
 
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   # http://blog.zwiegnet.com/linux-server/configure-centos-7-ldap-client/
   yum -y -e1 -d1 install nss-pam-ldapd
   #yum -y -e1 -d1 install openldap-clients

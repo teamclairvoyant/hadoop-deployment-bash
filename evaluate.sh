@@ -28,7 +28,7 @@ else
     if [ -f /etc/centos-release ]; then
       OS=CentOS
     else
-      OS=RedHat
+      OS=RedHatEnterpriseServer
     fi
     OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
     OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
@@ -91,7 +91,7 @@ ip route
 # machines with Haswell; upgrading kernel version to 2.6.32-504.16.2.el6 or
 # later is recommended.
 # https://www.cloudera.com/documentation/enterprise/release-notes/topics/cdh_rn_os_ki.html
-if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
+if [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
   echo "****************************************"
   echo "*** kernel"
   echo "** running config:"
@@ -127,14 +127,14 @@ java -version 2>&1 || ${JAVA_HOME}/java -version 2>&1
 
 echo "****************************************"
 echo "*** Firewall"
-if [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
+if [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
   echo "** running config:"
   service iptables status
   service ip6tables status
   echo "** startup config:"
   chkconfig --list iptables
   chkconfig --list ip6tables
-elif [ \( "$OS" == RedHat -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
+elif [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
   echo "** running config:"
   service firewalld status
   service iptables status
@@ -151,7 +151,7 @@ fi
 
 echo "****************************************"
 echo "*** SElinux"
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   echo "** running config:"
   getenforce
   echo "** startup config:"
@@ -168,7 +168,7 @@ cat /sys/kernel/mm/transparent_hugepage/defrag
 echo "* enabled:"
 cat /sys/kernel/mm/transparent_hugepage/enabled
 echo "** startup config:"
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   grep transparent_hugepage /etc/rc.d/rc.local
 else
   grep transparent_hugepage /etc/rc.local
@@ -188,7 +188,7 @@ grep noatime /etc/navencrypt/ztab || echo "none"
 echo "****************************************"
 echo "*** Entropy"
 echo "** running config:"
-if [ "$OS" == CentOS -o "$OS" == RedHat ]; then
+if [ "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer ]; then
   service rngd status
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   service rng-tools status || ps -o user,pid,command -C rngd
@@ -230,7 +230,7 @@ fi
 
 echo "****************************************"
 echo "*** JDBC"
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   rpm -q mysql-connector-java postgresql-jdbc
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l libmysql-java libpostgresql-jdbc-java | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -239,7 +239,7 @@ fi
 echo "****************************************"
 echo "*** Java"
 echo "** installed Java(s):"
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   rpm -qa | egrep 'jdk|jre|^java-|j2sdk' | sort
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   #dpkg -l | egrep 'jdk|jre|^java-|j2sdk'
@@ -253,7 +253,7 @@ which java
 
 echo "****************************************"
 echo "*** Kerberos"
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   rpm -q krb5-workstation kstart k5start
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l krb5-user kstart k5start | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -269,7 +269,7 @@ chkconfig --list nscd
 echo "****************************************"
 echo "*** NTP"
 echo "** running config:"
-if [ "$OS" == CentOS -o "$OS" == RedHat ]; then
+if [ "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer ]; then
   service ntpd status
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   service ntp status
@@ -277,14 +277,14 @@ fi
 echo "** startup config:"
 RETVAL=0
 chkconfig --list ntpd
-if [ \( "$OS" == CentOS -o "$OS" == RedHat \) -a "$OSREL" == 7 ]; then
+if [ \( "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer \) -a "$OSREL" == 7 ]; then
   systemctl status chronyd.service
   RETVAL=$?
   # Do we want to support chrony? Does CM?
 fi
 echo "** timesync status:"
 ntpq -p
-if [ \( "$OS" == CentOS -o "$OS" == RedHat \) -a \( "$OSREL" == 7 -a "$RETVAL" == 0 \) ]; then
+if [ \( "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer \) -a \( "$OSREL" == 7 -a "$RETVAL" == 0 \) ]; then
   chronyc sources
 fi
 
@@ -309,13 +309,13 @@ host $(echo $DNS | awk '{print $NF}')
 
 echo "****************************************"
 echo "*** Cloudera Software"
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   rpm -qa ^cloudera\*
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l \*cloudera\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Cloudera Hadoop Packages"
-if [ "$OS" == RedHat -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   rpm -qa ^hadoop\*
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
