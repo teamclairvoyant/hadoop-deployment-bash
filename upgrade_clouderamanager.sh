@@ -37,7 +37,7 @@ discover_os () {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n" | awk -F. '{print $1"."$2}'`
+      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
       OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n"`
     fi
   fi
