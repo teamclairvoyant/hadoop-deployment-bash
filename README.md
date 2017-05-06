@@ -51,25 +51,49 @@ Copy several of the scripts to the nodes.
 ```
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
-  scp -p ${GITREPO}/install_{tools,nscd,ntp,jdk,jce,clouderamanageragent}.sh \
-  ${GITREPO}/install_{entropy,jdbc,krb5}.sh ${GITREPO}/link_openssl.sh \
-  ${GITREPO}/change_swappiness.sh ${GITREPO}/configure_{javahome,tuned}.sh \
-  ${GITREPO}/disable_{iptables,selinux,thp}.sh $HOST:
+  scp -p \
+  ${GITREPO}/install_tools.sh \
+  ${GITREPO}/change_swappiness.sh \
+  ${GITREPO}/disable_iptables.sh \
+  ${GITREPO}/disable_selinux.sh \
+  ${GITREPO}/disable_thp.sh \
+  ${GITREPO}/install_ntp.sh \
+  ${GITREPO}/install_nscd.sh \
+  ${GITREPO}/install_jdk.sh \
+  ${GITREPO}/configure_javahome.sh \
+  ${GITREPO}/install_jce.sh \
+  ${GITREPO}/install_krb5.sh \
+  ${GITREPO}/configure_tuned.sh \
+  ${GITREPO}/link_openssl.sh \
+  ${GITREPO}/install_entropy.sh \
+  ${GITREPO}/install_jdbc.sh \
+  ${GITREPO}/install_clouderamanageragent.sh \
+  $HOST:
 done
 ```
 
 Run the scripts to prep the system for Cloudera Manager installation.  Pin the version of Cloudera Manager to the value in $CMVER.  Also deploy Oracle JDK 8.
 ```
-#CMVER=5.9.0
-CMVER=5
+#BOPT="-x"    # Turn on bash debugging.
+#CMVER=5.9.1  # Set specific Cloudera Manager version, or ...
+CMVER=5       # ... use major version 5.
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
-  ssh -t $HOST "for Y in install_tools.sh change_swappiness.sh disable_iptables.sh \
-  disable_selinux.sh disable_thp.sh install_ntp.sh install_nscd.sh install_jdk.sh \
-  configure_javahome.sh install_jce.sh install_krb5.sh configure_tuned.sh \
-  link_openssl.sh install_entropy.sh; do \
-  sudo bash -x /home/centos/\${Y} 8 $CMVER;done"
-
+  ssh -t $HOST " \
+  sudo bash $BOPT ./install_tools.sh; \
+  sudo bash $BOPT ./change_swappiness.sh; \
+  sudo bash $BOPT ./disable_iptables.sh; \
+  sudo bash $BOPT ./disable_selinux.sh; \
+  sudo bash $BOPT ./disable_thp.sh; \
+  sudo bash $BOPT ./install_ntp.sh; \
+  sudo bash $BOPT ./install_nscd.sh; \
+  sudo bash $BOPT ./install_jdk.sh 8 $CMVER; \
+  sudo bash $BOPT ./configure_javahome.sh; \
+  sudo bash $BOPT ./install_jce.sh; \
+  sudo bash $BOPT ./install_krb5.sh; \
+  sudo bash $BOPT ./configure_tuned.sh; \
+  sudo bash $BOPT ./link_openssl.sh; \
+  sudo bash $BOPT ./install_entropy.sh"
 done
 ```
 
@@ -78,15 +102,16 @@ Install the Cloudera Manager agent.
 CMSERVER=ip-10-2-5-22.ec2.internal
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
-  ssh -t $HOST "sudo bash -x /home/centos/install_clouderamanageragent.sh $CMSERVER $CMVER"
+  ssh -t $HOST "sudo bash $BOPT ./install_clouderamanageragent.sh $CMSERVER $CMVER"
 done
 ```
 
-Install the Cloudera Manager server.
+Install the Cloudera Manager server with the embedded PostgreSQL database.
 ```
-scp -p ${GITREPO}/install_clouderamanagerserver.sh centos@${CMSERVER}:
-ssh -t centos@${CMSERVER} 'sudo bash -x /home/centos/install_clouderamanagerserver.sh embedded'
+scp -p ${GITREPO}/install_clouderamanagerserver.sh ${CMSERVER}:
+ssh -t ${CMSERVER} "sudo bash $BOPT ./install_clouderamanagerserver.sh embedded $CMVER"
 ```
+You can use the argument embedded, postgresql, or mysql.
 
 # Post Evaluation
 
