@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2015
 
+DATE=`date +'%Y%m%d%H%M%S'`
+
 # Function to discover basic OS details.
 discover_os () {
   if command -v lsb_release >/dev/null; then
@@ -38,6 +40,21 @@ discover_os () {
   fi
 }
 
+is_virtual () {
+  egrep -qi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU' /sys/devices/virtual/dmi/id/*
+  return $?
+}
+
+tinker_ntp.conf () {
+  cp -p /etc/ntp.conf /etc/ntp.conf.${DATE}
+  sed -e '/# CLAIRVOYANT$/d' -i /etc/ntp.conf
+  sed -e '1i\
+# Keep ntpd from panicking in the event of a large clock skew when # CLAIRVOYANT\
+# a VM guest is suspended and resumed.                             # CLAIRVOYANT\
+tinker panic 0                                                     # CLAIRVOYANT' \
+      -i /etc/ntp.conf
+}
+
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -51,10 +68,16 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     systemctl disable chronyd.service
   fi
   yum -y -e1 -d1 install ntp
+  if is_virtual; then
+    tinker_ntp.conf
+  fi
   service ntpd start
   chkconfig ntpd on
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   apt-get -y -q install ntp
+  if is_virtual; then
+    tinker_ntp.conf
+  fi
   service ntp start
   update-rc.d ntp defaults
 fi
