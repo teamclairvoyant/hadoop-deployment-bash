@@ -111,7 +111,7 @@ Install the Cloudera Manager server with the embedded PostgreSQL database.
 scp -p ${GITREPO}/install_clouderamanagerserver.sh ${CMSERVER}:
 ssh -t ${CMSERVER} "sudo bash $BOPT ./install_clouderamanagerserver.sh embedded $CMVER"
 ```
-You can use the argument embedded, postgresql, or mysql.
+You can use the argument embedded, postgresql, mysql, or oracle.
 
 # Post Evaluation
 
