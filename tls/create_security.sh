@@ -14,8 +14,8 @@
 #
 # Copyright Clairvoyant 2015
 
-mkdir -p /opt/cloudera/security
-mkdir -p /opt/cloudera/security/x509
-mkdir -p /opt/cloudera/security/jks
-mkdir -p /opt/cloudera/security/CAcerts
+mkdir -p -m 0755 /opt/cloudera/security
+mkdir -p -m 0755 /opt/cloudera/security/x509
+mkdir -p -m 0755 /opt/cloudera/security/jks
+mkdir -p -m 0755 /opt/cloudera/security/CAcerts
 

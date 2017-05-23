@@ -52,6 +52,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
 export JAVA_HOME=$JAVA_HOME
 export PATH=\$JAVA_HOME/bin:\$PATH
 EOF
+  chown root:root /etc/profile.d/java.sh
   chmod 0644 /etc/profile.d/java.sh
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   if ! grep -q JAVA_HOME /etc/profile.d/*; then

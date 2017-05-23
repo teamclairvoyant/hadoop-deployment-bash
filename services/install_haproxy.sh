@@ -18,6 +18,8 @@ exit 1
 
 yum -y -d1 -e1 install haproxy
 
+chown root:root /etc/haproxy/haproxy.cfg
+chmod 0644 /etc/haproxy/haproxy.cfg
 cat <<EOF >/etc/haproxy/haproxy.cfg
 # CLAIRVOYANT
 # http://gethue.com/hadoop-tutorial-how-to-distribute-impala-query-load/
@@ -114,6 +116,8 @@ listen stats :1936
 
 EOF
 
+chown root:root /etc/rsyslog.d/remoteudp.conf
+chmod 0644 /etc/rsyslog.d/remoteudp.conf
 cat <<EOF >/etc/rsyslog.d/remoteudp.conf
 # CLAIRVOYANT
 # Provides UDP syslog reception
@@ -123,6 +127,8 @@ cat <<EOF >/etc/rsyslog.d/remoteudp.conf
 local2.* /var/log/haproxy.log
 EOF
 touch /var/log/haproxy.log
+chown root:root /var/log/haproxy.log
+chmod 0600 /var/log/haproxy.log
 service rsyslog condrestart
 
 service haproxy start

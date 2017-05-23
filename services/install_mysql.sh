@@ -49,7 +49,7 @@ fi
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ $OSREL == 6 ]; then
     yum -y -e1 -d1 install mysql-server
-    mkdir /etc/my.cnf.d
+    mkdir -m 0755 /etc/my.cnf.d
   else
     yum -y -e1 -d1 install mariadb-server
   fi
@@ -102,6 +102,8 @@ innodb_log_file_size = 512M
 #pid-file=/var/run/mysqld/mysqld.pid
 #sql_mode=STRICT_ALL_TABLES
 EOF
+  chown root:root /etc/my.cnf.d/cloudera.cnf
+  chmod 0644 /etc/my.cnf.d/cloudera.cnf
 
   cat <<EOF >/etc/my.cnf.d/replication.cnf
 # CLAIRVOYANT
@@ -115,6 +117,8 @@ EOF
 # replication config END
 #innodb_flush_log_at_trx_commit=1
 EOF
+  chown root:root /etc/my.cnf.d/replication.cnf
+  chmod 0644 /etc/my.cnf.d/replication.cnf
 
   if [ $OSREL == 6 ]; then
     service mysql start

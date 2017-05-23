@@ -178,6 +178,8 @@ $_REALM_UPPER = {
  .${_REALM_LOWER} = $_REALM_UPPER
  $_REALM_LOWER = $_REALM_UPPER
 EOF
+  chown root:root /etc/krb5.conf
+  chmod 0644 /etc/krb5.conf
 
   cp -p /etc/sssd/sssd.conf /etc/sssd/sssd.conf.${DATE}
   cat <<EOF >/etc/sssd/sssd.conf
@@ -226,6 +228,7 @@ krb5_ccname_template = FILE:/tmp/krb5cc_%U
 krb5_store_password_if_offline = true
 
 EOF
+  chown root:root /etc/sssd/sssd.conf
   chmod 0600 /etc/sssd/sssd.conf
 
   authconfig --enablesssd --enablesssdauth --enablemkhomedir --update

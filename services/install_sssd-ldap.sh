@@ -170,6 +170,7 @@ ldap_access_filter = memberOf=cn=sysadmin,ou=Groups,${_LDAPSUFFIX}
 simple_allow_groups = sysadmin, hdpadmin, developer
 
 EOF
+  chown root:root /etc/sssd/sssd.conf
   chmod 0600 /etc/sssd/sssd.conf
 
   authconfig --enablesssd --enablesssdauth --enablemkhomedir --update

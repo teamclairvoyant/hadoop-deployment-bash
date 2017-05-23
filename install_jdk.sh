@@ -70,6 +70,8 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     # Because it may have been put there by some other process.
     if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
       wget -q https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+      chown root:root /etc/yum.repos.d/cloudera-manager.repo
+      chmod 0644 /etc/yum.repos.d/cloudera-manager.repo
       if [ -n "$SCMVERSION" ]; then
         sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
       fi
@@ -104,6 +106,8 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
         OS_LOWER=ubuntu
       fi
       wget -q https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list -O /etc/apt/sources.list.d/cloudera-manager.list
+      chown root:root /etc/apt/sources.list.d/cloudera-manager.list
+      chmod 0644 /etc/apt/sources.list.d/cloudera-manager.list
       if [ -n "$SCMVERSION" ]; then
         sed -e "s|-cm5 |-cm${SCMVERSION} |" -i /etc/apt/sources.list.d/cloudera-manager.list
       fi
