@@ -88,7 +88,7 @@ while [[ $1 = -* ]]; do
       ;;
     -m|--mountpoint)
       shift
-      FSMOUNT=$1
+      MOUNTPOINT=$(echo $1 | sed -e 's|/$||')
       ;;
     -t|--fstype)
       shift
@@ -123,34 +123,45 @@ if [[ -z "$MOUNTPOINT" ]]; then print_help "$(basename $0)"; fi
 check_root
 
 # main
+set -u
+
 if ! rpm -q parted; then echo "Installing parted. Please wait...";yum -y -d1 -e1 install parted; fi
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
-#  if [ -b ${DEVICE} -a -b ${DEVICE}${PART} ]; then
-#    echo "Moving data off of /data/0..."
-#    mkdir -p /data/0a
-#    mv /data/0/* /data/0a/
-#    umount /data/0
-#    sed -e '/^\/dev\/xvdf1 /d' -i /etc/fstab
-#    rmdir /data/0
-#    mv /data/0a /data/0
-#    dd if=/dev/zero of=/dev/xvdf bs=1M count=10
-#    kpartx -d /dev/xvdf
-#    rm -f /dev/xvdf1
-#  fi
-  if [ -b ${DEVICE} -a ! -b ${DEVICE}${PART} ]; then
-#    mkdir -p /data/0
-    echo "Preparing ${DEVICE} for encryption..."
-    SIZE=$(lsblk --all --bytes --list --output NAME,SIZE,TYPE $DEVICE | awk '/disk$/{print $2}')
-    if [ "$SIZE" -ge 2199023255552 ]; then
-      parted --script $DEVICE mklabel gpt mkpart primary $FSTYPE 1049kB 100%
+  if [ -b ${DEVICE} ]; then
+    # Is there a partition?
+    if [ -b ${DEVICE}1 ]; then
+      echo "** Device ${DEVICE} is already partitioned."
+      PART="1"
+    elif [ -b ${DEVICE}p1 ]; then
+      echo "** Device ${DEVICE} is already partitioned."
+      PART="p1"
     else
-      parted --script $DEVICE mklabel msdos mkpart primary $FSTYPE 1049kB 100%
+      echo "** Device ${DEVICE} is not partitioned."
+      SIZE=$(lsblk --all --bytes --list --output NAME,SIZE,TYPE $DEVICE | awk '/disk$/{print $2}')
+      if [ "$SIZE" -ge 2199023255552 ]; then
+        parted --script $DEVICE mklabel gpt mkpart primary $FSTYPE 1049kB 100%
+      else
+        parted --script $DEVICE mklabel msdos mkpart primary $FSTYPE 1049kB 100%
+      fi
+      sleep 2
+      if [ -b ${DEVICE}1 ]; then
+        PART="1"
+      elif [ -b ${DEVICE}p1 ]; then
+        PART="p1"
+      else
+        printf "** WARNING: Device ${DEVICE} partitioning failed. Exiting..."
+        exit 5
+      fi
     fi
-    sleep 2
-    mkdir -p $FSMOUNT
+    echo "** Preparing ${DEVICE} for encryption..."
+    mkdir -p -m 0755 $MOUNTPOINT && \
+    chattr +i $MOUNTPOINT && \
     printf '%s' $NAVPASS |
-    navencrypt-prepare -t $FSTYPE -o $FSMOOUNTOPT $DEVICE $FSMOUNT
+    navencrypt-prepare -t $FSTYPE -o $FSMOOUNTOPT ${DEVICE}${PART} $MOUNTPOINT
+  else
+    printf "** WARNING: Device ${DEVICE} does not exist. Exiting..."
+    exit 4
   fi
 else
   printf "** WARNING: This host is not yet registered.  Skipping..."

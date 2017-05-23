@@ -4,3 +4,10 @@ These are shell scripts to deploy [Cloudera Navigator Encrypt](https://www.cloud
 
 * Assumes RHEL/CentOS 7 x86_64.
 
+Scripts should be run in the following order:
+
+* navencrypt_register.sh
+* navencrypt_preprepare.sh
+* navencrypt_prepare.sh
+* navencrypt_move.sh
+
