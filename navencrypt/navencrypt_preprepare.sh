@@ -133,6 +133,12 @@ if ! echo $DEVICE | grep -q ^/dev/sd ;then
 fi
 # Add a check to make sure there is not another partition on the device (ie rootfs on sda1 with data on sda2).
 # Add a check to make sure there is enough space in /data
+_USED=$(df $MOUNTPOINT | awk '$3~/^[0-9]/{print $3}')
+_FREE=$(df ${MOUNTPOINT}/.. | awk '$4~/^[0-9]/{print $4}')
+if [ "$_FREE" -lt "$_USED" ]; then
+  printf "** ERROR: $(realpath ${MOUNTPOINT}/..) does not have enough space for data in ${MOUNTPOINT}. Exiting..."
+  exit 9
+fi
 
 set -euo pipefail
 echo "** Moving data off of ${MOUNTPOINT}..."
