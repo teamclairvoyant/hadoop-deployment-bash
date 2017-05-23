@@ -127,7 +127,7 @@ if [ ! -b $DEVICE ]; then
   fi
 fi
 # Check to make sure we do not wipe a LVM.
-if echo $DEVICE | grep -q ^/dev/sd ;then
+if ! echo $DEVICE | grep -q ^/dev/sd ;then
   printf "** ERROR: ${DEVICE} is not an sd device. Exiting..."
   exit 7
 fi

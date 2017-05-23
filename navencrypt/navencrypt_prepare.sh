@@ -160,7 +160,7 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
     mkdir -p -m 0755 $MOUNTPOINT && \
     chattr +i $MOUNTPOINT && \
     printf '%s' $NAVPASS |
-    navencrypt-prepare -t $FSTYPE -o $FSMOOUNTOPT ${DEVICE}${PART} $MOUNTPOINT
+    navencrypt-prepare -t $FSTYPE -o $FSMOUNTOPT ${DEVICE}${PART} $MOUNTPOINT
   else
     printf "** ERROR: Device ${DEVICE} does not exist. Exiting..."
     exit 4

@@ -99,6 +99,8 @@ if [[ -z "$NAVPASS" ]]; then print_help "$(basename $0)"; fi
 check_root
 
 # main
+set -u
+
 if [ ! -f /etc/navencrypt/keytrustee/clientname ]; then
   printf '%s' $NAVPASS | \
   navencrypt acl --add --rule="ALLOW @* * *"
