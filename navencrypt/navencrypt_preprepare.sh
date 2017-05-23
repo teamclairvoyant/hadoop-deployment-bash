@@ -38,14 +38,13 @@ FSMOUNTOPT=noatime
 
 # Function to print the help screen.
 print_help () {
-  printf "Usage:  $1 --device <device> --mountpoint <mountpoint>\n"
+  printf "Usage:  $1 --mountpoint <mountpoint>\n"
   printf "\n"
-  printf "         -d|--device           Disk device to encrypt.  Device will be wiped.\n"
   printf "         -m|--mountpoint       Mountpoint of the unencrypted filesystem.\n"
   printf "        [-h|--help]\n"
   printf "        [-v|--version]\n"
   printf "\n"
-  printf "   ex.  $1 --navpass \"mypasssword\" --device /dev/sdb --mountpoint /data/2\n"
+  printf "   ex.  $1 --navpass \"mypasssword\" --mountpoint /data/2\n"
   exit 1
 }
 
@@ -75,10 +74,6 @@ check_root () {
 # Process arguments.
 while [[ $1 = -* ]]; do
   case $1 in
-    -d|--device)
-      shift
-      DEVICE=$1
-      ;;
     -m|--mountpoint)
       shift
       MOUNTPOINT=$1
@@ -100,7 +95,6 @@ while [[ $1 = -* ]]; do
 done
 
 # Check to see if we have no parameters.
-if [[ -z "$DEVICE" ]]; then print_help "$(basename $0)"; fi
 if [[ -z "$MOUNTPOINT" ]]; then print_help "$(basename $0)"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
@@ -112,26 +106,33 @@ if [ ! -f /etc/navencrypt/keytrustee/clientname ]; then
   exit 3
 fi
 if ! mountpoint -q ${MOUNTPOINT}; then
-  printf "** WARNING: ${MOUNTPOINT} is not a mountpoint. Exiting..."
+  printf "** ERROR: ${MOUNTPOINT} is not a mountpoint. Exiting..."
   exit 4
 fi
 if [ -d ${MOUNTPOINT}tmp ]; then
-  printf "** WARNING: ${MOUNTPOINT}tmp exists.  Is another move process running?  Exiting..."
+  printf "** ERROR: ${MOUNTPOINT}tmp exists.  Is another move process running?  Exiting..."
   exit 5
 fi
-# add a check to make sure there is enough space in /data
 
 ESCMOUNTPOINT=$(echo $MOUNTPOINT | sed -e 's|/|\\/|g')
 FULLDEVICE=$(mount | awk "\$3~/${ESCMOUNTPOINT}\$/{print \$1}")
 ESCFULLDEVICE=$(echo $FULLDEVICE | sed -e 's|/|\\/|g')
+# Find the parent device (ie not the partition).
 DEVICE=$(echo $FULLDEVICE | sed -e 's|[0-9]$||')
 if [ ! -b $DEVICE ]; then
   DEVICE=$(echo $DEVICE | sed -e 's|.$||')
   if [ ! -b $DEVICE ]; then
-    printf "** WARNING: ${DEVICE} does not exit. Exiting..."
+    printf "** ERROR: ${DEVICE} does not exist. Exiting..."
     exit 6
   fi
 fi
+# Check to make sure we do not wipe a LVM.
+if echo $DEVICE | grep -q ^/dev/sd ;then
+  printf "** ERROR: ${DEVICE} is not an sd device. Exiting..."
+  exit 7
+fi
+# Add a check to make sure there is not another partition on the device (ie rootfs on sda1 with data on sda2).
+# Add a check to make sure there is enough space in /data
 
 set -euo pipefail
 echo "** Moving data off of ${MOUNTPOINT}..."

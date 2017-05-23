@@ -125,8 +125,6 @@ check_root
 # main
 set -u
 
-if ! rpm -q parted; then echo "Installing parted. Please wait...";yum -y -d1 -e1 install parted; fi
-
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   if [ -b ${DEVICE} ]; then
     # Is there a partition?
@@ -138,6 +136,10 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
       PART="p1"
     else
       echo "** Device ${DEVICE} is not partitioned."
+      if ! rpm -q parted >/dev/null 2>&1; then
+        echo "** Installing parted. Please wait..."
+        yum -y -d1 -e1 install parted
+      fi
       SIZE=$(lsblk --all --bytes --list --output NAME,SIZE,TYPE $DEVICE | awk '/disk$/{print $2}')
       if [ "$SIZE" -ge 2199023255552 ]; then
         parted --script $DEVICE mklabel gpt mkpart primary $FSTYPE 1049kB 100%
@@ -150,7 +152,7 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
       elif [ -b ${DEVICE}p1 ]; then
         PART="p1"
       else
-        printf "** WARNING: Device ${DEVICE} partitioning failed. Exiting..."
+        printf "** ERROR: Device ${DEVICE} partitioning failed. Exiting..."
         exit 5
       fi
     fi
@@ -160,7 +162,7 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
     printf '%s' $NAVPASS |
     navencrypt-prepare -t $FSTYPE -o $FSMOOUNTOPT ${DEVICE}${PART} $MOUNTPOINT
   else
-    printf "** WARNING: Device ${DEVICE} does not exist. Exiting..."
+    printf "** ERROR: Device ${DEVICE} does not exist. Exiting..."
     exit 4
   fi
 else
