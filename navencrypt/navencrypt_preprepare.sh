@@ -101,6 +101,7 @@ if [[ -z "$MOUNTPOINT" ]]; then print_help "$(basename $0)"; fi
 check_root
 
 # main
+umask 022
 if [ ! -f /etc/navencrypt/keytrustee/clientname ]; then
   printf "** WARNING: This host is not yet registered.  Skipping..."
   exit 3
@@ -133,6 +134,7 @@ if ! echo $DEVICE | grep -q ^/dev/sd ;then
 fi
 # Add a check to make sure there is not another partition on the device (ie rootfs on sda1 with data on sda2).
 # Add a check to make sure there is enough space in /data
+# Add a check to not move the data again (idempotent).
 _USED=$(df $MOUNTPOINT | awk '$3~/^[0-9]/{print $3}')
 _FREE=$(df ${MOUNTPOINT}/.. | awk '$4~/^[0-9]/{print $4}')
 if [ "$_FREE" -lt "$_USED" ]; then

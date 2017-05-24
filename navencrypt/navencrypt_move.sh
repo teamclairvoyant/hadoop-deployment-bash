@@ -118,6 +118,7 @@ check_root
 
 # main
 set -u
+umask 022
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   if [ -d $EMOUNTPOINT ]; then

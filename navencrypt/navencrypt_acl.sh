@@ -101,7 +101,7 @@ check_root
 # main
 set -u
 
-if [ ! -f /etc/navencrypt/keytrustee/clientname ]; then
+if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   printf '%s' $NAVPASS | \
   navencrypt acl --add --rule="ALLOW @* * *"
   printf '%s' $NAVPASS | \

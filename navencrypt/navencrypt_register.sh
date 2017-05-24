@@ -141,6 +141,7 @@ esac
 check_root
 
 # main
+umask 022
 if [ ! -f /etc/navencrypt/keytrustee/clientname ]; then
   printf '%s\n%s' $NAVPASS $NAVPASS |
   navencrypt register --server=https://${KTSERVERHOST1}:11371 ${KTSERVERHOST2} --org=${KTORG} --auth=${KTPASS} --key-type=${KTTYPE} ${SKIPSSL}
