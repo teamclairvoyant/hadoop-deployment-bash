@@ -157,10 +157,11 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
       fi
     fi
     echo "** Preparing ${DEVICE} for encryption..."
+    mkdir -p -m 0755 $(dirname $MOUNTPOINT)
     mkdir -p -m 0755 $MOUNTPOINT && \
     chattr +i $MOUNTPOINT && \
     printf '%s' $NAVPASS |
-    navencrypt-prepare -t $FSTYPE -o $FSMOUNTOPT ${DEVICE}${PART} $MOUNTPOINT
+    navencrypt-prepare -t $FSTYPE -o $FSMOUNTOPT ${DEVICE}${PART} $MOUNTPOINT -
   else
     printf "** ERROR: Device ${DEVICE} does not exist. Exiting..."
     exit 4

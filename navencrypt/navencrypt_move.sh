@@ -119,7 +119,7 @@ check_root
 # main
 set -u
 
-if [ ! -f /etc/navencrypt/keytrustee/clientname ]; then
+if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   if [ -d $EMOUNTPOINT ]; then
     echo "Moving data from ${MOUNTPOINT} to ${EMOUNTPOINT} for encryption..."
     printf '%s' $NAVPASS |
