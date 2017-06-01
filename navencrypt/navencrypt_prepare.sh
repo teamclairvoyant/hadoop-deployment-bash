@@ -127,6 +127,11 @@ set -u
 umask 022
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
+  # Check to make sure we do not wipe a LVM.
+  if ! echo $DEVICE | grep -q ^/dev/sd ;then
+    printf "** ERROR: ${DEVICE} is not an sd device. Exiting..."
+    exit 7
+  fi
   if [ -b ${DEVICE} ]; then
     # Is there a partition?
     if [ -b ${DEVICE}1 ]; then
