@@ -222,21 +222,21 @@ EOF
   chkconfig sssd on
   service oddjobd start
   chkconfig oddjobd on
-
-  if [ -f /etc/nscd.conf ]; then
-    echo "*** Disabling NSCD caching of passwd/group/netgroup/services..."
-    if [ ! -f /etc/nscd.conf-orig ]; then
-      cp -p /etc/nscd.conf /etc/nscd.conf-orig
-    else
-      cp -p /etc/nscd.conf /etc/nscd.conf.${DATE}
-    fi
-    sed -e '/enable-cache[[:blank:]]*passwd/s|yes|no|' \
-        -e '/enable-cache[[:blank:]]*group/s|yes|no|' \
-        -e '/enable-cache[[:blank:]]*services/s|yes|no|' \
-        -e '/enable-cache[[:blank:]]*netgroup/s|yes|no|' -i /etc/nscd.conf
-    service nscd condrestart
-  fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   :
+fi
+
+if [ -f /etc/nscd.conf ]; then
+  echo "*** Disabling NSCD caching of passwd/group/netgroup/services..."
+  if [ ! -f /etc/nscd.conf-orig ]; then
+    cp -p /etc/nscd.conf /etc/nscd.conf-orig
+  else
+    cp -p /etc/nscd.conf /etc/nscd.conf.${DATE}
+  fi
+  sed -e '/enable-cache[[:blank:]]*passwd/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*group/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*services/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*netgroup/s|yes|no|' -i /etc/nscd.conf
+  service nscd condrestart
 fi
 
