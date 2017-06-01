@@ -61,6 +61,8 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
 
   if rpm -q cloud-init; then
     echo 'preserve_hostname: True' >/etc/cloud/cloud.cfg.d/04_hostname.cfg
+    chown root:root /etc/cloud/cloud.cfg.d/04_hostname.cfg
+    chmod 0644 /etc/cloud/cloud.cfg.d/04_hostname.cfg
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   hostnamectl set-hostname $H || \

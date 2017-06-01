@@ -58,6 +58,8 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/cloudera-director.repo ]; then
     wget -q https://archive.cloudera.com/director/redhat/${OSREL}/x86_64/director/cloudera-director.repo -O /etc/yum.repos.d/cloudera-director.repo
+    chown root:root /etc/yum.repos.d/cloudera-director.repo
+    chmod 0644 /etc/yum.repos.d/cloudera-director.repo
   fi
   yum -y -e1 -d1 install cloudera-director-server cloudera-director-client
   chkconfig cloudera-director-server on
@@ -65,6 +67,8 @@ elif [ "$OS" == Ubuntu ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/apt/sources.list.d/cloudera-director.list ]; then
     wget -q https://archive.cloudera.com/director/ubuntu/${OSNAME}/amd64/director/cloudera.list -O /etc/apt/sources.list.d/cloudera-director.list
+    chown root:root /etc/apt/sources.list.d/cloudera-director.list
+    chmod 0644 /etc/apt/sources.list.d/cloudera-director.list
     curl -s http://archive.cloudera.com/director/ubuntu/${OSNAME}/amd64/director/archive.key | apt-key add -
   fi
   apt-get -y -qq update

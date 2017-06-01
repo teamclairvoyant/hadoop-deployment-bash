@@ -48,7 +48,7 @@ fi
 
 yum -y -e1 -d1 install tuned
 
-mkdir /etc/tuned/hadoop
+mkdir -m 0755 /etc/tuned/hadoop
 cat <<EOF >/etc/tuned/hadoop/tuned.conf
 #
 # tuned configuration
@@ -125,8 +125,10 @@ vm.swappiness=1
 #net.ipv4.udp_mem="3145728 4194304 16777216"
 
 EOF
+chown root:root /etc/tuned/hadoop/tuned.conf
+chmod 0644 /etc/tuned/hadoop/tuned.conf
 
-mkdir /etc/tuned/hadoop-virtual
+mkdir -m 0755 /etc/tuned/hadoop-virtual
 cat <<EOF >/etc/tuned/hadoop-virtual/tuned.conf
 #
 # tuned configuration
@@ -146,6 +148,8 @@ include=hadoop
 vm.dirty_ratio = 30
 
 EOF
+chown root:root /etc/tuned/hadoop-virtual/tuned.conf
+chmod 0644 /etc/tuned/hadoop-virtual/tuned.conf
 
 if virt-what | grep -q '.*'; then
   tuned-adm profile hadoop-virtual

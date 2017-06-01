@@ -133,7 +133,7 @@ fi
 
 # main
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  $ECHO sudo yum -y -e1 -d1 install epel-release
+  $ECHO sudo yum -y -e1 -d1 install epel-release || rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
   if [ $OSREL == 6 ]; then
     $ECHO sudo yum -y -e1 -d1 install mysql apg || err_msg 4
   else

@@ -18,6 +18,7 @@ if [ ! -d /var/lib/keytrustee/.keytrustee/.ssl-orig/ ]; then
   cp -a /var/lib/keytrustee/.keytrustee/.ssl/ /var/lib/keytrustee/.keytrustee/.ssl-orig/
 fi
 cat /opt/cloudera/security/CAcerts/ca.cert.pem /opt/cloudera/security/CAcerts/intermediate.cert.pem >/opt/cloudera/security/x509/ca-chain.cert.pem
+chmod 0444 /opt/cloudera/security/x509/ca-chain.cert.pem
 install -m 0400 -o keytrustee -g keytrustee /opt/cloudera/security/x509/ca-chain.cert.pem /var/lib/keytrustee/.keytrustee/.ssl/ssl-cert-keytrustee-ca.pem
 install -m 0400 -o keytrustee -g keytrustee /opt/cloudera/security/x509/localhost.pem /var/lib/keytrustee/.keytrustee/.ssl/ssl-cert-keytrustee.pem
 install -m 0400 -o keytrustee -g keytrustee /opt/cloudera/security/x509/localhost.key /var/lib/keytrustee/.keytrustee/.ssl/ssl-cert-keytrustee-pk.pem

@@ -46,7 +46,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == CentOS ]; then
   YUMHOST=$1
   if [ -z "$YUMHOST" ]; then
     echo "ERROR: Missing YUM hostname."
@@ -72,6 +72,25 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
 
   yum -y -e1 -d1 install epel-release
   wget -q http://${YUMHOST}/navigator-encrypt/latest/cloudera-navencrypt.repo -O /etc/yum.repos.d/cloudera-navencrypt.repo
+  chown root:root /etc/yum.repos.d/cloudera-navencrypt.repo
+  chmod 0644 /etc/yum.repos.d/cloudera-navencrypt.repo
+  yum -y -e1 -d1 install navencrypt
+  chkconfig navencrypt-mount on
+elif [ "$OS" == RedHatEnterpriseServer ]; then
+  YUMHOST=$1
+  if [ -z "$YUMHOST" ]; then
+    echo "ERROR: Missing YUM hostname."
+    exit 1
+  fi
+
+  echo "** Find the correct kernel-headers and kernel-devel that match the running kernel."
+  #subscription-manager repos --enable=rhel-${OSREL}-server-optional-rpms
+  yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r)
+
+  yum -y -e1 -d1 install epel-release || rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  wget -q http://${YUMHOST}/navigator-encrypt/latest/cloudera-navencrypt.repo -O /etc/yum.repos.d/cloudera-navencrypt.repo
+  chown root:root /etc/yum.repos.d/cloudera-navencrypt.repo
+  chmod 0644 /etc/yum.repos.d/cloudera-navencrypt.repo
   yum -y -e1 -d1 install navencrypt
   chkconfig navencrypt-mount on
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then

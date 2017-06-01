@@ -40,6 +40,25 @@ discover_os () {
   fi
 }
 
+_install_oracle_jdbc() {
+  pushd $(dirname $0)
+  if [ ! -f ojdbc6.jar ]; then
+    echo "** NOTICE: ojdbc6.jar not found.  Please manually download from"
+    echo "   http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html"
+    echo "   and place in the same directory as this script."
+    exit 1
+  else
+    cp -p ojdbc6.jar /tmp/ojdbc6.jar
+  fi
+  if [ ! -d /usr/share/java ]; then
+    install -o root -g root -m 0755 -d /usr/share/java
+  fi
+  install -o root -g root -m 0644 /tmp/ojdbc6.jar /usr/share/java/
+  ln -sf ojdbc6.jar /usr/share/java/oracle-connector-java.jar
+  ls -l /usr/share/java/oracle-connector-java.jar /usr/share/java/ojdbc6.jar
+  popd
+}
+
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -59,10 +78,12 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     HAS_JDK=no
   fi
   if [ "$INSTALLDB" == yes ]; then
+    echo "** NOTICE: Installing mysql and postgresql JDBC drivers."
     yum -y -e1 -d1 install mysql-connector-java postgresql-jdbc
     if [ $HAS_JDK == no ]; then yum -y -e1 -d1 remove jdk; fi
   else
     if [ "$INSTALLDB" == mysql ]; then
+      echo "** NOTICE: Installing mysql JDBC driver."
       if [ $OSREL == 6 ]; then
         PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
         eval $PROXY
@@ -86,21 +107,31 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
         if [ $HAS_JDK == no ]; then yum -y -e1 -d1 remove jdk; fi
       fi
     elif [ "$INSTALLDB" == postgresql ]; then
+      echo "** NOTICE: Installing postgresql JDBC driver."
       yum -y -e1 -d1 install postgresql-jdbc
+    elif [ "$INSTALLDB" == oracle ]; then
+      echo "** NOTICE: Installing oracle JDBC driver."
+      _install_oracle_jdbc
     else
-      echo "** ERROR: Argument must be either mysql or postgresql."
+      echo "** ERROR: Argument must be either mysql, postgresql, or oracle."
     fi
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   if [ "$INSTALLDB" == yes ]; then
+    echo "** NOTICE: Installing mysql and postgresql JDBC drivers."
     apt-get -y -q install libmysql-java libpostgresql-jdbc-java
   else
     if [ "$INSTALLDB" == mysql ]; then
+      echo "** NOTICE: Installing mysql JDBC driver."
       apt-get -y -q install libmysql-java
     elif [ "$INSTALLDB" == postgresql ]; then
+      echo "** NOTICE: Installing postgresql JDBC driver."
       apt-get -y -q install libpostgresql-jdbc-java
+    elif [ "$INSTALLDB" == oracle ]; then
+      echo "** NOTICE: Installing oracle JDBC driver."
+      _install_oracle_jdbc
     else
-      echo "** ERROR: Argument must be either mysql or postgresql."
+      echo "** ERROR: Argument must be either mysql, postgresql, or oracle."
     fi
   fi
 fi

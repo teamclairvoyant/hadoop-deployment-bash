@@ -46,7 +46,8 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
 fi
 
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  yum -y -e1 -d1 install epel-release wget unzip deltarpm
+  yum -y -e1 -d1 install epel-release || rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  yum -y -e1 -d1 install wget unzip deltarpm
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   apt-get -y -q install wget curl unzip
 fi

@@ -136,7 +136,7 @@ fi
 
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ "$USEHAVEGED" == "yes" ]; then
-    yum -y -e1 -d1 install epel-release
+    yum -y -e1 -d1 install epel-release || rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
     yum -y -e1 -d1 install haveged
     service haveged start
     chkconfig haveged on

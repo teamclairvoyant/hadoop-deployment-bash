@@ -100,8 +100,10 @@ while [[ $1 = -* ]]; do
       ;;
     -o|--computer-ou)
       shift
-      _OU7="--computer-ou=\"$1\""
-      _OU6="--domain-ou=\"$1\""
+      #_OU7="--computer-ou=\"$1\"" # Deal with spaces in the OU name.
+      #_OU6="--domain-ou=\"$1\""   # Deal with spaces in the OU name. 
+      _OU7="--computer-ou=$1"
+      _OU6="--domain-ou=$1"
       ;;
     -i|--automatic-id-mapping)
       shift
@@ -190,6 +192,8 @@ elif [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 6
 
 [domain_realm]
 EOF
+  chown root:root /etc/krb5.conf
+  chmod 0644 /etc/krb5.conf
 
   cat <<EOF >/etc/sssd/sssd.conf
 [sssd]
@@ -210,6 +214,7 @@ ldap_id_mapping = True
 fallback_homedir = /home/%u
 access_provider = ad
 EOF
+  chown root:root /etc/sssd/sssd.conf
   chmod 0600 /etc/sssd/sssd.conf
 
   authconfig --enablesssd --enablesssdauth --enablemkhomedir --update
@@ -217,21 +222,21 @@ EOF
   chkconfig sssd on
   service oddjobd start
   chkconfig oddjobd on
-
-  if [ -f /etc/nscd.conf ]; then
-    echo "*** Disabling NSCD caching of passwd/group/netgroup/services..."
-    if [ ! -f /etc/nscd.conf-orig ]; then
-      cp -p /etc/nscd.conf /etc/nscd.conf-orig
-    else
-      cp -p /etc/nscd.conf /etc/nscd.conf.${DATE}
-    fi
-    sed -e '/enable-cache[[:blank:]]*passwd/s|yes|no|' \
-        -e '/enable-cache[[:blank:]]*group/s|yes|no|' \
-        -e '/enable-cache[[:blank:]]*services/s|yes|no|' \
-        -e '/enable-cache[[:blank:]]*netgroup/s|yes|no|' -i /etc/nscd.conf
-    service nscd condrestart
-  fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   :
+fi
+
+if [ -f /etc/nscd.conf ]; then
+  echo "*** Disabling NSCD caching of passwd/group/netgroup/services..."
+  if [ ! -f /etc/nscd.conf-orig ]; then
+    cp -p /etc/nscd.conf /etc/nscd.conf-orig
+  else
+    cp -p /etc/nscd.conf /etc/nscd.conf.${DATE}
+  fi
+  sed -e '/enable-cache[[:blank:]]*passwd/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*group/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*services/s|yes|no|' \
+      -e '/enable-cache[[:blank:]]*netgroup/s|yes|no|' -i /etc/nscd.conf
+  service nscd condrestart
 fi
 

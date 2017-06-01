@@ -235,6 +235,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l libmysql-java libpostgresql-jdbc-java | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
+ls -l /usr/share/java/oracle-connector-java.jar /usr/share/java/ojdbc?.jar
 
 echo "****************************************"
 echo "*** Java"

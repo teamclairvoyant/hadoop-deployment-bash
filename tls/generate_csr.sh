@@ -46,6 +46,9 @@ keytool -genkeypair -alias localhost -keyalg RSA \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -keysize 2048 -dname "$DN" -storepass $SP -keypass $KP
 
+chmod 0644 /opt/cloudera/security/jks/localhost-keystore.jks
+chown root:root /opt/cloudera/security/jks/localhost-keystore.jks
+
 keytool -certreq -alias localhost \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -file /opt/cloudera/security/x509/localhost.csr -storepass $SP \

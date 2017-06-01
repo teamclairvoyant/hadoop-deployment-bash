@@ -56,5 +56,7 @@ if [ "$OSREL" == 7 ]; then
   PROFILE=`tuned-adm active | awk '{print $NF}'`
   mkdir /etc/tuned/${PROFILE}
   sed -e '/^vm.swappiness/s|= .*|= 1|' /usr/lib/tuned/${PROFILE}/tuned.conf >/etc/tuned/${PROFILE}/tuned.conf
+  chown root:root /etc/tuned/${PROFILE}/tuned.conf
+  chmod 0644 /etc/tuned/${PROFILE}/tuned.conf
 fi
 

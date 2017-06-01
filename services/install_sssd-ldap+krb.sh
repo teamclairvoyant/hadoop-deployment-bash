@@ -178,6 +178,8 @@ $_REALM_UPPER = {
  .${_REALM_LOWER} = $_REALM_UPPER
  $_REALM_LOWER = $_REALM_UPPER
 EOF
+  chown root:root /etc/krb5.conf
+  chmod 0644 /etc/krb5.conf
 
   cp -p /etc/sssd/sssd.conf /etc/sssd/sssd.conf.${DATE}
   cat <<EOF >/etc/sssd/sssd.conf
@@ -213,8 +215,8 @@ EOF
 ldap_search_base = $_LDAPSUFFIX
 #ldap_schema = rfc2307bis
 ldap_pwd_policy = mit_kerberos
-ldap_access_filter = memberOf=cn=admin,ou=Groups,${_LDAPSUFFIX}
-simple_allow_groups = admin, developer
+ldap_access_filter = memberOf=cn=sysadmin,ou=Groups,${_LDAPSUFFIX}
+simple_allow_groups = sysadmin, hdpadmin, developer
 krb5_realm = $_REALM_UPPER
 krb5_server = $_KRBSERVER
 krb5_lifetime = 24h
@@ -226,6 +228,7 @@ krb5_ccname_template = FILE:/tmp/krb5cc_%U
 krb5_store_password_if_offline = true
 
 EOF
+  chown root:root /etc/sssd/sssd.conf
   chmod 0600 /etc/sssd/sssd.conf
 
   authconfig --enablesssd --enablesssdauth --enablemkhomedir --update

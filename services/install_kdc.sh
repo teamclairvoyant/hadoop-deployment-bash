@@ -150,6 +150,8 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   else
     cp -p /var/kerberos/krb5kdc/kdc.conf /var/kerberos/krb5kdc/kdc.conf.${DATE}
   fi
+  chown root:root /var/kerberos/krb5kdc/kdc.conf
+  chmod 0600 /var/kerberos/krb5kdc/kdc.conf
   cat <<EOF >/var/kerberos/krb5kdc/kdc.conf
 [kdcdefaults]
 kdc_ports = 88
@@ -178,6 +180,8 @@ EOF
   else
     cp -p /var/kerberos/krb5kdc/kadm5.acl /var/kerberos/krb5kdc/kadm5.acl.${DATE}
   fi
+  chown root:root /var/kerberos/krb5kdc/kadm5.acl
+  chmod 0600 /var/kerberos/krb5kdc/kadm5.acl
   cat <<EOF >/var/kerberos/krb5kdc/kadm5.acl
 */admin@${_REALM_UPPER} *
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * flume/*@${_REALM_UPPER}
@@ -208,7 +212,7 @@ EOF
   else
     cp -p /etc/krb5.conf /etc/krb5.conf.${DATE}
   fi
-  mkdir -p /etc/krb5.conf.d/
+  mkdir -p -m 0755 /etc/krb5.conf.d/
   cat <<EOF >/etc/krb5.conf
 # Configuration snippets may be placed in this directory as well
 includedir /etc/krb5.conf.d/
@@ -279,6 +283,8 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   else
     cp -p /etc/krb5kdc/kdc.conf /etc/krb5kdc/kdc.conf.${DATE}
   fi
+  chown root:root /etc/krb5kdc/kdc.conf
+  chmod 0600 /etc/krb5kdc/kdc.conf
   cat <<EOF >/etc/krb5kdc/kdc.conf
 [kdcdefaults]
 kdc_ports = 88
@@ -307,6 +313,8 @@ EOF
   else
     cp -p /etc/krb5kdc/kadm5.acl /etc/krb5kdc/kadm5.acl.${DATE}
   fi
+  chown root:root /etc/krb5kdc/kadm5.acl
+  chmod 0600 /etc/krb5kdc/kadm5.acl
   cat <<EOF >/etc/krb5kdc/kadm5.acl
 */admin@${_REALM_UPPER} *
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * flume/*@${_REALM_UPPER}
@@ -337,7 +345,7 @@ EOF
   else
     cp -p /etc/krb5.conf /etc/krb5.conf.${DATE}
   fi
-  mkdir -p /etc/krb5.conf.d/
+  mkdir -p -m 0755 /etc/krb5.conf.d/
   cat <<EOF >/etc/krb5.conf
 # Configuration snippets may be placed in this directory as well
 includedir /etc/krb5.conf.d/
