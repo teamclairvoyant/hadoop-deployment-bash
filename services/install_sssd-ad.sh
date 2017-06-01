@@ -100,8 +100,10 @@ while [[ $1 = -* ]]; do
       ;;
     -o|--computer-ou)
       shift
-      _OU7="--computer-ou=\"$1\""
-      _OU6="--domain-ou=\"$1\""
+      #_OU7="--computer-ou=\"$1\"" # Deal with spaces in the OU name.
+      #_OU6="--domain-ou=\"$1\""   # Deal with spaces in the OU name. 
+      _OU7="--computer-ou=$1"
+      _OU6="--domain-ou=$1"
       ;;
     -i|--automatic-id-mapping)
       shift
