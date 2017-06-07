@@ -49,7 +49,7 @@ PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
 eval $PROXY
 export http_proxy
 export https_proxy
-if [ -z $http_proxy ]; then
+if [ -z "$http_proxy" ]; then
   PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
   . $PROXY
 fi
