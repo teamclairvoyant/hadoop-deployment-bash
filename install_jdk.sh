@@ -15,8 +15,14 @@
 # Copyright Clairvoyant 2015
 
 # ARGV:
-# 1 - Which JDK version to install. If empty, install JDK 7 from Cloudera. - optional
+# 1 - Which major JDK version to install. If empty, install JDK 7 from Cloudera. - optional
 # 2 - SCM version - optional
+
+# Note:
+# If you do not want to download the JDK multiple times or access to
+# download.oracle.com is blocked, you can place the manually downloaded JDK RPM
+# in the /tmp directory for RedHat-based systems or the JDK tarball in
+# /var/cache/oracle-jdk8-installer for Debian-based systems.
 
 # Function to discover basic OS details.
 discover_os () {
