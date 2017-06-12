@@ -15,8 +15,14 @@
 # Copyright Clairvoyant 2015
 
 # ARGV:
-# 1 - Which JDK version to install. If empty, install JDK 7 from Cloudera. - optional
+# 1 - Which major JDK version to install. If empty, install JDK 7 from Cloudera. - optional
 # 2 - SCM version - optional
+
+# Note:
+# If you do not want to download the JDK multiple times or access to
+# download.oracle.com is blocked, you can place the manually downloaded JDK RPM
+# in the /tmp directory for RedHat-based systems or the JDK tarball in
+# /var/cache/oracle-jdk8-installer for Debian-based systems.
 
 # Function to discover basic OS details.
 discover_os () {
@@ -60,7 +66,7 @@ PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
 eval $PROXY
 export http_proxy
 export https_proxy
-if [ -z $http_proxy ]; then
+if [ -z "$http_proxy" ]; then
   PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
   . $PROXY
 fi
@@ -89,8 +95,8 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   elif [ "$USECLOUDERA" = 8 ]; then
     pushd /tmp
     wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-      http://download.oracle.com/otn-pub/java/jdk/8u91-b14/jdk-8u91-linux-x64.rpm -O jdk-8u91-linux-x64.rpm
-    rpm -Uv jdk-8u91-linux-x64.rpm
+      http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.rpm -O jdk-8u131-linux-x64.rpm
+    rpm -Uv jdk-8u131-linux-x64.rpm
     popd
   else
     echo "ERROR: Unknown Java version.  Please choose 7 or 8."
