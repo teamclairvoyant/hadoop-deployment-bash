@@ -107,6 +107,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
       curl -s http://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/archive.key | apt-key add -
     fi
     sed -e "s|-cm5 |-cm${SCMVERSION} |" -i /etc/apt/sources.list.d/cloudera-manager.list
+    export DEBIAN_FRONTEND=noninteractive
     apt-get -y -qq update
 
     service cloudera-scm-agent stop

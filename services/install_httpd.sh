@@ -50,6 +50,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   service httpd start
   chkconfig httpd on
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   apt-get -y -q install apache2
   service apache2 start
   update-rc.d apache2 defaults

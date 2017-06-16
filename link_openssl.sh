@@ -55,6 +55,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   #ln -s libcrypto.so.10 /usr/lib64/libcrypto.so
   #ln -s libssl.so.10 /usr/lib64/libssl.so
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   apt-get -y -q install libssl-dev
 fi
 

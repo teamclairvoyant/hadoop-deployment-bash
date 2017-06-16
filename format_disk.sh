@@ -64,6 +64,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if ! rpm -q parted; then echo "Installing parted. Please wait...";yum -y -d1 -e1 install parted; fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   FS=ext4
+  export DEBIAN_FRONTEND=noninteractive
   if ! dpkg -l parted >/dev/null; then echo "Installing parted. Please wait...";apt-get -y -q install parted; fi
 fi
 

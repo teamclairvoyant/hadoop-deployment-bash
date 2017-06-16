@@ -48,6 +48,7 @@ fi
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   yum -y -e1 -d1 install jq ksh
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   apt-get -y -q install jq ksh
 fi
 

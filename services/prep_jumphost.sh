@@ -48,6 +48,7 @@ fi
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   yum -y -d1 -e1 install mpssh mussh tmux screen bind-utils apg
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   apt-get -y -q install mpssh mussh tmux screen bind9utils bind9-host apg
 fi
 

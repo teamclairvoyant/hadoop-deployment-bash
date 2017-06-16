@@ -103,6 +103,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     exit 10
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   if [ "$USECLOUDERA" = yes ]; then
     # Because it may have been put there by some other process.
     if [ ! -f /etc/apt/sources.list.d/cloudera-manager.list ]; then

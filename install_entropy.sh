@@ -157,6 +157,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     chkconfig rngd on
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   if [ "$USEHAVEGED" == "yes" ]; then
     apt-get -y -q install haveged
     service haveged start

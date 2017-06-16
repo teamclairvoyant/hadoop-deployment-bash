@@ -117,6 +117,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     fi
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   if [ "$INSTALLDB" == yes ]; then
     echo "** NOTICE: Installing mysql and postgresql JDBC drivers."
     apt-get -y -q install libmysql-java libpostgresql-jdbc-java

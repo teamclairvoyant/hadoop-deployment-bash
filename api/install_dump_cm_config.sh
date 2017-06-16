@@ -62,6 +62,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
   if ! dpkg -l apg >/dev/null; then
     echo "Installing apg. Please wait..."
+    export DEBIAN_FRONTEND=noninteractive
     apt-get -y -q install apg
   fi
   if dpkg -l apg >/dev/null; then
