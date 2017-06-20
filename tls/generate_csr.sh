@@ -42,7 +42,7 @@ elif [ -f /etc/profile.d/java.sh ]; then
   . /etc/profile.d/java.sh
 fi
 
-keytool -genkeypair -alias localhost -keyalg RSA \
+keytool -genkeypair -alias localhost -keyalg RSA -sigalg SHA256withRSA \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -keysize 2048 -dname "$DN" -storepass $SP -keypass $KP
 
