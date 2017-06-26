@@ -14,6 +14,10 @@
 #
 # Copyright Clairvoyant 2015
 
+# ARGV:
+# 1 - JDBC driver type : mysql, postgresql, oracle, or sqlserver - optional
+#                        installs mysql and postgresql JDBC drivers by default
+
 MYSQL_VERSION=5.1.31
 
 # Function to discover basic OS details.
