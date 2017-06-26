@@ -237,7 +237,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
 fi
 ls -l /usr/share/java/mysql-connector-java.jar
 ls -l /usr/share/java/oracle-connector-java.jar /usr/share/java/ojdbc?.jar
-ls -l /usr/share/java/sqljdbc*.jar
+ls -l /usr/share/java/sqlserver-connector-java.jar /usr/share/java/sqljdbc*.jar
 
 echo "****************************************"
 echo "*** Java"

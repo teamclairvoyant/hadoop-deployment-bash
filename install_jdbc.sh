@@ -92,10 +92,12 @@ _install_sqlserver_jdbc() {
   JVER=$(_jdk_major_version)
   if [[ "$JVER" == 7 ]]; then
     install -o root -g root -m 0644 sqljdbc_6.0/enu/jre7/sqljdbc41.jar /usr/share/java/
-    ls -l /usr/share/java/sqljdbc41.jar
+    ln -sf sqljdbc41.jar /usr/share/java/sqlserver-connector-java.jar
+    ls -l /usr/share/java/sqlserver-connector-java.jar /usr/share/java/sqljdbc41.jar
   elif [[ "$JVER" == 8 ]]; then
     install -o root -g root -m 0644 sqljdbc_6.0/enu/jre8/sqljdbc42.jar /usr/share/java/
-    ls -l /usr/share/java/sqljdbc42.jar
+    ln -sf sqljdbc42.jar /usr/share/java/sqlserver-connector-java.jar
+    ls -l /usr/share/java/sqlserver-connector-java.jar /usr/share/java/sqljdbc42.jar
   else
     echo "ERROR: Java version either not supported or not detected."
   fi
