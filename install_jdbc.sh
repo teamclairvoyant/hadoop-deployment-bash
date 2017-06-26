@@ -14,7 +14,7 @@
 #
 # Copyright Clairvoyant 2015
 
-VERSION=5.1.31
+MYSQL_VERSION=5.1.31
 
 # Function to discover basic OS details.
 discover_os () {
@@ -129,13 +129,13 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
       echo "** NOTICE: Installing mysql JDBC driver."
       if [ $OSREL == 6 ]; then
         _get_proxy
-        wget -q -O /tmp/mysql-connector-java-${VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${VERSION}.tar.gz
-        tar xf /tmp/mysql-connector-java-${VERSION}.tar.gz -C /tmp
+        wget -q -O /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MYSQL_VERSION}.tar.gz
+        tar xf /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz -C /tmp
         if [ ! -d /usr/share/java ]; then
           install -o root -g root -m 0755 -d /usr/share/java
         fi
-        install -o root -g root -m 0644 /tmp/mysql-connector-java-${VERSION}/mysql-connector-java-${VERSION}-bin.jar /usr/share/java/
-        ln -sf mysql-connector-java-${VERSION}-bin.jar /usr/share/java/mysql-connector-java.jar
+        install -o root -g root -m 0644 /tmp/mysql-connector-java-${MYSQL_VERSION}/mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/
+        ln -sf mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/mysql-connector-java.jar
         ls -l /usr/share/java/*sql*
       else
         yum -y -e1 -d1 install mysql-connector-java
