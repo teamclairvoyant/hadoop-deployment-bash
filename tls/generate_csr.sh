@@ -32,9 +32,10 @@ if [ -z "$KP" ]; then
   echo "ERROR: Missing private key password."
   exit 3
 fi
-if [ -n "$EXT" ]; then
-  EXT="-ext $EXT"
-fi
+# https://www.cloudera.com/documentation/enterprise/5-9-x/topics/cm_sg_create_deploy_certs.html#concept_frd_1px_nw
+# X509v3 Extended Key Usage:
+#   TLS Web Server Authentication, TLS Web Client Authentication
+EXT="-ext EKU=serverAuth,clientAuth $EXT"
 
 if [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
