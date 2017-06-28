@@ -14,6 +14,9 @@
 #
 # Copyright Clairvoyant 2016
 
+# ARGV:
+# 1 - SCM Agent version - optional
+
 # We assume that the CM Services have been previously shut down.
 # We assume that the CM server is also running the CM agent.
 # We assume that the CM server and CM database have been previously shut down.
@@ -113,7 +116,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
 
     service cloudera-scm-agent stop
     # This should update the -daemons and -server packages as well if they are present.
-    apt-get -y -qq update cloudera-manager-agent
+    apt-get -y -qq install cloudera-manager-agent
     if dpkg -l cloudera-manager-server-db-2 >/dev/null; then
       service cloudera-scm-server-db start
       update-rc.d cloudera-scm-server-db defaults
