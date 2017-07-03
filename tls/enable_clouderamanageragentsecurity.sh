@@ -14,6 +14,9 @@
 #
 # Copyright Clairvoyant 2015
 
+# ARGV:
+# 1 - Whether to enable Level 3 agent authN to server. - optional
+
 LEVEL3=$1
 if [ -n "$LEVEL3" ]; then
   # https://www.cloudera.com/content/www/en-us/documentation/enterprise/latest/topics/cm_sg_config_tls_agent_auth.html

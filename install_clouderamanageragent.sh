@@ -16,7 +16,7 @@
 
 # ARGV:
 # 1 - SCM server hostname - required
-# 2 - SCM Agent version - optional
+# 2 - SCM agent version - optional
 
 # Function to discover basic OS details.
 discover_os () {

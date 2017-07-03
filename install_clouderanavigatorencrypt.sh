@@ -14,6 +14,9 @@
 #
 # Copyright Clairvoyant 2015
 
+# ARGV:
+# 1 - YUM repository hostname - required
+
 # Function to discover basic OS details.
 discover_os () {
   if command -v lsb_release >/dev/null; then

@@ -14,6 +14,12 @@
 #
 # Copyright Clairvoyant 2015
 
+# ARGV:
+# 1 - TLS certificate Common Name - required
+# 2 - JKS store password - required
+# 3 - JKS key password - required
+# 4 - Extra parameters for keytool (ie Subject Alternative Name (SAN)) - optional
+
 #"CN=cmhost.sec.cloudera.com,OU=Support,O=Cloudera,L=Denver,ST=Colorado,C=US"
 DN="$1"
 SP="$2"

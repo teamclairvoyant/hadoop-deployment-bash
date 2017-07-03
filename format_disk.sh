@@ -14,6 +14,10 @@
 #
 # Copyright Clairvoyant 2016
 
+# ARGV:
+# 1 - Name of disk (ie sda) - required
+# 2 - Mountpoint number (ie 2 for /data/2) - required
+
 # Function to discover basic OS details.
 discover_os () {
   if command -v lsb_release >/dev/null; then

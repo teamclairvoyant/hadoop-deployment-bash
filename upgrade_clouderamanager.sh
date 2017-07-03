@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2016
 
 # ARGV:
-# 1 - SCM Agent version - optional
+# 1 - SCM agent version - optional
 
 # We assume that the CM Services have been previously shut down.
 # We assume that the CM server is also running the CM agent.

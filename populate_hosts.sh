@@ -14,6 +14,9 @@
 #
 # Copyright Clairvoyant 2015
 
+# ARGV:
+# 1 - name of the file which contains /etc/hosts formatted data - required
+
 #for X in `awk -F@ '{print $2}' hosts-QA `;do
 #  Y=`echo $X|sed -e 's|\.|-|g'`
 #  Z=`host "ip-${Y}.us-west-2.compute.internal."`
