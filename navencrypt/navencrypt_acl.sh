@@ -16,16 +16,10 @@
 #
 # $Id$
 #
-# Program
-#     Does something.
-#
 # EXIT CODE:
 #     0 = success
 #     1 = print_help function (or incorrect commandline)
 #     2 = ERROR: Must be root.
-#
-AUTHOR="Michael Arnold <michael.arnold@clairvoyantsoft.com>"
-VERSION=YYYYMMDD
 #
 if [ $DEBUG ]; then set -x; fi
 #
@@ -80,9 +74,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename $0)"
       ;;
     -v|--version)
-      printf "\tProgram\n"
-      printf "\tVersion: $VERSION\n"
-      printf "\tWritten by: $AUTHOR\n"
+      printf "\tSet the Navigator Encrypt access control list to allow all access.\n"
       exit 0
       ;;
     *)
