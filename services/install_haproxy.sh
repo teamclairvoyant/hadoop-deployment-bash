@@ -45,40 +45,40 @@ defaults
     timeout client 50000ms
     timeout server 50000ms
 
-# Setup for Oozie.
-frontend oozie
-    bind 0.0.0.0:11000
-    mode http
-    default_backend oozie_servers
-    option httplog
+## Setup for Oozie.
+#frontend oozie
+#    bind 0.0.0.0:11000
+#    mode http
+#    default_backend oozie_servers
+#    option httplog
+#
+#backend oozie_servers
+#    mode http
+#    option httplog
+#    balance roundrobin
+#    server oozie1 OOZIEHOST1:11000 check
+#    server oozie2 OOZIEHOST2:11000 check
 
-backend oozie_servers
-    mode http
-    option httplog
-    balance roundrobin
-    server oozie1 OOZIEHOST1:11000 check
-    server oozie2 OOZIEHOST2:11000 check
-
-# Setup for Hue.
-frontend hue
-    bind 0.0.0.0:80
-    mode http
-    option http-server-close
-    timeout client 120s
-    option forwardfor
-    default_backend hue_servers
-    timeout http-request 5s
-
-backend hue_servers
-    mode http
-    option http-server-close
-    timeout server 120s
-    option forwardfor
-    option httpchk HEAD /desktop/debug/is_alive
-    http-check expect status 200
-    balance source
-    server hue1 HUEHOST1:8888 cookie ServerA check inter 2s fall 3
-    server hue2 HUEHOST2:8888 cookie ServerB check inter 2s fall 3
+## Setup for Hue.
+#frontend hue
+#    bind 0.0.0.0:8889
+#    mode http
+#    option http-server-close
+#    timeout client 120s
+#    option forwardfor
+#    default_backend hue_servers
+#    timeout http-request 5s
+#
+#backend hue_servers
+#    mode http
+#    option http-server-close
+#    timeout server 120s
+#    option forwardfor
+#    option httpchk HEAD /desktop/debug/is_alive
+#    http-check expect status 200
+#    balance source
+#    server hue1 HUEHOST1:8888 cookie ServerA check inter 2s fall 3
+#    server hue2 HUEHOST2:8888 cookie ServerB check inter 2s fall 3
 
 # Setup for beeswax (impala-shell) or original ODBC driver.
 # For JDBC or ODBC version 2.x driver, use port 21050 instead of 21000.
