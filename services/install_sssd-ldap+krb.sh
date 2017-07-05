@@ -117,9 +117,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename $0)"
       ;;
     -v|--version)
-      echo "Script"
-      echo "Version: $VERSION"
-      echo "Written by: $AUTHOR"
+      echo "Intall and configure SSSD to use the LDAP identity and Kerberos authN providers."
       exit 0
       ;;
     *)

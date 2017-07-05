@@ -14,6 +14,9 @@
 #
 # Copyright Clairvoyant 2016
 
+# ARGV:
+# 1 - hdpadmin user password - required
+
 PASS=$1
 if [ -z "$PASS" ]; then
   echo "ERROR: Missing hdpadmin user password."

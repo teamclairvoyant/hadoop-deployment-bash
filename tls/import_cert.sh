@@ -14,6 +14,9 @@
 #
 # Copyright Clairvoyant 2015
 
+# ARGV:
+# 1 - JKS store password - required
+
 SP="$1"
 if [ -z "$SP" ]; then
   echo "ERROR: Missing keystore password."

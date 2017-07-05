@@ -96,9 +96,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename $0)"
       ;;
     -v|--version)
-      echo "Script"
-      echo "Version: $VERSION"
-      echo "Written by: $AUTHOR"
+      echo "Installs an entropy gathering daemon: RNGD ot HAVEGED."
       exit 0
       ;;
     *)

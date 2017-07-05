@@ -14,7 +14,11 @@
 #
 # Copyright Clairvoyant 2015
 
-VERSION=5.1.31
+# ARGV:
+# 1 - JDBC driver type : mysql, postgresql, oracle, or sqlserver - optional
+#                        installs mysql and postgresql JDBC drivers by default
+
+MYSQL_VERSION=5.1.31
 
 # Function to discover basic OS details.
 discover_os () {
@@ -40,6 +44,26 @@ discover_os () {
   fi
 }
 
+_get_proxy() {
+  PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
+  eval $PROXY
+  export http_proxy
+  export https_proxy
+  if [ -z "$http_proxy" ]; then
+    PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
+    if [ -n "$PROXY" ]; then
+      . $PROXY
+    fi
+  fi
+}
+
+_jdk_major_version() {
+  local JVER MAJ_JVER
+  JVER=$(java -version 2>&1 | awk '/java version/{print $NF}' | sed -e 's|"||g')
+  MAJ_JVER=$(echo $JVER | awk -F. '{print $2}')
+  echo $MAJ_JVER
+}
+
 _install_oracle_jdbc() {
   pushd $(dirname $0)
   if [ ! -f ojdbc6.jar ]; then
@@ -56,6 +80,31 @@ _install_oracle_jdbc() {
   install -o root -g root -m 0644 /tmp/ojdbc6.jar /usr/share/java/
   ln -sf ojdbc6.jar /usr/share/java/oracle-connector-java.jar
   ls -l /usr/share/java/oracle-connector-java.jar /usr/share/java/ojdbc6.jar
+  popd
+}
+
+_install_sqlserver_jdbc() {
+  # https://www.cloudera.com/documentation/enterprise/5-10-x/topics/cdh_ig_jdbc_driver_install.html
+  pushd /tmp
+  _get_proxy
+  SQLSERVER_VERSION=6.0.8112.100
+  wget -q -c -O /tmp/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz https://download.microsoft.com/download/0/2/A/02AAE597-3865-456C-AE7F-613F99F850A8/enu/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz
+  tar xf /tmp/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz -C /tmp
+  if [ ! -d /usr/share/java ]; then
+    install -o root -g root -m 0755 -d /usr/share/java
+  fi
+  JVER=$(_jdk_major_version)
+  if [[ "$JVER" == 7 ]]; then
+    install -o root -g root -m 0644 sqljdbc_6.0/enu/jre7/sqljdbc41.jar /usr/share/java/
+    ln -sf sqljdbc41.jar /usr/share/java/sqlserver-connector-java.jar
+    ls -l /usr/share/java/sqlserver-connector-java.jar /usr/share/java/sqljdbc41.jar
+  elif [[ "$JVER" == 8 ]]; then
+    install -o root -g root -m 0644 sqljdbc_6.0/enu/jre8/sqljdbc42.jar /usr/share/java/
+    ln -sf sqljdbc42.jar /usr/share/java/sqlserver-connector-java.jar
+    ls -l /usr/share/java/sqlserver-connector-java.jar /usr/share/java/sqljdbc42.jar
+  else
+    echo "ERROR: Java version either not supported or not detected."
+  fi
   popd
 }
 
@@ -85,22 +134,14 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     if [ "$INSTALLDB" == mysql ]; then
       echo "** NOTICE: Installing mysql JDBC driver."
       if [ $OSREL == 6 ]; then
-        PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
-        eval $PROXY
-        export http_proxy
-        export https_proxy
-        if [ -z "$http_proxy" ]; then
-          PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
-          . $PROXY
-        fi
-
-        wget -q -O /tmp/mysql-connector-java-${VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${VERSION}.tar.gz
-        tar xf /tmp/mysql-connector-java-${VERSION}.tar.gz -C /tmp
+        _get_proxy
+        wget -q -O /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MYSQL_VERSION}.tar.gz
+        tar xf /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz -C /tmp
         if [ ! -d /usr/share/java ]; then
           install -o root -g root -m 0755 -d /usr/share/java
         fi
-        install -o root -g root -m 0644 /tmp/mysql-connector-java-${VERSION}/mysql-connector-java-${VERSION}-bin.jar /usr/share/java/
-        ln -sf mysql-connector-java-${VERSION}-bin.jar /usr/share/java/mysql-connector-java.jar
+        install -o root -g root -m 0644 /tmp/mysql-connector-java-${MYSQL_VERSION}/mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/
+        ln -sf mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/mysql-connector-java.jar
         ls -l /usr/share/java/*sql*
       else
         yum -y -e1 -d1 install mysql-connector-java
@@ -112,8 +153,11 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     elif [ "$INSTALLDB" == oracle ]; then
       echo "** NOTICE: Installing oracle JDBC driver."
       _install_oracle_jdbc
+    elif [ "$INSTALLDB" == sqlserver ]; then
+      echo "** NOTICE: Installing sqlserver JDBC driver."
+      _install_sqlserver_jdbc
     else
-      echo "** ERROR: Argument must be either mysql, postgresql, or oracle."
+      echo "** ERROR: Argument must be either mysql, postgresql, oracle, or sqlserver."
     fi
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
@@ -131,8 +175,11 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
     elif [ "$INSTALLDB" == oracle ]; then
       echo "** NOTICE: Installing oracle JDBC driver."
       _install_oracle_jdbc
+    elif [ "$INSTALLDB" == sqlserver ]; then
+      echo "** NOTICE: Installing sqlserver JDBC driver."
+      _install_sqlserver_jdbc
     else
-      echo "** ERROR: Argument must be either mysql, postgresql, or oracle."
+      echo "** ERROR: Argument must be either mysql, postgresql, oracle, or sqlserver."
     fi
   fi
 fi

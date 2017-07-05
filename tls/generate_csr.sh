@@ -14,6 +14,12 @@
 #
 # Copyright Clairvoyant 2015
 
+# ARGV:
+# 1 - TLS certificate Common Name - required
+# 2 - JKS store password - required
+# 3 - JKS key password - required
+# 4 - Extra parameters for keytool (ie Subject Alternative Name (SAN)) - optional
+
 #"CN=cmhost.sec.cloudera.com,OU=Support,O=Cloudera,L=Denver,ST=Colorado,C=US"
 DN="$1"
 SP="$2"
@@ -42,17 +48,20 @@ elif [ -f /etc/profile.d/java.sh ]; then
   . /etc/profile.d/java.sh
 fi
 
-keytool -genkeypair -alias localhost -keyalg RSA \
+keytool -genkeypair -alias localhost -keyalg RSA -sigalg SHA256withRSA \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -keysize 2048 -dname "$DN" -storepass $SP -keypass $KP
 
 chmod 0644 /opt/cloudera/security/jks/localhost-keystore.jks
 chown root:root /opt/cloudera/security/jks/localhost-keystore.jks
 
+# https://www.cloudera.com/documentation/enterprise/5-9-x/topics/cm_sg_create_deploy_certs.html#concept_frd_1px_nw
+# X509v3 Extended Key Usage:
+#   TLS Web Server Authentication, TLS Web Client Authentication
 keytool -certreq -alias localhost \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -file /opt/cloudera/security/x509/localhost.csr -storepass $SP \
--keypass $KP $EXT
+-keypass $KP -ext EKU=serverAuth,clientAuth $EXT
 
 rm -f /tmp/localhost-keystore.p12.$$
 

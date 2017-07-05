@@ -16,7 +16,7 @@
 
 # ARGV:
 # 1 - SCM server hostname - required
-# 2 - SCM Agent version - optional
+# 2 - SCM agent version - optional
 
 # Function to discover basic OS details.
 discover_os () {
@@ -62,7 +62,9 @@ export http_proxy
 export https_proxy
 if [ -z "$http_proxy" ]; then
   PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
-  . $PROXY
+  if [ -n "$PROXY" ]; then
+    . $PROXY
+  fi
 fi
 
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then

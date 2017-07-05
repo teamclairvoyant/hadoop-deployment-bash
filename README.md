@@ -67,6 +67,7 @@ for HOST in `cat HOSTLIST`; do
   ${GITREPO}/link_openssl.sh \
   ${GITREPO}/install_entropy.sh \
   ${GITREPO}/install_jdbc.sh \
+  ${GITREPO}/install_jdbc_sqoop.sh \
   ${GITREPO}/install_clouderamanageragent.sh \
   $HOST:
 done
