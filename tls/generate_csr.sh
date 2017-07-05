@@ -38,10 +38,9 @@ if [ -z "$KP" ]; then
   echo "ERROR: Missing private key password."
   exit 3
 fi
-# https://www.cloudera.com/documentation/enterprise/5-9-x/topics/cm_sg_create_deploy_certs.html#concept_frd_1px_nw
-# X509v3 Extended Key Usage:
-#   TLS Web Server Authentication, TLS Web Client Authentication
-EXT="-ext EKU=serverAuth,clientAuth $EXT"
+if [ -n "$EXT" ]; then
+  EXT="-ext $EXT"
+fi
 
 if [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
@@ -56,10 +55,13 @@ keytool -genkeypair -alias localhost -keyalg RSA -sigalg SHA256withRSA \
 chmod 0644 /opt/cloudera/security/jks/localhost-keystore.jks
 chown root:root /opt/cloudera/security/jks/localhost-keystore.jks
 
+# https://www.cloudera.com/documentation/enterprise/5-9-x/topics/cm_sg_create_deploy_certs.html#concept_frd_1px_nw
+# X509v3 Extended Key Usage:
+#   TLS Web Server Authentication, TLS Web Client Authentication
 keytool -certreq -alias localhost \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -file /opt/cloudera/security/x509/localhost.csr -storepass $SP \
--keypass $KP $EXT
+-keypass $KP -ext EKU=serverAuth,clientAuth $EXT
 
 rm -f /tmp/localhost-keystore.p12.$$
 
