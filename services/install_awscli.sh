@@ -49,6 +49,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   yum -y -e1 -d1 install epel-release || rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
   yum -y -e1 -d1 install awscli
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   apt-get -y -q install awscli
 fi
 

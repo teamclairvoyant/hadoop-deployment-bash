@@ -141,6 +141,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   fi
   if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   $ECHO sudo apt-get -y -q install mysql-client apg || err_msg 4
   if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi

@@ -50,6 +50,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   service nscd start
   chkconfig nscd on
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   apt-get -y -q install nscd
   service nscd start
   update-rc.d nscd defaults

@@ -73,6 +73,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     unzip -o -j /tmp/jce_policy-8.zip -d /usr/java/jdk1.8.0_*/jre/lib/security/
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   if dpkg -l oracle-j2sdk1.7 >/dev/null || test -d /usr/lib/jvm/java-7-oracle-cloudera; then
     wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip -O /tmp/jce_policy-7.zip

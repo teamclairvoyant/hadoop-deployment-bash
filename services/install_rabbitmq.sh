@@ -54,6 +54,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   service rabbitmq-server start
   chkconfig rabbitmq-server on
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  export DEBIAN_FRONTEND=noninteractive
   apt-get -y -q install rabbitmq-server
 
   rabbitmq-plugins enable rabbitmq_management
