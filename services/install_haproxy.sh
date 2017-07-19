@@ -80,6 +80,24 @@ defaults
 #    server hue1 HUEHOST1:8888 cookie ServerA check inter 2s fall 3
 #    server hue2 HUEHOST2:8888 cookie ServerB check inter 2s fall 3
 
+## Setup for HiveServer2.
+#listen hiveserver2
+#    bind 0.0.0.0:10000
+#    timeout client 1h
+#    timeout server 1h
+#    balance leastconn
+#    server hiveserver20 HIVESERVER2HOST1:10000 check
+#    server hiveserver21 HIVESERVER2HOST2:10000 check
+
+## Setup for Hive Metastore Server.
+#listen hivemetastore
+#    bind 0.0.0.0:9083
+#    timeout client 1h
+#    timeout server 1h
+#    balance leastconn
+#    server hivemetastore0 HIVEMETASTOREHOST1:9083 check
+#    server hivemetastore1 HIVEMETASTOREHOST2:9083 check
+
 # Setup for beeswax (impala-shell) or original ODBC driver.
 # For JDBC or ODBC version 2.x driver, use port 21050 instead of 21000.
 listen impala
