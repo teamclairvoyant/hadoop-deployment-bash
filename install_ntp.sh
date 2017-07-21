@@ -41,7 +41,7 @@ discover_os () {
 }
 
 is_virtual () {
-  egrep -qi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU' /sys/devices/virtual/dmi/id/*
+  egrep -qi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
   return $?
 }
 
