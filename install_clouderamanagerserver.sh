@@ -87,6 +87,7 @@ if [ -z "$http_proxy" ]; then
 fi
 
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+  # Test to see if JDK 6 is present.
   if rpm -q jdk >/dev/null; then
     HAS_JDK=yes
   else
@@ -113,7 +114,9 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   else
     if [ "$INSTALLDB" == mysql ]; then
       yum -y -e1 -d1 install mysql-connector-java
-      if [ $HAS_JDK = no ]; then yum -y -e1 -d1 remove jdk; fi
+      # Removes JDK 6 if it snuck onto the system. Tests for the actual RPM
+      # named "jdk" to keep virtual packages from causing a JDK 8 uninstall.
+      if [ "$HAS_JDK" == no ] && rpm -q jdk >/dev/null; then yum -y -e1 -d1 remove jdk; fi
     elif [ "$INSTALLDB" == postgresql ]; then
       yum -y -e1 -d1 install postgresql-jdbc
     elif [ "$INSTALLDB" == oracle ]; then
