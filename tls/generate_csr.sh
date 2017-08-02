@@ -79,6 +79,7 @@ chmod 0400 /opt/cloudera/security/x509/localhost.e.key /opt/cloudera/security/x5
 
 rm -f /tmp/localhost-keystore.p12.$$
 
+install -o root -g root -m 0755 -d /etc/cloudera-scm-agent
 install -o root -g root -m 0600 /dev/null /etc/cloudera-scm-agent/agentkey.pw
 echo "$SP" >/etc/cloudera-scm-agent/agentkey.pw
 
