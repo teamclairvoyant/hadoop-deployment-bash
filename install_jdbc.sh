@@ -21,16 +21,16 @@
 MYSQL_VERSION=5.1.31
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -38,21 +38,21 @@ discover_os () {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
 
 _get_proxy() {
-  PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
-  eval $PROXY
+  PROXY=$(egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
+  eval "$PROXY"
   export http_proxy
   export https_proxy
   if [ -z "$http_proxy" ]; then
-    PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
+    PROXY=$(egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*)
     if [ -n "$PROXY" ]; then
-      . $PROXY
+      . "$PROXY"
     fi
   fi
 }
@@ -60,12 +60,12 @@ _get_proxy() {
 _jdk_major_version() {
   local JVER MAJ_JVER
   JVER=$(java -version 2>&1 | awk '/java version/{print $NF}' | sed -e 's|"||g')
-  MAJ_JVER=$(echo $JVER | awk -F. '{print $2}')
-  echo $MAJ_JVER
+  MAJ_JVER=$(echo "$JVER" | awk -F. '{print $2}')
+  echo "$MAJ_JVER"
 }
 
 _install_oracle_jdbc() {
-  pushd $(dirname $0)
+  pushd "$(dirname "$0")"
   if [ ! -f ojdbc6.jar ] && [ ! -f ojdbc8.jar ]; then
     echo "** NOTICE: ojdbc6.jar or ojdbc8.jar not found.  Please manually download from"
     echo "   http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html"
@@ -123,7 +123,7 @@ echo "*** $(basename $0)"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -139,7 +139,7 @@ if [ "$INSTALLDB" == yes ]; then
 else
   echo "Driver type to install: $INSTALLDB"
 fi
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # Test to see if JDK 6 is present.
   if rpm -q jdk >/dev/null; then
     HAS_JDK=yes
@@ -155,7 +155,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   else
     if [ "$INSTALLDB" == mysql ]; then
       echo "** NOTICE: Installing mysql JDBC driver."
-      if [ $OSREL == 6 ]; then
+      if [ "$OSREL" == 6 ]; then
         _get_proxy
         wget -q -O /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MYSQL_VERSION}.tar.gz
         tar xf /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz -C /tmp
@@ -184,7 +184,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
       echo "** ERROR: Argument must be either mysql, postgresql, oracle, or sqlserver."
     fi
   fi
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   if [ "$INSTALLDB" == yes ]; then
     echo "** NOTICE: Installing mysql and postgresql JDBC drivers."

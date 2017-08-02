@@ -26,7 +26,7 @@ _ROOTDN="Manager"
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 YUMOPTS="-y -e1 -d1"
-DATE=`date '+%Y%m%d%H%M%S'`
+DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
 print_help() {
@@ -41,7 +41,7 @@ print_help() {
 
 # Function to check for root priviledges.
 check_root() {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
   fi
@@ -51,11 +51,11 @@ check_root() {
 discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -63,8 +63,8 @@ discover_os() {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
@@ -89,7 +89,7 @@ while [[ $1 = -* ]]; do
   case $1 in
     -d|--domain)
       shift
-      _DOMAIN_LOWER=`echo $1 | tr '[:upper:]' '[:lower:]'`
+      _DOMAIN_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
       ;;
     -r|--rootdn)
       shift
@@ -100,14 +100,14 @@ while [[ $1 = -* ]]; do
       _ROOTPW="$1"
       ;;
     -h|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       echo "Create test users and groups in LDAP and Kerberos."
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
@@ -119,23 +119,23 @@ echo "**************************************************************************
 # Check to see if we are on a supported OS.
 # Currently only EL.
 #discover_os
-#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
 #  echo "ERROR: Unsupported OS."
 #  exit 3
 #fi
 
 # Check to see if we have the required parameters.
-if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
+if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
 
 # main
 echo "Creating test credentials in LDAP..."
-_SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
-_ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
+_SUFFIX=$(echo "${_DOMAIN_LOWER}" | awk -F. '{print "dc="$1",dc="$2}')
+_ROOTDN=$(echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||")
 _ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
-#_LDAPPASS=`slappasswd -s $_ROOTPW`
+#_LDAPPASS=$(slappasswd -s $_ROOTPW)
 
 #ldapadd -x -w $_ROOTPW -D $_ROOTDN -H ldapi:/// <<EOF
 #dn: $_SUFFIX
@@ -146,7 +146,7 @@ _ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
 #structuralObjectClass: organization
 #EOF
 
-ldapadd -x -w $_ROOTPW -D $_ROOTDN -H ldapi:/// <<EOF
+ldapadd -x -w "$_ROOTPW" -D "$_ROOTDN" -H ldapi:/// <<EOF
 # Creates a base for DIT
 dn: $_SUFFIX
 objectClass: top
@@ -172,7 +172,7 @@ ou: Groups
 EOF
 
 # Create test users and groups.
-ldapadd -x -w $_ROOTPW -D $_ROOTDN -H ldapi:/// <<EOF
+ldapadd -x -w "$_ROOTPW" -D "$_ROOTDN" -H ldapi:/// <<EOF
 dn: uid=user00,ou=People,${_SUFFIX}
 uid: user00
 cn: User 00
@@ -241,7 +241,7 @@ member: uid=user02,ou=People,${_SUFFIX}
 cn: group02
 EOF
 
-ldapsearch -x -D $_ROOTDN -w $_ROOTPW
+ldapsearch -x -D "$_ROOTDN" -w "$_ROOTPW"
 
 if [ -x /usr/sbin/kadmin.local ]; then
   echo "Creating test credentials in Kerberos..."

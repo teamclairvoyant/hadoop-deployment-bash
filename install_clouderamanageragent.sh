@@ -22,13 +22,13 @@
 discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -36,8 +36,8 @@ discover_os() {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
@@ -47,7 +47,7 @@ echo "*** $(basename $0) $@"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -59,21 +59,21 @@ if [ -z "$SCMHOST" ]; then
 fi
 SCMVERSION=$2
 
-PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
-eval $PROXY
+PROXY=$(egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
+eval "$PROXY"
 export http_proxy
 export https_proxy
 if [ -z "$http_proxy" ]; then
-  PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
+  PROXY=$(egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*)
   if [ -n "$PROXY" ]; then
-    . $PROXY
+    . "$PROXY"
   fi
 fi
 
 echo "Installing Cloudera Manager Agent..."
 echo "CM server is: $SCMHOST"
 echo "CM version is: $SCMVERSION"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
     wget -q https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
@@ -87,7 +87,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   sed -i -e "/server_host/s|=.*|=${SCMHOST}|" /etc/cloudera-scm-agent/config.ini
   service cloudera-scm-agent start
   chkconfig cloudera-scm-agent on
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/apt/sources.list.d/cloudera-manager.list ]; then
     if [ "$OS" == Debian ]; then

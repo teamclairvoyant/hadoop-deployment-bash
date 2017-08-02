@@ -38,7 +38,7 @@ print_help() {
 
 # Function to check for root priviledges.
 check_root() {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
   fi
@@ -48,20 +48,20 @@ check_root() {
 err_msg() {
   local CODE=$1
   echo "ERROR: Could not install required package. Exiting."
-  exit $CODE
+  exit "$CODE"
 }
 
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -69,8 +69,8 @@ discover_os() {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
@@ -110,21 +110,21 @@ while [[ $1 = -* ]]; do
       export PGPASSWORD=$1
       ;;
     -H|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       echo "Create the Cloudera Manager users and databases in MySQL."
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
 done
 
 # Check to see if we have the required parameters.
-if [ -z "$PG_HOST" -o -z "$PG_USER" -o -z "$PGPASSWORD" ]; then print_help "$(basename $0)"; fi
+if [ -z "$PG_HOST" ] || [ -z "$PG_USER" ] || [ -z "$PGPASSWORD" ]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
@@ -134,14 +134,14 @@ echo "*** $(basename $0)"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 # main
 echo "Creating users and databases in PostgreSQL for Reports Manager, Navigator Audit, Navigator Metadata, Hive, Oozie, Sentry, and Hue..."
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
     $ECHO sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
@@ -149,42 +149,42 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install postgresql apg || err_msg 4
   if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 echo "hue : $HUEDB_PASSWORD"
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   $ECHO sudo apt-get -y -q install postgresql-client apg || err_msg 4
   if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
-RMANDB_PASSWORD=`eval $PWCMD`
-NAVDB_PASSWORD=`eval $PWCMD`
-NAVMSDB_PASSWORD=`eval $PWCMD`
-METASTOREDB_PASSWORD=`eval $PWCMD`
-OOZIEDB_PASSWORD=`eval $PWCMD`
-SENTRYDB_PASSWORD=`eval $PWCMD`
-HUEDB_PASSWORD=`eval $PWCMD`
+RMANDB_PASSWORD=$(eval "$PWCMD")
+NAVDB_PASSWORD=$(eval "$PWCMD")
+NAVMSDB_PASSWORD=$(eval "$PWCMD")
+METASTOREDB_PASSWORD=$(eval "$PWCMD")
+OOZIEDB_PASSWORD=$(eval "$PWCMD")
+SENTRYDB_PASSWORD=$(eval "$PWCMD")
+HUEDB_PASSWORD=$(eval "$PWCMD")
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
 echo "*** SAVE THESE PASSWORDS"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE rman LOGIN ENCRYPTED PASSWORD '$RMANDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE rman WITH OWNER = rman ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE rman LOGIN ENCRYPTED PASSWORD '$RMANDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE rman WITH OWNER = rman ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "rman : $RMANDB_PASSWORD"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE nav LOGIN ENCRYPTED PASSWORD '$NAVDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE nav WITH OWNER = nav ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE nav LOGIN ENCRYPTED PASSWORD '$NAVDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE nav WITH OWNER = nav ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "nav : $NAVDB_PASSWORD"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE navms LOGIN ENCRYPTED PASSWORD '$NAVMSDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE navms WITH OWNER = navms ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE navms LOGIN ENCRYPTED PASSWORD '$NAVMSDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE navms WITH OWNER = navms ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "navms : $NAVMSDB_PASSWORD"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE hive LOGIN ENCRYPTED PASSWORD '$METASTOREDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE metastore WITH OWNER = hive ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE hive LOGIN ENCRYPTED PASSWORD '$METASTOREDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE metastore WITH OWNER = hive ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "hive : $METASTOREDB_PASSWORD"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE oozie LOGIN ENCRYPTED PASSWORD '$OOZIEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE oozie WITH OWNER = oozie ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE oozie LOGIN ENCRYPTED PASSWORD '$OOZIEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE oozie WITH OWNER = oozie ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "oozie : $OOZIEDB_PASSWORD"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE sentry LOGIN ENCRYPTED PASSWORD '$SENTRYDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE sentry WITH OWNER = sentry ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE sentry LOGIN ENCRYPTED PASSWORD '$SENTRYDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE sentry WITH OWNER = sentry ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "sentry : $SENTRYDB_PASSWORD"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE hue LOGIN ENCRYPTED PASSWORD '$HUEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
-$ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE hue WITH OWNER = hue ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE hue LOGIN ENCRYPTED PASSWORD '$HUEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE hue WITH OWNER = hue ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "hue : $HUEDB_PASSWORD"
 echo "****************************************"
 echo "****************************************"

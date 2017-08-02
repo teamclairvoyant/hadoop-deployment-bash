@@ -18,13 +18,13 @@
 discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -32,8 +32,8 @@ discover_os() {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
@@ -49,7 +49,7 @@ echo "**************************************************************************
 # Check to see if we are on a supported OS.
 # Only available on EL.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -61,11 +61,11 @@ fi
 
 echo "Configuring tuned..."
 if [ "$OSREL" == 6 ]; then
-  PROFILE=`tuned-adm active | awk '{print $NF}' | head -1`
+  PROFILE=$(tuned-adm active | awk '{print $NF}' | head -1)
   sed -e '/^vm.swappiness/s|= .*|= 1|' -i /etc/tune-profiles/${PROFILE}/sysctl.ktune
 fi
 if [ "$OSREL" == 7 ]; then
-  PROFILE=`tuned-adm active | awk '{print $NF}'`
+  PROFILE=$(tuned-adm active | awk '{print $NF}')
   if [ "$OS" == CentOS ] && [ "$PROFILE" == balanced ] && ! is_virtual; then
     PROFILE=throughput-performance
   fi

@@ -22,13 +22,13 @@
 discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -36,14 +36,14 @@ discover_os() {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
 
 _install_oracle_jdbc() {
-  pushd $(dirname $0)
+  pushd "$(dirname "$0")"
   if [ ! -f ojdbc6.jar ] && [ ! -f ojdbc8.jar ]; then
     echo "** NOTICE: ojdbc6.jar or ojdbc8.jar not found.  Please manually download from"
     echo "   http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html"
@@ -76,7 +76,7 @@ echo "*** $(basename $0) $@"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -88,21 +88,21 @@ if [ -z "$INSTALLDB" ]; then
 fi
 SCMVERSION=$2
 
-PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
-eval $PROXY
+PROXY=$(egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
+eval "$PROXY"
 export http_proxy
 export https_proxy
 if [ -z "$http_proxy" ]; then
-  PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
+  PROXY=$(egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*)
   if [ -n "$PROXY" ]; then
-    . $PROXY
+    . "$PROXY"
   fi
 fi
 
 echo "Installing Cloudera Manager Server..."
 echo "CM database is: $INSTALLDB"
 echo "CM version is: $SCMVERSION"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # Test to see if JDK 6 is present.
   if rpm -q jdk >/dev/null; then
     HAS_JDK=yes
@@ -156,7 +156,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     echo "****************************************"
     echo "****************************************"
   fi
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/apt/sources.list.d/cloudera-manager.list ]; then
     if [ "$OS" == Debian ]; then

@@ -29,8 +29,8 @@ if [ $DEBUG ]; then set -x; fi
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
 
 # Function to print the help screen.
-print_help () {
-  printf "Usage:  $1 --navpass <password> --mountpoint <mountpoint> --emountpoint <emountpoint> --category <category>\n"
+print_help() {
+  printf "Usage:  %s --navpass <password> --mountpoint <mountpoint> --emountpoint <emountpoint> --category <category>\n" "$1"
   printf "\n"
   printf "         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n"
   printf "         -m|--mountpoint       Mountpoint of the source filesystem.\n"
@@ -39,13 +39,13 @@ print_help () {
   printf "        [-h|--help]\n"
   printf "        [-v|--version]\n"
   printf "\n"
-  printf "   ex.  $1 --navpass \"mypasssword\" --mountpoint /data/0 --emountpoint /navencrypt/0 --category data\n"
+  printf "   ex.  %s --navpass \"mypasssword\" --mountpoint /data/0 --emountpoint /navencrypt/0 --category data\n" "$1"
   exit 1
 }
 
 # Function to check for root priviledges.
-check_root () {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+check_root() {
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     printf "You must have root priviledges to run this program.\n"
     exit 2
   fi
@@ -86,14 +86,14 @@ while [[ $1 = -* ]]; do
       CATEGORY=$1
       ;;
     -h|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       printf "\tMove data onto Navigator Encrypt encrypted storage.\n"
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
@@ -103,10 +103,10 @@ echo "**************************************************************************
 echo "*** $(basename $0)"
 echo "********************************************************************************"
 # Check to see if we have no parameters.
-if [[ -z "$NAVPASS" ]]; then print_help "$(basename $0)"; fi
-if [[ -z "$MOUNTPOINT" ]]; then print_help "$(basename $0)"; fi
-if [[ -z "$EMOUNTPOINT" ]]; then print_help "$(basename $0)"; fi
-if [[ -z "$CATEGORY" ]]; then print_help "$(basename $0)"; fi
+if [[ -z "$NAVPASS" ]]; then print_help "$(basename "$0")"; fi
+if [[ -z "$MOUNTPOINT" ]]; then print_help "$(basename "$0")"; fi
+if [[ -z "$EMOUNTPOINT" ]]; then print_help "$(basename "$0")"; fi
+if [[ -z "$CATEGORY" ]]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
@@ -116,11 +116,11 @@ set -u
 umask 022
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
-  if [ -d $MOUNTPOINT ]; then
-    if [ -d $EMOUNTPOINT ]; then
+  if [ -d "$MOUNTPOINT" ]; then
+    if [ -d "$EMOUNTPOINT" ]; then
       echo "Moving data from ${MOUNTPOINT} to ${EMOUNTPOINT} for encryption..."
-      printf '%s' $NAVPASS |
-      navencrypt-move encrypt @${CATEGORY} $MOUNTPOINT $EMOUNTPOINT
+      printf '%s' "$NAVPASS" |
+      navencrypt-move encrypt "@${CATEGORY}" "$MOUNTPOINT" "$EMOUNTPOINT"
     else
       printf "** ERROR: Destination mountpoint ${EMOUNTPOINT} is not a directory. Exiting..."
       exit 5

@@ -32,8 +32,8 @@ FSMOUNTOPT=noatime
 FORCE=no
 
 # Function to print the help screen.
-print_help () {
-  printf "Usage:  $1 --navpass <password> --device <device> --emountpoint <emountpoint> [--fstype <fstype>] [--mountoptions <options>]\n"
+print_help() {
+  printf "Usage:  %s --navpass <password> --device <device> --emountpoint <emountpoint> [--fstype <fstype>] [--mountoptions <options>]\n" "$1"
   printf "\n"
   printf "         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n"
   printf "         -d|--device           Disk device to encrypt.  Device will be wiped.\n"
@@ -44,13 +44,13 @@ print_help () {
   printf "        [-h|--help]\n"
   printf "        [-v|--version]\n"
   printf "\n"
-  printf "   ex.  $1 --navpass \"mypasssword\" --device /dev/sdb --emountpoint /navencrypt/2\n"
+  printf "   ex.  %s --navpass \"mypasssword\" --device /dev/sdb --emountpoint /navencrypt/2\n" "$1"
   exit 1
 }
 
 # Function to check for root priviledges.
-check_root () {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+check_root() {
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     printf "You must have root priviledges to run this program.\n"
     exit 2
   fi
@@ -84,7 +84,7 @@ while [[ $1 = -* ]]; do
       ;;
     -e|--emountpoint)
       shift
-      EMOUNTPOINT=$(echo $1 | sed -e 's|/$||')
+      EMOUNTPOINT=$(echo "$1" | sed -e 's|/$||')
       ;;
     -t|--fstype)
       shift
@@ -98,14 +98,14 @@ while [[ $1 = -* ]]; do
       FORCE=yes
       ;;
     -h|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       printf "\tPrepare a device for Navigator Encrypt data encryption.\n"
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
@@ -115,9 +115,9 @@ echo "**************************************************************************
 echo "*** $(basename $0)"
 echo "********************************************************************************"
 # Check to see if we have no parameters.
-if [[ -z "$NAVPASS" ]]; then print_help "$(basename $0)"; fi
-if [[ -z "$DEVICE" ]]; then print_help "$(basename $0)"; fi
-if [[ -z "$EMOUNTPOINT" ]]; then print_help "$(basename $0)"; fi
+if [[ -z "$NAVPASS" ]]; then print_help "$(basename "$0")"; fi
+if [[ -z "$DEVICE" ]]; then print_help "$(basename "$0")"; fi
+if [[ -z "$EMOUNTPOINT" ]]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
@@ -128,16 +128,16 @@ umask 022
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   # Check to make sure we do not wipe a LVM.
-  if ! echo $DEVICE | grep -qE '^/dev/sd|^/dev/xvd' ;then
-    printf "** ERROR: ${DEVICE} is not an sd device. Exiting..."
+  if ! echo "$DEVICE" | grep -qE '^/dev/sd|^/dev/xvd' ;then
+    echo "** ERROR: ${DEVICE} is not an sd device. Exiting..."
     exit 7
   fi
-  if [ -b ${DEVICE} ]; then
+  if [ -b "$DEVICE" ]; then
     # Is there a partition?
-    if [ -b ${DEVICE}1 ]; then
+    if [ -b "${DEVICE}1" ]; then
       echo "** Device ${DEVICE} is already partitioned."
       PART="1"
-    elif [ -b ${DEVICE}p1 ]; then
+    elif [ -b "${DEVICE}p1" ]; then
       echo "** Device ${DEVICE} is already partitioned."
       PART="p1"
     else
@@ -146,19 +146,19 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
         echo "** Installing parted. Please wait..."
         yum -y -d1 -e1 install parted
       fi
-      SIZE=$(lsblk --all --bytes --list --output NAME,SIZE,TYPE $DEVICE | awk '/disk$/{print $2}')
+      SIZE=$(lsblk --all --bytes --list --output NAME,SIZE,TYPE "$DEVICE" | awk '/disk$/{print $2}')
       if [ "$SIZE" -ge 2199023255552 ]; then
-        parted --script $DEVICE mklabel gpt mkpart primary $FSTYPE 1049kB 100%
+        parted --script "$DEVICE" mklabel gpt mkpart primary "$FSTYPE" 1049kB 100%
       else
-        parted --script $DEVICE mklabel msdos mkpart primary $FSTYPE 1049kB 100%
+        parted --script "$DEVICE" mklabel msdos mkpart primary "$FSTYPE" 1049kB 100%
       fi
       sleep 2
-      if [ -b ${DEVICE}1 ]; then
+      if [ -b "${DEVICE}1" ]; then
         PART="1"
-      elif [ -b ${DEVICE}p1 ]; then
+      elif [ -b "${DEVICE}p1" ]; then
         PART="p1"
       else
-        printf "** ERROR: Device ${DEVICE} partitioning failed. Exiting..."
+        echo "** ERROR: Device ${DEVICE} partitioning failed. Exiting..."
         exit 5
       fi
     fi
@@ -166,22 +166,22 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
     if [ "$FORCE" == yes ]; then
       dd if=/dev/zero of=${DEVICE}${PART} ibs=1M count=1
     fi
-    mkdir -p -m 0755 $(dirname $EMOUNTPOINT)
-    mkdir -p -m 0755 $EMOUNTPOINT && \
-    chattr +i $EMOUNTPOINT && \
-    printf '%s' $NAVPASS |
-    navencrypt-prepare -t $FSTYPE -o $FSMOUNTOPT --use-uuid ${DEVICE}${PART} $EMOUNTPOINT -
+    mkdir -p -m 0755 "$(dirname $EMOUNTPOINT)"
+    mkdir -p -m 0755 "$EMOUNTPOINT" && \
+    chattr +i "$EMOUNTPOINT" && \
+    printf '%s' "$NAVPASS" |
+    navencrypt-prepare -t "$FSTYPE" -o "$FSMOUNTOPT" --use-uuid "${DEVICE}${PART}" "$EMOUNTPOINT" -
     RETVAL=$?
     if [ "$RETVAL" -ne 0 ]; then
       echo "** ERROR: Could not format ${DEVICE} for ${EMOUNTPOINT}."
       exit $RETVAL
     fi
   else
-    printf "** ERROR: Device ${DEVICE} does not exist. Exiting..."
+    echo "** ERROR: Device ${DEVICE} does not exist. Exiting..."
     exit 4
   fi
 else
-  printf "** WARNING: This host is not yet registered.  Skipping..."
+  echo "** WARNING: This host is not yet registered.  Skipping..."
   exit 3
 fi
 

@@ -25,16 +25,16 @@
 # /var/cache/oracle-jdk8-installer for Debian-based systems.
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -42,8 +42,8 @@ discover_os () {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
@@ -53,7 +53,7 @@ echo "*** $(basename $0)"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -65,19 +65,19 @@ if [ -z "$USECLOUDERA" ]; then
 fi
 SCMVERSION=$2
 
-PROXY=`egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*`
-eval $PROXY
+PROXY=$(egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
+eval "$PROXY"
 export http_proxy
 export https_proxy
 if [ -z "$http_proxy" ]; then
-  PROXY=`egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*`
+  PROXY=$(egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*)
   if [ -n "$PROXY" ]; then
-    . $PROXY
+    . "$PROXY"
   fi
 fi
 
 echo "Installing Oracle JDK..."
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if [ "$USECLOUDERA" = yes ]; then
     # Because it may have been put there by some other process.
     if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
@@ -89,9 +89,9 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
       fi
     fi
     yum -y -e1 -d1 install oracle-j2sdk1.7
-    DIRNAME=`rpm -ql oracle-j2sdk1.7|head -1`
-    TARGET=`basename $DIRNAME`
-    ln -s $TARGET /usr/java/default
+    DIRNAME=$(rpm -ql oracle-j2sdk1.7|head -1)
+    TARGET=$(basename "$DIRNAME")
+    ln -s "$TARGET" /usr/java/default
   elif [ "$USECLOUDERA" = 7 ]; then
     pushd /tmp
     echo "*** Downloading Oracle JDK 7u80..."
@@ -110,7 +110,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     echo "ERROR: Unknown Java version.  Please choose 7 or 8."
     exit 10
   fi
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   if [ "$USECLOUDERA" = yes ]; then
     # Because it may have been put there by some other process.

@@ -35,7 +35,7 @@ print_help() {
 
 # Function to check for root priviledges.
 check_root() {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
   fi
@@ -45,20 +45,20 @@ check_root() {
 err_msg() {
   local CODE=$1
   echo "ERROR: Could not install required package. Exiting."
-  exit $CODE
+  exit "$CODE"
 }
 
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -66,8 +66,8 @@ discover_os() {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
@@ -103,21 +103,21 @@ while [[ $1 = -* ]]; do
       MYSQL_PASSWORD=$1
       ;;
     -H|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       echo "Create the Cloudera Manager users and databases in MySQL."
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
 done
 
 # Check to see if we have the required parameters.
-if [ -z "$MYSQL_HOST" -o -z "$MYSQL_USER" -o -z "$MYSQL_PASSWORD" ]; then print_help "$(basename $0)"; fi
+if [ -z "$MYSQL_HOST" ] || [ -z "$MYSQL_USER" ] || [ -z "$MYSQL_PASSWORD" ]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
@@ -127,14 +127,14 @@ echo "*** $(basename $0)"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 # main
 echo "Creating users and databases in MySQL for Reports Manager, Navigator Audit, Navigator Metadata, Hive, Oozie, Sentry, and Hue..."
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
     $ECHO sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
@@ -145,42 +145,42 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     $ECHO sudo yum -y -e1 -d1 install mariadb apg || err_msg 4
   fi
   if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   $ECHO sudo apt-get -y -q install mysql-client apg || err_msg 4
   if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
-RMANDB_PASSWORD=`eval $PWCMD`
-NAVDB_PASSWORD=`eval $PWCMD`
-NAVMSDB_PASSWORD=`eval $PWCMD`
-METASTOREDB_PASSWORD=`eval $PWCMD`
-OOZIEDB_PASSWORD=`eval $PWCMD`
-SENTRYDB_PASSWORD=`eval $PWCMD`
-HUEDB_PASSWORD=`eval $PWCMD`
+RMANDB_PASSWORD=$(eval "$PWCMD")
+NAVDB_PASSWORD=$(eval "$PWCMD")
+NAVMSDB_PASSWORD=$(eval "$PWCMD")
+METASTOREDB_PASSWORD=$(eval "$PWCMD")
+OOZIEDB_PASSWORD=$(eval "$PWCMD")
+SENTRYDB_PASSWORD=$(eval "$PWCMD")
+HUEDB_PASSWORD=$(eval "$PWCMD")
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
 echo "*** SAVE THESE PASSWORDS"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE rman DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY '$RMANDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE rman DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY '$RMANDB_PASSWORD';"
 echo "rman : $RMANDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE nav DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON nav.* TO 'nav'@'%' IDENTIFIED BY '$NAVDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE nav DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON nav.* TO 'nav'@'%' IDENTIFIED BY '$NAVDB_PASSWORD';"
 echo "nav : $NAVDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE navms DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON navms.* TO 'navms'@'%' IDENTIFIED BY '$NAVMSDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE navms DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON navms.* TO 'navms'@'%' IDENTIFIED BY '$NAVMSDB_PASSWORD';"
 echo "navms : $NAVMSDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE metastore DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY '$METASTOREDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE metastore DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY '$METASTOREDB_PASSWORD';"
 echo "hive : $METASTOREDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE oozie DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY '$OOZIEDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE oozie DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY '$OOZIEDB_PASSWORD';"
 echo "oozie : $OOZIEDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE sentry DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON sentry.* TO 'sentry'@'%' IDENTIFIED BY '$SENTRYDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE sentry DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON sentry.* TO 'sentry'@'%' IDENTIFIED BY '$SENTRYDB_PASSWORD';"
 echo "sentry : $SENTRYDB_PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '$HUEDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '$HUEDB_PASSWORD';"
 echo "hue : $HUEDB_PASSWORD"
 echo "****************************************"
 echo "****************************************"

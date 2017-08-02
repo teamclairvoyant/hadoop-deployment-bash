@@ -35,13 +35,13 @@ fi
 
 keytool -importcert -trustcacerts -noprompt -alias RootCA \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
--file /opt/cloudera/security/CAcerts/ca.cert.pem -storepass $SP
+-file /opt/cloudera/security/CAcerts/ca.cert.pem -storepass "$SP"
 
 keytool -importcert -trustcacerts -noprompt -alias SubordinateCA \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
--file /opt/cloudera/security/CAcerts/intermediate.cert.pem -storepass $SP
+-file /opt/cloudera/security/CAcerts/intermediate.cert.pem -storepass "$SP"
 
 keytool -importcert -trustcacerts -noprompt -alias localhost \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
--file /opt/cloudera/security/x509/localhost.pem -storepass $SP
+-file /opt/cloudera/security/x509/localhost.pem -storepass "$SP"
 

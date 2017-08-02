@@ -23,7 +23,7 @@ if [ $DEBUG ]; then ECHO=echo; fi
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 YUMOPTS="-y -e1 -d1"
-DATE=`date '+%Y%m%d%H%M%S'`
+DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
 print_help() {
@@ -42,7 +42,7 @@ print_help() {
 
 # Function to check for root priviledges.
 check_root() {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
   fi
@@ -52,13 +52,13 @@ check_root() {
 discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -66,8 +66,8 @@ discover_os() {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
@@ -92,8 +92,8 @@ while [[ $1 = -* ]]; do
   case $1 in
     -d|--domain)
       shift
-      _DOMAIN_UPPER=`echo $1 | tr '[:lower:]' '[:upper:]'`
-      _DOMAIN_LOWER=`echo $1 | tr '[:upper:]' '[:lower:]'`
+      _DOMAIN_UPPER=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+      _DOMAIN_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
       ;;
     -u|--user)
       shift
@@ -115,14 +115,14 @@ while [[ $1 = -* ]]; do
       _BATCH7="--unattended"
       ;;
     -h|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       echo "Intall and configure SSSD to use the Active Directory provider."
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
@@ -134,25 +134,25 @@ echo "**************************************************************************
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
-#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 # Check to see if we have the required parameters.
-if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
+if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
 
 # main
 echo "Installing SSSD for Active Directory..."
-if [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
+if \( [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] \) && [ "$OSREL" == 7 ]; then
   # EL7
   OPTS="$_USER $_OU7 $_ID $_BATCH7"
   echo "** Installing software."
-  yum $YUMOPTS install sssd adcli realmd PackageKit
+  yum "$YUMOPTS" install sssd adcli realmd PackageKit
 
   cat <<EOF >/etc/realmd.conf
 [users]
@@ -161,8 +161,8 @@ default-shell = /bin/bash
 EOF
 
   echo "** Discovering and joining domain..."
-  realm discover $_DOMAIN_LOWER && \
-  realm join $_DOMAIN_LOWER $OPTS || exit $?
+  realm discover "$_DOMAIN_LOWER" && \
+  realm join "$_DOMAIN_LOWER" $OPTS || exit $?
 
   sed -e '/^use_fully_qualified_names .*/d' \
       -e '/^\[domain/a\
@@ -177,15 +177,15 @@ use_fully_qualified_names = False' -i /etc/sssd/sssd.conf
 #default_ccache_name = FILE:/tmp/krb5cc_%{uid}' -i /etc/sssd/sssd.conf
   service sssd restart
 
-elif [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
+elif \( [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] \) && [ "$OSREL" == 6 ]; then
   # EL6
   OPTS="$_USER $_OU6"
   echo "** Installing software."
-  yum $YUMOPTS install sssd oddjob oddjob-mkhomedir adcli
+  yum "$YUMOPTS" install sssd oddjob oddjob-mkhomedir adcli
 
   echo "** Discovering and joining domain..."
-  adcli info $_DOMAIN_LOWER && \
-  adcli join $_DOMAIN_LOWER $OPTS || exit $?
+  adcli info "$_DOMAIN_LOWER" && \
+  adcli join "$_DOMAIN_LOWER" $OPTS || exit $?
 
   echo "** Writing configs..."
   cat <<EOF >/etc/krb5.conf
@@ -240,7 +240,7 @@ EOF
   chkconfig sssd on
   service oddjobd start
   chkconfig oddjobd on
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   :
 fi
 
@@ -249,7 +249,7 @@ if [ -f /etc/nscd.conf ]; then
   if [ ! -f /etc/nscd.conf-orig ]; then
     cp -p /etc/nscd.conf /etc/nscd.conf-orig
   else
-    cp -p /etc/nscd.conf /etc/nscd.conf.${DATE}
+    cp -p /etc/nscd.conf /etc/nscd.conf."${DATE}"
   fi
   sed -e '/enable-cache[[:blank:]]*passwd/s|yes|no|' \
       -e '/enable-cache[[:blank:]]*group/s|yes|no|' \

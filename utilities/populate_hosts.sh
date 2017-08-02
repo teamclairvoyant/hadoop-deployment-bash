@@ -18,8 +18,8 @@
 # 1 - name of the file which contains /etc/hosts formatted data - required
 
 #for X in `awk -F@ '{print $2}' hosts-QA `;do
-#  Y=`echo $X|sed -e 's|\.|-|g'`
-#  Z=`host "ip-${Y}.us-west-2.compute.internal."`
+#  Y=$(echo $X|sed -e 's|\.|-|g')
+#  Z=$(host "ip-${Y}.us-west-2.compute.internal.")
 #  echo "$Z" | awk "{print \$4,\$1,\"ip-$Y\"}"
 #done >hostlist
 
@@ -32,8 +32,8 @@ if [ -z "$HOSTLIST" ]; then
   exit 1
 fi
 echo "Populating /etc/hosts..."
-IP=`/usr/bin/curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
+IP=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 #sed -i -e '/^[0-9]/d' /etc/hosts
 sed -i -e "/^${IP}/d" /etc/hosts
-cat $HOSTLIST >>/etc/hosts
+cat "$HOSTLIST" >>/etc/hosts
 

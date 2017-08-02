@@ -48,16 +48,16 @@ check_root() {
 }
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -65,8 +65,8 @@ discover_os () {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
@@ -130,7 +130,7 @@ echo "*** $(basename $0)"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -148,7 +148,7 @@ if ! (exec 6<>/dev/tcp/${CMHOST}/${CMPORT}); then
   exit 10
 fi
 
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
   PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
   if ! rpm -q apg >/dev/null; then
@@ -158,7 +158,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if rpm -q apg >/dev/null; then
     export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'
   fi
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   # https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
   PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
   if ! dpkg -l apg >/dev/null; then
@@ -171,7 +171,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   fi
 fi
 
-APIPASS=`eval $PWCMD`
+APIPASS=$(eval "$PWCMD")
 
 if curl -s $OPT -X GET -u "${ADMINUSER}:${ADMINPASS}" "${BASEURL}/api/${API}/users/${APIUSER}" | grep -q "does not exist"; then
   curl -s $OPT -X POST -u "${ADMINUSER}:${ADMINPASS}" -H "content-type:application/json" -d \

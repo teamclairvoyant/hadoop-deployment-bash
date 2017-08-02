@@ -26,7 +26,7 @@ _ROOTDN="Manager"
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 YUMOPTS="-y -e1 -d1"
-DATE=`date '+%Y%m%d%H%M%S'`
+DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
 print_help() {
@@ -40,7 +40,7 @@ print_help() {
 
 # Function to check for root priviledges.
 check_root() {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
   fi
@@ -50,13 +50,13 @@ check_root() {
 discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
@@ -64,8 +64,8 @@ discover_os() {
       else
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
+      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
     fi
   fi
 }
@@ -90,21 +90,21 @@ while [[ $1 = -* ]]; do
   case $1 in
     -d|--domain)
       shift
-      _DOMAIN_LOWER=`echo $1 | tr '[:upper:]' '[:lower:]'`
+      _DOMAIN_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
       ;;
     -r|--rootdn)
       shift
       _ROOTDN="$1"
       ;;
     -h|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       echo "Install OpenLDAP server."
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
@@ -116,33 +116,33 @@ echo "**************************************************************************
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
-#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 # Check to see if we have the required parameters.
-if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
+if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
 
 # main
 echo "Installing OpenLDAP..."
-_SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
-_ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
+_SUFFIX=$(echo "${_DOMAIN_LOWER}" | awk -F. '{print "dc="$1",dc="$2}')
+_ROOTDN=$(echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||")
 _ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
 
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  yum $YUMOPTS install openldap-servers openldap-clients
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+  yum "$YUMOPTS" install openldap-servers openldap-clients
 
-  _PASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+  _PASS=$(apg -a 1 -M NCL -m 20 -x 20 -n 1)
   if [ -z "$_PASS" ]; then
-    _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+    _PASS=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
   fi
   _ROOTPW=${_PASS}
-  _LDAPPASS=`slappasswd -s $_ROOTPW`
+  _LDAPPASS=$(slappasswd -s "$_ROOTPW")
   cp -p /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
   chown -R ldap:ldap /var/lib/ldap
   restorecon -rv /var/lib/ldap
@@ -196,12 +196,12 @@ EOF
   echo "****************************************"
   echo "****************************************"
 
-  cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf.${DATE}
+  cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf."${DATE}"
   cat <<EOF >>/etc/openldap/ldap.conf
 BASE            ${_SUFFIX}
 URI             ldap://$(hostname -f)
 EOF
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   :
 fi
 
