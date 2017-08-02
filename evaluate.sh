@@ -202,30 +202,39 @@ echo "****************************************"
 echo "*** JCE"
 if [ -d /usr/java/jdk1.6.0_31/jre/lib/security/ ]; then
   ls -l /usr/java/jdk1.6.0_31/jre/lib/security/*.jar
+  sha1sum /usr/java/jdk1.6.0_31/jre/lib/security/*.jar
 fi
 if [ -d /usr/java/jdk1.7.0_67-cloudera/jre/lib/security/ ]; then
   ls -l /usr/java/jdk1.7.0_67-cloudera/jre/lib/security/*.jar
+  sha1sum /usr/java/jdk1.7.0_67-cloudera/jre/lib/security/*.jar
 fi
 if [ -d /usr/java/jdk1.8.0_*/jre/lib/security/ ]; then
   ls -l /usr/java/jdk1.8.0_*/jre/lib/security/*.jar
+  sha1sum /usr/java/jdk1.8.0_*/jre/lib/security/*.jar
 fi
 if [ -d /usr/java/default/jre/lib/security/ ]; then
   ls -l /usr/java/default/jre/lib/security/*.jar
+  sha1sum /usr/java/default/jre/lib/security/*.jar
 fi
 if [ -d /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/ ]; then
   ls -l /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/*.jar
+  sha1sum /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/*.jar
 fi
 if [ -d /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/ ]; then
   ls -l /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/*.jar
+  sha1sum /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/*.jar
 fi
 if [ -d /usr/lib/jvm/default-java/jre/lib/security/ ]; then
   ls -l /usr/lib/jvm/default-java/jre/lib/security/*.jar
+  sha1sum /usr/lib/jvm/default-java/jre/lib/security/*.jar
 fi
 if [ -d /usr/lib/jvm/java-7-oracle/jre/lib/security/ ]; then
   ls -l /usr/lib/jvm/java-7-oracle/jre/lib/security/*.jar
+  sha1sum /usr/lib/jvm/java-7-oracle/jre/lib/security/*.jar
 fi
 if [ -d /usr/lib/jvm/java-8-oracle/jre/lib/security/ ]; then
   ls -l /usr/lib/jvm/java-8-oracle/jre/lib/security/*.jar
+  sha1sum /usr/lib/jvm/java-8-oracle/jre/lib/security/*.jar
 fi
 
 echo "****************************************"
