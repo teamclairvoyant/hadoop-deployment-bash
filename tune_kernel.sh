@@ -39,7 +39,7 @@ net.ipv4.tcp_wmem = 4096 65536 4194304"
 #vm.min_free_kbytes = 1048576
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
     OS=$(lsb_release -is)
@@ -62,7 +62,7 @@ discover_os () {
   fi
 }
 
-_sysctld () {
+_sysctld() {
   FILE=/etc/sysctl.d/cloudera-network.conf
 
   install -m 0644 -o root -g root /dev/null "$FILE"

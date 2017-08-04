@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2016
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
     OS=`lsb_release -is`
@@ -38,7 +38,7 @@ discover_os () {
   fi
 }
 
-is_virtual () {
+is_virtual() {
   egrep -qi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
   return $?
 }

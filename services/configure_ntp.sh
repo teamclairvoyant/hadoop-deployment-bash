@@ -17,7 +17,7 @@
 DATE=`date +'%Y%m%d%H%M%S'`
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
     OS=`lsb_release -is`
@@ -40,12 +40,12 @@ discover_os () {
   fi
 }
 
-is_virtual () {
+is_virtual() {
   egrep -qi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
   return $?
 }
 
-is_aws () {
+is_aws() {
   grep -qi 'amazon' /sys/devices/virtual/dmi/id/*
   return $?
 }

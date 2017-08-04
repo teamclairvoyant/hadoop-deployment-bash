@@ -27,7 +27,7 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 
 # Function to print the help screen.
-print_help () {
+print_help() {
   echo "Usage:  $1 --host <hostname> [--port <port>] --user <username> --password <password>"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
@@ -37,7 +37,7 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
+check_root() {
   if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
@@ -45,14 +45,14 @@ check_root () {
 }
 
 # Function to print and error message and exit.
-err_msg () {
+err_msg() {
   local CODE=$1
   echo "ERROR: Could not install required package. Exiting."
   exit "$CODE"
 }
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
     OS=$(lsb_release -is)

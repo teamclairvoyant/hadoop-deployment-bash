@@ -31,7 +31,7 @@ CMPORT=7180
 CMSCHEME=http
 
 # Function to print the help screen.
-print_help () {
+print_help() {
   print "Usage:  $1 -u <username> -p <password> -H <host> [-P <port>]"
   print "        $1 [-h|--help]"
   print "        $1 [-v|--version]"
@@ -41,7 +41,7 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
+check_root() {
   if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
     print "You must have root priviledges to run this program."
     exit 2

@@ -19,7 +19,7 @@
 # 2 - LDAP server hostname - required
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
     OS=`lsb_release -is`

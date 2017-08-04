@@ -45,7 +45,7 @@ is_virtual () {
   return $?
 }
 
-tinker_ntp.conf () {
+tinker_ntp.conf() {
   cp -p /etc/ntp.conf /etc/ntp.conf.${DATE}
   sed -e '/# CLAIRVOYANT$/d' -i /etc/ntp.conf
   sed -e '1i\

@@ -18,7 +18,7 @@
 # Fix EC2 Network Issue: skb rides the rocket: 19 slots
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
     OS=`lsb_release -is`
