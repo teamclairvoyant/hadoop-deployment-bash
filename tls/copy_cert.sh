@@ -19,12 +19,14 @@ install -m 0440 -o root -g hbase /opt/cloudera/security/jks/localhost-keystore.j
 install -m 0440 -o root -g hive /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/hive-keystore.jks
 install -m 0440 -o root -g oozie /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/oozie-keystore.jks
 install -m 0440 -o root -g solr /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/solr-keystore.jks
+install -m 0440 -o root -g spark /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/spark-keystore.jks
 install -m 0440 -o root -g httpfs /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/httpfs-keystore.jks
 install -m 0440 -o root -g flume /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/flume-keystore.jks
 cat /opt/cloudera/security/CAcerts/ca.cert.pem /opt/cloudera/security/CAcerts/intermediate.cert.pem >/opt/cloudera/security/x509/ca-chain.cert.pem
 chmod 0444 /opt/cloudera/security/x509/ca-chain.cert.pem
 install -m 0444 -o hue -g hue /opt/cloudera/security/x509/localhost.pem /opt/cloudera/security/x509/hue.crt
 install -m 0440 -o hue -g hue /opt/cloudera/security/x509/localhost.e.key /opt/cloudera/security/x509/hue.key
+install -m 0440 -o hue -g hue /opt/cloudera/security/x509/localhost.key /opt/cloudera/security/x509/hue-proxy.key
 install -m 0444 -o impala -g impala /opt/cloudera/security/x509/localhost.pem /opt/cloudera/security/x509/impala.crt
 install -m 0440 -o impala -g impala /opt/cloudera/security/x509/localhost.e.key /opt/cloudera/security/x509/impala.key
 

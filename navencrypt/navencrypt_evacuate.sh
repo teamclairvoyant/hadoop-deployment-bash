@@ -140,6 +140,7 @@ mkdir -p -m 0755 ${MOUNTPOINT}tmp
 mv ${MOUNTPOINT}/* ${MOUNTPOINT}tmp/
 umount $MOUNTPOINT
 sed -e "/^${ESCFULLDEVICE} /d" -i /etc/fstab
+chattr -i "$MOUNTPOINT"
 rmdir $MOUNTPOINT
 mv ${MOUNTPOINT}tmp ${MOUNTPOINT}
 

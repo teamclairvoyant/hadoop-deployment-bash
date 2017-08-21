@@ -61,7 +61,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
       sed -i -e '/^vm.swappiness/d' /etc/sysctl.conf
     fi
     install -m 0644 -o root -g root /dev/null /etc/sysctl.d/cloudera.conf
-    echo "# Tuning for Hadoop installation." >/etc/sysctl.d/cloudera.conf
+    echo "# Tuning for Hadoop installation. CLAIRVOYANT" >/etc/sysctl.d/cloudera.conf
     echo "vm.swappiness = $VAL" >>/etc/sysctl.d/cloudera.conf
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
@@ -69,7 +69,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
     sed -i -e '/^vm.swappiness/d' /etc/sysctl.conf
   fi
   install -m 0644 -o root -g root /dev/null /etc/sysctl.d/cloudera.conf
-  echo "# Tuning for Hadoop installation." >/etc/sysctl.d/cloudera.conf
+  echo "# Tuning for Hadoop installation. CLAIRVOYANT" >/etc/sysctl.d/cloudera.conf
   echo "vm.swappiness = $VAL" >>/etc/sysctl.d/cloudera.conf
 fi
 
