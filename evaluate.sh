@@ -333,6 +333,20 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
 fi
 
 echo "****************************************"
+echo "*** Hortonworks Software"
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+  rpm -qa ^ambari\*
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  dpkg -l \*ambari\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+fi
+echo "*** Hortonworks Hadoop Packages"
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+  rpm -qa ^hadoop\*
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+fi
+
+echo "****************************************"
 echo "*** Native Code"
 hadoop checknative
 
