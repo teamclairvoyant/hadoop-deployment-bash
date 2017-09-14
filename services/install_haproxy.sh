@@ -134,8 +134,6 @@ listen stats :1936
 
 EOF
 
-chown root:root /etc/rsyslog.d/remoteudp.conf
-chmod 0644 /etc/rsyslog.d/remoteudp.conf
 cat <<EOF >/etc/rsyslog.d/remoteudp.conf
 # CLAIRVOYANT
 # Provides UDP syslog reception
@@ -144,6 +142,9 @@ cat <<EOF >/etc/rsyslog.d/remoteudp.conf
 
 local2.* /var/log/haproxy.log
 EOF
+chown root:root /etc/rsyslog.d/remoteudp.conf
+chmod 0644 /etc/rsyslog.d/remoteudp.conf
+
 touch /var/log/haproxy.log
 chown root:root /var/log/haproxy.log
 chmod 0600 /var/log/haproxy.log
