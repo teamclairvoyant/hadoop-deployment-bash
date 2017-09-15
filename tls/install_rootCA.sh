@@ -63,6 +63,10 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   c_rehash /opt/cloudera/security/CAcerts/
 
   if [ -d /etc/pki/ca-trust/source/anchors/ ]; then
+    # Lets not enable dynamic certs if the customer has not done it themselves.
+    #if [ "$OSREL" == 6 ]; then
+    #  update-ca-trust check | grep -q DISABLED && update-ca-trust enable
+    #fi
     cp -p /opt/cloudera/security/CAcerts/*.pem /etc/pki/ca-trust/source/anchors/
     update-ca-trust extract
   fi
