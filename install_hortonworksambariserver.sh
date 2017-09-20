@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086,SC1090,SC1091
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2017
+#
 
 # ARGV:
-# 1 - Ambari server database type : embedded, postgresql, or mysql - optional
+# 1 - Ambari server database type : embedded, postgresql, mysql, or oracle - optional
 # 2 - Ambari server version - optional
 AMBVERSION=2.5.2.0
 
@@ -103,30 +105,32 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   fi
   yum -y -e1 -d1 install ambari-server
   if [ "$INSTALLDB" == embedded ]; then
-    OPTS="--silent"
+    if [ -f /etc/profile.d/java.sh ]; then
+      . /etc/profile.d/java.sh
+    fi
+    ambari-server setup --java-home "$JAVA_HOME" --silent
+    service ambari-server start
+    chkconfig ambari-server on
   else
     if [ "$INSTALLDB" == mysql ]; then
       yum -y -e1 -d1 install mysql-connector-java
-      OPTS="$OPTS --jdbc-db mysql --jdbc-driver /usr/share/java/mysql-connector-java.jar"
       # Removes JDK 6 if it snuck onto the system. Tests for the actual RPM
       # named "jdk" to keep virtual packages from causing a JDK 8 uninstall.
       if [ "$HAS_JDK" == no ] && rpm -q jdk >/dev/null; then yum -y -e1 -d1 remove jdk; fi
     elif [ "$INSTALLDB" == postgresql ]; then
       yum -y -e1 -d1 install postgresql-jdbc
-      OPTS="$OPTS --jdbc-db postgres --jdbc-driver /usr/share/java/postgresql-jdbc.jar"
     elif [ "$INSTALLDB" == oracle ]; then
       _install_oracle_jdbc
-      OPTS="$OPTS --jdbc-db oracle --jdbc-driver /usr/share/java/oracle-connector-java.jar"
     else
       echo "** ERROR: Argument must be either embedded, mysql, postgresql, or oracle."
     fi
+    echo "** Now you must configure the Hortonworks Ambari server to connect to the"
+    echo "** external database.  Please run:"
+    echo "${PWD}/ambari_prepare_database.sh"
+    echo "** and then:"
+    echo "service ambari-server start"
+    echo "chkconfig ambari-server-db on"
   fi
-  if [ -f /etc/profile.d/java.sh ]; then
-    . /etc/profile.d/java.sh
-  fi
-  ambari-server setup --java-home "$JAVA_HOME" $OPTS
-  service ambari-server start
-  chkconfig ambari-server on
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/apt/sources.list.d/ambari.list ]; then
@@ -139,28 +143,30 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   apt-get -y -qq update
   apt-get -y -q install ambari-server
   if [ "$INSTALLDB" == embedded ]; then
-    OPTS="--silent"
+    if [ -f /etc/profile.d/java.sh ]; then
+      . /etc/profile.d/java.sh
+    elif [ -f /etc/profile.d/jdk.sh ]; then
+      . /etc/profile.d/jdk.sh
+    fi
+    ambari-server setup --java-home "$JAVA_HOME" --silent
+    service ambari-server start
+    update-rc.d ambari-server defaults
   else
     if [ "$INSTALLDB" == mysql ]; then
       apt-get -y -q install libmysql-java
-      OPTS="$OPTS --jdbc-db mysql --jdbc-driver /usr/share/java/mysql-connector-java.jar"
     elif [ "$INSTALLDB" == postgresql ]; then
       apt-get -y -q install libpostgresql-jdbc-java
-      OPTS="$OPTS --jdbc-db postgres --jdbc-driver /usr/share/java/postgresql.jar"
     elif [ "$INSTALLDB" == oracle ]; then
       _install_oracle_jdbc
-      OPTS="$OPTS --jdbc-db oracle --jdbc-driver /usr/share/java/oracle-connector-java.jar"
     else
       echo "** ERROR: Argument must be either embedded, mysql, or postgresql, or oracle."
     fi
+    echo "** Now you must configure the Hortonworks Ambari server to connect to the"
+    echo "** external database.  Please run:"
+    echo "${PWD}/ambari_prepare_database.sh"
+    echo "** and then:"
+    echo "service ambari-server start"
+    echo "update-rc.d ambari-server-db defaults"
   fi
-  if [ -f /etc/profile.d/java.sh ]; then
-    . /etc/profile.d/java.sh
-  elif [ -f /etc/profile.d/jdk.sh ]; then
-    . /etc/profile.d/jdk.sh
-  fi
-  ambari-server setup --java-home "$JAVA_HOME" $OPTS
-  service ambari-server start
-  update-rc.d ambari-server defaults
 fi
 
