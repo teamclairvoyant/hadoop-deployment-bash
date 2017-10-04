@@ -148,6 +148,10 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   service ufw status
   echo "** startup config:"
 fi
+IPT=$(iptables -nL | grep -vE '^Chain|^target|^$' | wc -l)
+echo "There are $IPT active iptables rules."
+IP6T=$(ip6tables -nL | grep -vE '^Chain|^target|^$' | wc -l)
+echo "There are $IP6T active ip6tables rules."
 
 echo "****************************************"
 echo "*** SElinux"
