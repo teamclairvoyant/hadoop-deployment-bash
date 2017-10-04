@@ -282,6 +282,10 @@ if [ \( "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer \) -a \( "$OSREL" == 
 fi
 
 echo "****************************************"
+echo "*** Tuned Profile"
+tuned-adm active
+
+echo "****************************************"
 echo "*** Timezone"
 date +'%Z %z'
 
