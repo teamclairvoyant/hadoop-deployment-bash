@@ -148,6 +148,10 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   service ufw status
   echo "** startup config:"
 fi
+IPT=$(iptables -nL | grep -vE '^Chain|^target|^$' | wc -l)
+echo "There are $IPT active iptables rules."
+IP6T=$(ip6tables -nL | grep -vE '^Chain|^target|^$' | wc -l)
+echo "There are $IP6T active ip6tables rules."
 
 echo "****************************************"
 echo "*** SElinux"
@@ -200,42 +204,23 @@ cat /proc/sys/kernel/random/entropy_avail
 
 echo "****************************************"
 echo "*** JCE"
-if [ -d /usr/java/jdk1.6.0_31/jre/lib/security/ ]; then
-  ls -l /usr/java/jdk1.6.0_31/jre/lib/security/*.jar
-  sha1sum /usr/java/jdk1.6.0_31/jre/lib/security/*.jar
-fi
-if [ -d /usr/java/jdk1.7.0_67-cloudera/jre/lib/security/ ]; then
-  ls -l /usr/java/jdk1.7.0_67-cloudera/jre/lib/security/*.jar
-  sha1sum /usr/java/jdk1.7.0_67-cloudera/jre/lib/security/*.jar
-fi
-if [ -d /usr/java/jdk1.8.0_*/jre/lib/security/ ]; then
-  ls -l /usr/java/jdk1.8.0_*/jre/lib/security/*.jar
-  sha1sum /usr/java/jdk1.8.0_*/jre/lib/security/*.jar
-fi
-if [ -d /usr/java/default/jre/lib/security/ ]; then
-  ls -l /usr/java/default/jre/lib/security/*.jar
-  sha1sum /usr/java/default/jre/lib/security/*.jar
-fi
-if [ -d /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/ ]; then
-  ls -l /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/*.jar
-  sha1sum /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/*.jar
-fi
-if [ -d /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/ ]; then
-  ls -l /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/*.jar
-  sha1sum /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security/*.jar
-fi
-if [ -d /usr/lib/jvm/default-java/jre/lib/security/ ]; then
-  ls -l /usr/lib/jvm/default-java/jre/lib/security/*.jar
-  sha1sum /usr/lib/jvm/default-java/jre/lib/security/*.jar
-fi
-if [ -d /usr/lib/jvm/java-7-oracle/jre/lib/security/ ]; then
-  ls -l /usr/lib/jvm/java-7-oracle/jre/lib/security/*.jar
-  sha1sum /usr/lib/jvm/java-7-oracle/jre/lib/security/*.jar
-fi
-if [ -d /usr/lib/jvm/java-8-oracle/jre/lib/security/ ]; then
-  ls -l /usr/lib/jvm/java-8-oracle/jre/lib/security/*.jar
-  sha1sum /usr/lib/jvm/java-8-oracle/jre/lib/security/*.jar
-fi
+for _DIR in /usr/java/default/jre/lib/security \
+            /usr/java/jdk1.6.0_31/jre/lib/security \
+            /usr/java/jdk1.7.0_67-cloudera/jre/lib/security \
+            /usr/java/jdk1.8.0_*/jre/lib/security \
+            /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security \
+            /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security \
+            /usr/lib/jvm/default-java/jre/lib/security \
+            /usr/lib/jvm/java-7-oracle/jre/lib/security \
+            /usr/lib/jvm/java-8-oracle/jre/lib/security; do
+  if [ -d "$_DIR" ]; then
+    ls -l "${_DIR}"/*.jar
+    sha1sum "${_DIR}"/*.jar
+    # http://harshj.com/checking-if-your-jre-has-the-unlimited-strength-policy-files-in-place/
+    unzip -c "${_DIR}"/local_policy.jar default_local.policy | grep -q javax.crypto.CryptoAllPermission && echo -n unlimited || echo -n vanilla
+    echo " JCE in $_DIR"
+  fi
+done
 
 echo "****************************************"
 echo "*** JDBC"
@@ -299,6 +284,10 @@ ntpq -p
 if [ \( "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer \) -a \( "$OSREL" == 7 -a "$RETVAL" == 0 \) ]; then
   chronyc sources
 fi
+
+echo "****************************************"
+echo "*** Tuned Profile"
+tuned-adm active
 
 echo "****************************************"
 echo "*** Timezone"

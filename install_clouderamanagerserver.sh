@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 # ARGV:
-# 1 - SCM server database type : embedded, postgresql, or mysql - optional
+# 1 - SCM server database type : embedded, postgresql, mysql, or oracle - optional
 # 2 - SCM server version - optional
 
 # Function to discover basic OS details.
