@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# $Id$
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -148,9 +150,9 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   service ufw status
   echo "** startup config:"
 fi
-IPT=$(iptables -nL | grep -vE '^Chain|^target|^$' | wc -l)
+IPT=$(sudo -n iptables -nL | grep -vE '^Chain|^target|^$' | wc -l)
 echo "There are $IPT active iptables rules."
-IP6T=$(ip6tables -nL | grep -vE '^Chain|^target|^$' | wc -l)
+IP6T=$(sudo -n ip6tables -nL | grep -vE '^Chain|^target|^$' | wc -l)
 echo "There are $IP6T active ip6tables rules."
 
 echo "****************************************"
