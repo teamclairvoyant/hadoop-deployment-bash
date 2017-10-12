@@ -55,6 +55,8 @@ elif [ -f /etc/profile.d/java.sh ]; then
   . /etc/profile.d/java.sh
 fi
 
+if [ -z "${JAVA_HOME}" ]; then echo "ERROR: \$JAVA_HOME is not set."; exit 10; fi
+
 if [ ! -f ${JAVA_HOME}/jre/lib/security/jssecacerts ]; then
   /bin/cp -p ${JAVA_HOME}/jre/lib/security/cacerts ${JAVA_HOME}/jre/lib/security/jssecacerts
 fi
