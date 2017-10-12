@@ -20,6 +20,9 @@
 # 3 - JKS key password - required
 # 4 - Extra parameters for keytool (ie Subject Alternative Name (SAN)) - optional
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 #"CN=cmhost.sec.cloudera.com,OU=Support,O=Cloudera,L=Denver,ST=Colorado,C=US"
 DN="$1"
 SP="$2"

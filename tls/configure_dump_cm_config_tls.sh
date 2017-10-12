@@ -18,6 +18,9 @@ CMHOST=localhost
 CMPORT=7180
 CMPORTTLS=7183
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 if ! (exec 6<>/dev/tcp/${CMHOST}/${CMPORT}); then
   echo 'ERROR: cloudera-scm-server not listening...'
   exit 1

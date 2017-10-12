@@ -14,5 +14,8 @@
 #
 # Copyright Clairvoyant 2017
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 install -m 0440 -o root -g kms /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/kms-keystore.jks
 

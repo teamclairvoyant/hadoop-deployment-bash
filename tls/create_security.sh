@@ -14,6 +14,9 @@
 #
 # Copyright Clairvoyant 2015
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 mkdir -p -m 0755 /opt/cloudera/security
 mkdir -p -m 0755 /opt/cloudera/security/x509
 mkdir -p -m 0755 /opt/cloudera/security/jks

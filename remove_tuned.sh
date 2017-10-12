@@ -38,6 +38,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Only available on EL.
 discover_os

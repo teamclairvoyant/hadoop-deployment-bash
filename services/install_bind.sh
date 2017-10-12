@@ -38,6 +38,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then

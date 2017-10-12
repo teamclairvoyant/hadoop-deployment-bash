@@ -17,6 +17,9 @@
 # ARGV:
 # 1 - hdpadmin user password - required
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 PASS=$1
 if [ -z "$PASS" ]; then
   echo "ERROR: Missing hdpadmin user password."
