@@ -94,8 +94,15 @@ if curl -s -X GET -u "admin:admin" http://${CMHOST}:${CMPORT}/api/${API}/users/$
     } ]
   }" http://${CMHOST}:${CMPORT}/api/${API}/users
   echo ""
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
+  echo "*** SAVE THIS PASSWORD"
   echo "APIUSER : $APIUSER"
   echo "APIPASS : $APIPASS"
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
 
   sed -e "/^APIUSER=/s|=.*|=${APIUSER}|" \
       -e "/^APIPASS=/s|=.*|=${APIPASS}|" \

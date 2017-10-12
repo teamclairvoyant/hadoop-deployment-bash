@@ -153,6 +153,10 @@ METASTOREDB_PASSWORD=`eval $PWCMD`
 OOZIEDB_PASSWORD=`eval $PWCMD`
 SENTRYDB_PASSWORD=`eval $PWCMD`
 HUEDB_PASSWORD=`eval $PWCMD`
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
+echo "*** SAVE THESE PASSWORDS"
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE rman DEFAULT CHARACTER SET utf8;'
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY '$RMANDB_PASSWORD';"
 echo "rman : $RMANDB_PASSWORD"
@@ -174,4 +178,7 @@ echo "sentry : $SENTRYDB_PASSWORD"
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '$HUEDB_PASSWORD';"
 echo "hue : $HUEDB_PASSWORD"
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
 

@@ -127,12 +127,21 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     else
       echo "** ERROR: Argument must be either embedded, mysql, postgresql, or oracle."
     fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
     echo "** Now you must configure the Cloudera Manager server to connect to the external"
     echo "** database.  Please run:"
     echo "/usr/share/cmf/schema/scm_prepare_database.sh"
     echo "** and then:"
     echo "service cloudera-scm-server start"
     echo "chkconfig cloudera-scm-server on"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   # Because it may have been put there by some other process.
@@ -173,12 +182,21 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
     else
       echo "** ERROR: Argument must be either embedded, mysql, or postgresql, or oracle."
     fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
     echo "** Now you must configure the Cloudera Manager server to connect to the external"
     echo "** database.  Please run:"
     echo "/usr/share/cmf/schema/scm_prepare_database.sh"
     echo "** and then:"
     echo "service cloudera-scm-server start"
     echo "update-rc.d cloudera-scm-server-db defaults"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
 fi
 

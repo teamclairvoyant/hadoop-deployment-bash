@@ -157,6 +157,10 @@ METASTOREDB_PASSWORD=`eval $PWCMD`
 OOZIEDB_PASSWORD=`eval $PWCMD`
 SENTRYDB_PASSWORD=`eval $PWCMD`
 HUEDB_PASSWORD=`eval $PWCMD`
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
+echo "*** SAVE THESE PASSWORDS"
 $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE rman LOGIN ENCRYPTED PASSWORD '$RMANDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
 $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE rman WITH OWNER = rman ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "rman : $RMANDB_PASSWORD"
@@ -177,4 +181,7 @@ $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE sentry WITH O
 echo "sentry : $SENTRYDB_PASSWORD"
 $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE hue LOGIN ENCRYPTED PASSWORD '$HUEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
 $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE hue WITH OWNER = hue ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
 

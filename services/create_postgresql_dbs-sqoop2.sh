@@ -150,7 +150,14 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
 SQOOPDB_PASSWORD=`eval $PWCMD`
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
+echo "*** SAVE THIS PASSWORD"
 $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE sqoop LOGIN ENCRYPTED PASSWORD '$SQOOPDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
 $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE sqoop WITH OWNER = sqoop ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "sqoop : $SQOOPDB_PASSWORD"
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
 

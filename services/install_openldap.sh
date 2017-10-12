@@ -186,7 +186,14 @@ add: olcRootPW
 olcRootPW: $_LDAPPASS
 EOF
 
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
+  echo "*** SAVE THIS PASSWORD"
   echo "${_ROOTDN} : ${_ROOTPW}"
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
 
   cp -p /etc/openldap/ldap.conf /etc/openldap/ldap.conf.${DATE}
   cat <<EOF >>/etc/openldap/ldap.conf
