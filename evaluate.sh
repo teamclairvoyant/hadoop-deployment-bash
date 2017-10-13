@@ -206,6 +206,11 @@ cat /proc/sys/kernel/random/entropy_avail
 
 echo "****************************************"
 echo "*** JCE"
+if which unzip >/dev/null 2>&1; then
+  UNZIP=true
+else
+  UNZIP=false
+fi
 for _DIR in /usr/java/default/jre/lib/security \
             /usr/java/jdk1.6.0_31/jre/lib/security \
             /usr/java/jdk1.7.0_67-cloudera/jre/lib/security \
@@ -216,11 +221,14 @@ for _DIR in /usr/java/default/jre/lib/security \
             /usr/lib/jvm/java-7-oracle/jre/lib/security \
             /usr/lib/jvm/java-8-oracle/jre/lib/security; do
   if [ -d "$_DIR" ]; then
-    ls -l "${_DIR}"/*.jar
-    sha1sum "${_DIR}"/*.jar
-    # http://harshj.com/checking-if-your-jre-has-the-unlimited-strength-policy-files-in-place/
-    unzip -c "${_DIR}"/local_policy.jar default_local.policy | grep -q javax.crypto.CryptoAllPermission && echo -n unlimited || echo -n vanilla
-    echo " JCE in $_DIR"
+    if [ "$UNZIP" == true ]; then
+      # http://harshj.com/checking-if-your-jre-has-the-unlimited-strength-policy-files-in-place/
+      unzip -c "${_DIR}"/local_policy.jar default_local.policy | grep -q javax.crypto.CryptoAllPermission && echo -n "unlimited" || echo -n "vanilla  "
+      echo " JCE in $_DIR"
+    else
+      #ls -l "${_DIR}"/*.jar
+      sha1sum "${_DIR}"/*.jar
+    fi
   fi
 done
 
