@@ -59,6 +59,7 @@ if ! rpm -q tuned; then
   exit 0
 fi
 
+echo "Configuring tuned..."
 if [ "$OSREL" == 6 ]; then
   PROFILE=`tuned-adm active | awk '{print $NF}' | head -1`
   sed -e '/^vm.swappiness/s|= .*|= 1|' -i /etc/tune-profiles/${PROFILE}/sysctl.ktune

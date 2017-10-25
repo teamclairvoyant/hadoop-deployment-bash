@@ -123,6 +123,7 @@ fi
 check_root
 
 # main
+echo "Installing entropy generator..."
 if grep -q rdrand /proc/cpuinfo; then
   RDRAND=true
 else

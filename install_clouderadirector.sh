@@ -59,6 +59,7 @@ if [ -z "$http_proxy" ]; then
   fi
 fi
 
+echo "Installing Cloudera Director..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/cloudera-director.repo ]; then
@@ -85,10 +86,12 @@ if [ ! -f /etc/cloudera-director-server/application.properties-orig ]; then
 else
   cp -p /etc/cloudera-director-server/application.properties /etc/cloudera-director-server/application.properties.`date '+%Y%m%d%H%M%S'`
 fi
+echo "Setting a random encryption password..."
 chgrp cloudera-director /etc/cloudera-director-server/application.properties
 chmod 0640 /etc/cloudera-director-server/application.properties
 sed -i -e '/lp.encryption.twoWayCipher:/a\
 lp.encryption.twoWayCipher: desede' -e "/lp.encryption.twoWayCipherConfig:/a\
 lp.encryption.twoWayCipherConfig: `python -c 'import base64, os; print base64.b64encode(os.urandom(24))'`" /etc/cloudera-director-server/application.properties
+echo "Starting Director..."
 service cloudera-director-server start
 

@@ -50,6 +50,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
   exit 3
 fi
 
+echo "Disabling IPv6..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   # https://access.redhat.com/solutions/8709
   # https://wiki.centos.org/FAQ/CentOS7#head-8984faf811faccca74c7bcdd74de7467f2fcd8ee

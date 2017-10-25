@@ -48,6 +48,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Disabling SElinux..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   setenforce 0
   sed -i -e '/^SELINUX=/s|=.*|=disabled|' /etc/selinux/config

@@ -49,6 +49,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Installing tuned..."
 yum -y -e1 -d1 install tuned
 
 mkdir -m 0755 /etc/tuned/hadoop

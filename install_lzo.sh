@@ -48,6 +48,7 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
   exit 3
 fi
 
+echo "Installing LZO libraries..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   yum -y -e1 -d1 install lzo
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then

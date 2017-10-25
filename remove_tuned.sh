@@ -49,5 +49,6 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Removing tuned..."
 rpm -e tuned
 

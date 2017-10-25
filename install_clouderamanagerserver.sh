@@ -89,6 +89,9 @@ if [ -z "$http_proxy" ]; then
   fi
 fi
 
+echo "Installing Cloudera Manager Server..."
+echo "CM database is: $INSTALLDB"
+echo "CM version is: $SCMVERSION"
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   # Test to see if JDK 6 is present.
   if rpm -q jdk >/dev/null; then

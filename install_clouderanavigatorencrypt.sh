@@ -52,6 +52,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Installing Cloudera Navigator Encrypt..."
 if [ "$OS" == CentOS ]; then
   YUMHOST=$1
   if [ -z "$YUMHOST" ]; then

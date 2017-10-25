@@ -67,6 +67,7 @@ if [ -z "$http_proxy" ]; then
   fi
 fi
 
+echo "Upgrading Cloudera Manager..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if rpm -q cloudera-manager-agent; then
     SCMVERSION=$1

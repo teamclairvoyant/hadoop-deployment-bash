@@ -70,6 +70,9 @@ if [ -z "$http_proxy" ]; then
   fi
 fi
 
+echo "Installing Cloudera Manager Agent..."
+echo "CM server is: $SCMHOST"
+echo "CM version is: $SCMVERSION"
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then

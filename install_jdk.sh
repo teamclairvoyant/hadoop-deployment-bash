@@ -76,6 +76,7 @@ if [ -z "$http_proxy" ]; then
   fi
 fi
 
+echo "Installing Oracle JDK..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ "$USECLOUDERA" = yes ]; then
     # Because it may have been put there by some other process.

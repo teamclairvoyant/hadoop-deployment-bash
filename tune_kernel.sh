@@ -71,6 +71,7 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
   exit 3
 fi
 
+echo "Tuning Kernel parameters..."
 FILE=/etc/sysctl.conf
 
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then

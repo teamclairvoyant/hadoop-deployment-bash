@@ -59,6 +59,7 @@ if [ -z "$http_proxy" ]; then
   fi
 fi
 
+echo "Installing Oracle Java Cryptography Extentions..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if rpm -q jdk || test -d /usr/java/jdk1.6.0_*; then
     wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \

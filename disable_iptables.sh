@@ -49,6 +49,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Ubuntu ]; th
   exit 3
 fi
 
+echo "Disabling iptables..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ $OSREL == 6 ]; then
     service iptables stop
