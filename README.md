@@ -36,7 +36,7 @@ mkdir evaluate-pre
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
   scp -p ${GITREPO}/evaluate.sh ${HOST}:
-  ssh -q $HOST './evaluate.sh' >evaluate-pre/${HOST}.out 2>evaluate-pre/${HOST}.err
+  ssh -qt $HOST './evaluate.sh' >evaluate-pre/${HOST}.out 2>evaluate-pre/${HOST}.err
 done
 ```
 
