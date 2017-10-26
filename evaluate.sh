@@ -115,7 +115,19 @@ echo "** running config:"
 swapon -s
 echo
 if grep -q swap /etc/fstab; then
-  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT `awk '/swap/{print $1}' /etc/fstab`
+  BDEVICE=""
+  SWAPLINES=$(awk '/swap/{print $1}' /etc/fstab)
+  # what if fstab has more than one swap entry?
+  for SWAPLINE in $SWAPLINES; do
+    # what if fstab is ^UUID= ?
+    if echo "$SWAPLINE" | grep -q ^UUID=; then
+      UUID=$(echo "$SWAPLINE" | awk -F= '{print $2}')
+      BDEVICE="$(lsblk -lo KNAME,UUID | awk "/$UUID/"'{print "/dev/"$1}') $BDEVICE"
+    else
+      BDEVICE="$SWAPLINE $BDEVICE"
+    fi
+  done
+  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT $BDEVICE
 fi
 echo "** startup config:"
 grep swap /etc/fstab || echo "none"
