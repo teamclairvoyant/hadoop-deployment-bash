@@ -129,6 +129,8 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
     apt-get -y -qq update
     apt-get -y -q install oracle-j2sdk1.7
   elif [ "$USECLOUDERA" = 7 ]; then
+    #mkdir -p /var/cache/oracle-jdk7-installer
+    #mv jdk-7u*-linux-x64.tar.gz /var/cache/oracle-jdk7-installer/
     add-apt-repository -y ppa:webupd8team/java
     apt-get -y -qq update
     echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
@@ -136,6 +138,8 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
     apt-get -y -q install oracle-java7-installer
     apt-get -y -q install oracle-java7-set-default
   elif [ "$USECLOUDERA" = 8 ]; then
+    #mkdir -p /var/cache/oracle-jdk8-installer
+    #mv jdk-8u*-linux-x64.tar.gz /var/cache/oracle-jdk8-installer/
     add-apt-repository -y ppa:webupd8team/java
     apt-get -y -qq update
     echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
