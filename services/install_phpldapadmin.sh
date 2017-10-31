@@ -132,6 +132,7 @@ fi
 check_root
 
 # main
+echo "Installing phpLDAPadmin..."
 #_SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
 #_ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
 #_ROOTDN="cn=${_ROOTDN},${_SUFFIX}"

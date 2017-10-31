@@ -57,6 +57,7 @@ if [ -z "$H" ]; then
   exit 1
 fi
 
+echo "Setting hostname to ${H}..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ $OSREL == 6 ]; then
     sed -e "/^HOSTNAME=/s|=.*|=$H|" -i /etc/sysconfig/network

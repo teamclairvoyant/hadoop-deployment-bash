@@ -138,6 +138,7 @@ if [ ! -f /opt/cloudera/security/x509/ca-chain.cert.pem ]; then
   exit 6
 fi
 
+echo "Configuring OpenLDAP for TLS..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/localhost.pem /etc/openldap/certs/server.crt
   install -m 0440 -o ldap -g ldap /opt/cloudera/security/x509/localhost.key /etc/openldap/certs/server.key

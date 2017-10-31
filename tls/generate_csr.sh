@@ -45,6 +45,7 @@ if [ -n "$EXT" ]; then
   EXT="-ext $EXT"
 fi
 
+echo "Generating TLS CSRs..."
 if [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
 elif [ -f /etc/profile.d/java.sh ]; then

@@ -17,6 +17,7 @@
 echo "********************************************************************************"
 echo "*** $(basename $0)"
 echo "********************************************************************************"
+echo "Copying CDAP TLS certs and keys..."
 install -m 0440 -o root -g cdap /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/cdap-keystore.jks
 install -m 0444 -o cdap -g cdap /opt/cloudera/security/x509/localhost.pem /opt/cloudera/security/x509/cdap.crt
 install -m 0440 -o cdap -g cdap /opt/cloudera/security/x509/localhost.e.key /opt/cloudera/security/x509/cdap.key

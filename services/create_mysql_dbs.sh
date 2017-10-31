@@ -133,6 +133,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
 fi
 
 # main
+echo "Creating users and databases in MySQL for Reports Manager, Navigator Audit, Navigator Metadata, Hive, Oozie, Sentry, and Hue..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release || sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
   if [ $OSREL == 6 ]; then

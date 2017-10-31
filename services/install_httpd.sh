@@ -48,6 +48,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
   exit 3
 fi
 
+echo "Installing httpd..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   yum -y -e1 -d1 install httpd
   service httpd start

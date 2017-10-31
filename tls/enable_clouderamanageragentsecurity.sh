@@ -22,6 +22,7 @@ echo "*** $(basename $0)"
 echo "********************************************************************************"
 LEVEL3=$1
 if [ -n "$LEVEL3" ]; then
+  echo "Configuring Cloudera Manager Agent for TLS level 3..."
   # https://www.cloudera.com/content/www/en-us/documentation/enterprise/latest/topics/cm_sg_config_tls_agent_auth.html
   sed -e '/^client_key_file/d' \
       -e '/^client_keypw_file/d' \
@@ -33,6 +34,8 @@ client_keypw_file=/etc/cloudera-scm-agent/agentkey.pw' \
       -e '/^# client_cert_file/a\
 client_cert_file=/opt/cloudera/security/x509/localhost.pem' \
       -i /etc/cloudera-scm-agent/config.ini
+else
+  echo "Configuring Cloudera Manager Agent for TLS level 2..."
 fi
 
 # https://www.cloudera.com/content/www/en-us/documentation/enterprise/latest/topics/cm_sg_config_tls_auth.html

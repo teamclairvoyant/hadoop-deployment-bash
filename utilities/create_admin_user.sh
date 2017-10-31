@@ -26,6 +26,7 @@ if [ -z "$PASS" ]; then
   exit 1
 fi
 
+echo "Creating hdpadmin user..."
 useradd -c 'Hadoop Admin' -m hdpadmin
 echo "$PASS" | passwd --stdin hdpadmin
 

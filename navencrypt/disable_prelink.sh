@@ -38,6 +38,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
@@ -46,6 +49,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Disabling prelink for Navigator Encrypt..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if rpm -q prelink >/dev/null; then
     sed -i -e '/^PRELINKING=/s|=.*|=no|' /etc/sysconfig/prelink

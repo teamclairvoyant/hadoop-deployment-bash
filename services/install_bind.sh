@@ -48,6 +48,7 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
   exit 3
 fi
 
+echo "Installing BIND..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   yum -y -e1 -d1 install bind
   service named start

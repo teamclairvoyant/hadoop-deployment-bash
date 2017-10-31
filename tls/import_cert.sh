@@ -26,6 +26,7 @@ if [ -z "$SP" ]; then
   exit 1
 fi
 
+echo "Importing signed TLS certificate and chain..."
 if [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
 elif [ -f /etc/profile.d/java.sh ]; then

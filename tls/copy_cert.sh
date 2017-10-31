@@ -17,6 +17,7 @@
 echo "********************************************************************************"
 echo "*** $(basename $0)"
 echo "********************************************************************************"
+echo "Copying Hadoop TLS certs and keys..."
 install -m 0440 -o root -g hadoop /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/hdfsyarn-keystore.jks
 install -m 0440 -o root -g hbase /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/hbase-keystore.jks
 install -m 0440 -o root -g hive /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/hive-keystore.jks

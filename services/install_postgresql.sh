@@ -49,6 +49,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Installing PostgreSQL..."
 DATE=`date '+%Y%m%d%H%M%S'`
 
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then

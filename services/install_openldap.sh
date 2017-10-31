@@ -129,6 +129,7 @@ if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
 check_root
 
 # main
+echo "Installing OpenLDAP..."
 _SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
 _ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
 _ROOTDN="cn=${_ROOTDN},${_SUFFIX}"

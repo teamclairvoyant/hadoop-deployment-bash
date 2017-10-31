@@ -51,6 +51,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
   exit 3
 fi
 
+echo "Disabling NIC scatter/gather..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   # https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1317811
   sed -i '/ethtool -K eth0 sg off/d' /etc/rc.d/rc.local

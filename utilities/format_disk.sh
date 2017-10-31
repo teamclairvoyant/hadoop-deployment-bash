@@ -66,6 +66,7 @@ if [ -z "$NUM" ]; then
   exit 1
 fi
 
+echo "Formatting disk /dev/${DISK}..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   FS=xfs
   if ! rpm -q parted; then echo "Installing parted. Please wait...";yum -y -d1 -e1 install parted; fi

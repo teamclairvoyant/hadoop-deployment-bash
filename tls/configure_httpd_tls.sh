@@ -128,6 +128,7 @@ if [ ! -f /opt/cloudera/security/x509/ca-chain.cert.pem ]; then
   exit 6
 fi
 
+echo "Configuring httpd for TLS..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   #install -m 0444 -o root -g root /opt/cloudera/security/x509/localhost.pem /etc/pki/tls/certs/localhost.crt
   #install -m 0440 -o root -g root /opt/cloudera/security/x509/localhost.key /etc/pki/tls/private/localhost.key

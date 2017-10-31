@@ -142,6 +142,7 @@ if [ -z "$_REALM_UPPER" -o -z "$_CM_PRINCIPAL" ]; then print_help "$(basename $0
 check_root
 
 # main
+echo "Installing MIT KDC..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   yum -y -e1 -d1 install krb5-server krb5-workstation
 

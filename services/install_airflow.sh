@@ -168,6 +168,7 @@ fi
 check_root
 
 # main
+echo "Installing Airflow..."
 if [ -n "$1" ]; then
   VERSION="==$1"
 fi

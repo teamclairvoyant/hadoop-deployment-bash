@@ -17,6 +17,7 @@
 echo "********************************************************************************"
 echo "*** $(basename $0)"
 echo "********************************************************************************"
+echo "Making TLS security directories..."
 mkdir -p -m 0755 /opt/cloudera/security
 mkdir -p -m 0755 /opt/cloudera/security/x509
 mkdir -p -m 0755 /opt/cloudera/security/jks

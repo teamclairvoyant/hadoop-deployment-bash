@@ -53,6 +53,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Installing PAM LDAP..."
 LDAPBASEDN=$1
 if [ -z "$LDAPBASEDN" ]; then
   echo "ERROR: Missing LDAP Base DN."

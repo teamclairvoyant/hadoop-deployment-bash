@@ -146,6 +146,7 @@ if [ -z "$_REALM_LOWER" -o -z "$_KRBSERVER" -o -z "$_LDAPSERVER" -o -z "$_LDAPSU
 check_root
 
 # main
+echo "Installing SSSD for LDAP+Kerberos..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   echo "** Installing software."
   yum $YUMOPTS install sssd-ldap sssd-krb5 oddjob oddjob-mkhomedir

@@ -48,6 +48,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
   exit 3
 fi
 
+echo "Installing jumphost tools..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   yum -y -d1 -e1 install mpssh mussh tmux screen bind-utils apg
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then

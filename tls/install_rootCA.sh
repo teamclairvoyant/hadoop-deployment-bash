@@ -49,6 +49,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Installing TLS root certificates..."
 if [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
 elif [ -f /etc/profile.d/java.sh ]; then

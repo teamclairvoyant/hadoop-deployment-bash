@@ -142,6 +142,7 @@ if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
 check_root
 
 # main
+echo "Installing SSSD for Active Directory..."
 if [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
   # EL7
   OPTS="$_USER $_OU7 $_ID"

@@ -49,6 +49,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Installing MySQL server..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ $OSREL == 6 ]; then
     yum -y -e1 -d1 install mysql-server

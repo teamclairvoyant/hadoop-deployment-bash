@@ -21,6 +21,7 @@
 echo "********************************************************************************"
 echo "*** $(basename $0)"
 echo "********************************************************************************"
+echo "Configuring PasswordAuthentication SSH access..."
 DATE=`date '+%Y%m%d%H%M%S'`
 cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.${DATE}
 sed -e '/^PasswordAuthentication/d' \

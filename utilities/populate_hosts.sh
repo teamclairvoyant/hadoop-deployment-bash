@@ -31,6 +31,7 @@ if [ -z "$HOSTLIST" ]; then
   echo "ERROR: Missing hostlist file."
   exit 1
 fi
+echo "Populating /etc/hosts..."
 IP=`/usr/bin/curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
 #sed -i -e '/^[0-9]/d' /etc/hosts
 sed -i -e "/^${IP}/d" /etc/hosts
