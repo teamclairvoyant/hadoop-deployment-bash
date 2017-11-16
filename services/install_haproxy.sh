@@ -104,7 +104,7 @@ defaults
 
 # Setup for beeswax (impala-shell) or original ODBC driver.
 # For JDBC or ODBC version 2.x driver, use port 21050 instead of 21000.
-listen impala
+listen impala-shell
     bind 0.0.0.0:21000
     timeout client 1h
     timeout server 1h
@@ -117,7 +117,7 @@ listen impala
 
 # Setup for Hue or other JDBC-enabled applications.
 # In particular, Hue requires sticky sessions.
-listen impalajdbc
+listen impala-jdbc
     bind 0.0.0.0:21050
     timeout client 1h
     timeout server 1h
