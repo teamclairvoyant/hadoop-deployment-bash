@@ -84,6 +84,9 @@ while [[ $1 = -* ]]; do
   shift
 done
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we have no parameters.
 if [[ -z "$NAVPASS" ]]; then print_help "$(basename $0)"; fi
 
@@ -94,6 +97,7 @@ check_root
 set -u
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
+  echo "Disabling ACLs for Navigator Encrypt..."
   printf '%s' $NAVPASS | \
   navencrypt acl --add --rule="ALLOW @* * *"
   printf '%s' $NAVPASS | \

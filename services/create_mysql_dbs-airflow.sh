@@ -122,6 +122,9 @@ if [ -z "$MYSQL_HOST" -o -z "$MYSQL_USER" -o -z "$MYSQL_PASSWORD" ]; then print_
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -130,6 +133,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
 fi
 
 # main
+echo "Creating users and databases in MySQL for Airflow..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release || sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
   if [ $OSREL == 6 ]; then
@@ -144,8 +148,15 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
 AIRFLOWDB_PASSWORD=`eval $PWCMD`
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
+echo "*** SAVE THIS PASSWORD"
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE airflow DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;'
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON airflow.* TO 'airflow'@'localhost' IDENTIFIED BY '$AIRFLOWDB_PASSWORD';"
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON airflow.* TO 'airflow'@'%' IDENTIFIED BY '$AIRFLOWDB_PASSWORD';"
 echo "airflow : $AIRFLOWDB_PASSWORD"
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
 

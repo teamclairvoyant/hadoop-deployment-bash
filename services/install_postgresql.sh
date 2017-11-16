@@ -38,6 +38,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
@@ -46,6 +49,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Installing PostgreSQL..."
 DATE=`date '+%Y%m%d%H%M%S'`
 
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
@@ -98,7 +102,14 @@ EOF
   if [ -z "$_PASS" ]; then
     _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
   fi
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
+  echo "*** SAVE THIS PASSWORD"
   echo "postgres : ${_PASS}"
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
 
   su - postgres -c 'psql' <<EOF
 \password

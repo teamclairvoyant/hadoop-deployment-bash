@@ -42,6 +42,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -63,6 +66,7 @@ if [ -z "$NUM" ]; then
   exit 1
 fi
 
+echo "Formatting disk /dev/${DISK}..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   FS=xfs
   if ! rpm -q parted; then echo "Installing parted. Please wait...";yum -y -d1 -e1 install parted; fi

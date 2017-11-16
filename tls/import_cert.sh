@@ -17,12 +17,16 @@
 # ARGV:
 # 1 - JKS store password - required
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 SP="$1"
 if [ -z "$SP" ]; then
   echo "ERROR: Missing keystore password."
   exit 1
 fi
 
+echo "Importing signed TLS certificate and chain..."
 if [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
 elif [ -f /etc/profile.d/java.sh ]; then

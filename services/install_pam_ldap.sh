@@ -42,6 +42,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
@@ -50,6 +53,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Installing PAM LDAP..."
 LDAPBASEDN=$1
 if [ -z "$LDAPBASEDN" ]; then
   echo "ERROR: Missing LDAP Base DN."

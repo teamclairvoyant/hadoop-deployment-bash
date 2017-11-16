@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# $Id$
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -113,7 +115,19 @@ echo "** running config:"
 swapon -s
 echo
 if grep -q swap /etc/fstab; then
-  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT `awk '/swap/{print $1}' /etc/fstab`
+  BDEVICE=""
+  SWAPLINES=$(awk '/swap/{print $1}' /etc/fstab)
+  # what if fstab has more than one swap entry?
+  for SWAPLINE in $SWAPLINES; do
+    # what if fstab is ^UUID= ?
+    if echo "$SWAPLINE" | grep -q ^UUID=; then
+      UUID=$(echo "$SWAPLINE" | awk -F= '{print $2}')
+      BDEVICE="$(lsblk -lo KNAME,UUID | awk "/$UUID/"'{print "/dev/"$1}') $BDEVICE"
+    else
+      BDEVICE="$SWAPLINE $BDEVICE"
+    fi
+  done
+  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT $BDEVICE
 fi
 echo "** startup config:"
 grep swap /etc/fstab || echo "none"
@@ -148,9 +162,9 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   service ufw status
   echo "** startup config:"
 fi
-IPT=$(iptables -nL | grep -vE '^Chain|^target|^$' | wc -l)
+IPT=$(sudo -n iptables -nL | grep -vE '^Chain|^target|^$' | wc -l)
 echo "There are $IPT active iptables rules."
-IP6T=$(ip6tables -nL | grep -vE '^Chain|^target|^$' | wc -l)
+IP6T=$(sudo -n ip6tables -nL | grep -vE '^Chain|^target|^$' | wc -l)
 echo "There are $IP6T active ip6tables rules."
 
 echo "****************************************"
@@ -204,6 +218,11 @@ cat /proc/sys/kernel/random/entropy_avail
 
 echo "****************************************"
 echo "*** JCE"
+if which unzip >/dev/null 2>&1; then
+  UNZIP=true
+else
+  UNZIP=false
+fi
 for _DIR in /usr/java/default/jre/lib/security \
             /usr/java/jdk1.6.0_31/jre/lib/security \
             /usr/java/jdk1.7.0_67-cloudera/jre/lib/security \
@@ -214,11 +233,14 @@ for _DIR in /usr/java/default/jre/lib/security \
             /usr/lib/jvm/java-7-oracle/jre/lib/security \
             /usr/lib/jvm/java-8-oracle/jre/lib/security; do
   if [ -d "$_DIR" ]; then
-    ls -l "${_DIR}"/*.jar
-    sha1sum "${_DIR}"/*.jar
-    # http://harshj.com/checking-if-your-jre-has-the-unlimited-strength-policy-files-in-place/
-    unzip -c "${_DIR}"/local_policy.jar default_local.policy | grep -q javax.crypto.CryptoAllPermission && echo -n unlimited || echo -n vanilla
-    echo " JCE in $_DIR"
+    if [ "$UNZIP" == true ]; then
+      # http://harshj.com/checking-if-your-jre-has-the-unlimited-strength-policy-files-in-place/
+      unzip -c "${_DIR}"/local_policy.jar default_local.policy | grep -q javax.crypto.CryptoAllPermission && echo -n "unlimited" || echo -n "vanilla  "
+      echo " JCE in $_DIR"
+    else
+      #ls -l "${_DIR}"/*.jar
+      sha1sum "${_DIR}"/*.jar
+    fi
   fi
 done
 

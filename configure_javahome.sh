@@ -38,6 +38,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -45,6 +48,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
   exit 3
 fi
 
+echo "Configuring \$JAVA_HOME..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   JAVA_HOME=/usr/java/default
 
@@ -56,7 +60,7 @@ EOF
   chmod 0644 /etc/profile.d/java.sh
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   if ! grep -q JAVA_HOME /etc/profile.d/*; then
-    JAVA_HOME=`dpkg -L oracle-j2sdk1.7|grep /usr/lib/jvm/java|head -1`
+    JAVA_HOME=`dpkg -L oracle-j2sdk1.7 | grep /usr/lib/jvm/java | head -1`
 
     cat <<EOF >/etc/profile.d/java.sh
 export JAVA_HOME=$JAVA_HOME

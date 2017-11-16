@@ -38,6 +38,14 @@ discover_os () {
   fi
 }
 
+is_virtual () {
+  egrep -qi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
+  return $?
+}
+
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Only available on EL.
 discover_os
@@ -46,14 +54,21 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
-if ! rpm -q tuned; then exit 0; fi
+if ! rpm -q tuned; then
+  echo "tuned not installed. Exiting."
+  exit 0
+fi
 
+echo "Configuring tuned..."
 if [ "$OSREL" == 6 ]; then
   PROFILE=`tuned-adm active | awk '{print $NF}' | head -1`
   sed -e '/^vm.swappiness/s|= .*|= 1|' -i /etc/tune-profiles/${PROFILE}/sysctl.ktune
 fi
 if [ "$OSREL" == 7 ]; then
   PROFILE=`tuned-adm active | awk '{print $NF}'`
+  if [ "$OS" == CentOS ] && [ "$PROFILE" == balanced ] && ! is_virtual; then
+    PROFILE=throughput-performance
+  fi
   mkdir /etc/tuned/${PROFILE}
   sed -e '/^vm.swappiness/s|= .*|= 1|' /usr/lib/tuned/${PROFILE}/tuned.conf >/etc/tuned/${PROFILE}/tuned.conf
   chown root:root /etc/tuned/${PROFILE}/tuned.conf

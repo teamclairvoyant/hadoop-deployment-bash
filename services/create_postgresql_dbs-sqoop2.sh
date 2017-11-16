@@ -129,6 +129,9 @@ if [ -z "$PG_HOST" -o -z "$PG_USER" -o -z "$PGPASSWORD" ]; then print_help "$(ba
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -137,6 +140,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
 fi
 
 # main
+echo "Creating users and databases in PostgreSQL for Sqoop2..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release || sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
   $ECHO sudo yum -y -e1 -d1 install postgresql apg || err_msg 4
@@ -147,7 +151,14 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
 SQOOPDB_PASSWORD=`eval $PWCMD`
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
+echo "*** SAVE THIS PASSWORD"
 $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE ROLE sqoop LOGIN ENCRYPTED PASSWORD '$SQOOPDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
 $ECHO psql -h $PG_HOST -p $PG_PORT -U $PG_USER -c "CREATE DATABASE sqoop WITH OWNER = sqoop ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "sqoop : $SQOOPDB_PASSWORD"
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
 

@@ -113,6 +113,9 @@ while [[ $1 = -* ]]; do
   shift
 done
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Currently only EL.
 #discover_os
@@ -128,6 +131,7 @@ if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
 #check_root
 
 # main
+echo "Creating test credentials in LDAP..."
 _SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
 _ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
 _ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
@@ -240,6 +244,7 @@ EOF
 ldapsearch -x -D $_ROOTDN -w $_ROOTPW
 
 if [ -x /usr/sbin/kadmin.local ]; then
+  echo "Creating test credentials in Kerberos..."
   kadmin.local <<EOF
 addprinc -pw p@ssw0rd user00
 addprinc -pw p@ssw0rd user01

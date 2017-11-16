@@ -122,6 +122,9 @@ if [ -z "$MYSQL_HOST" -o -z "$MYSQL_USER" -o -z "$MYSQL_PASSWORD" ]; then print_
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -130,6 +133,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
 fi
 
 # main
+echo "Creating users and databases in MySQL for Reports Manager, Navigator Audit, Navigator Metadata, Hive, Oozie, Sentry, and Hue..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release || sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
   if [ $OSREL == 6 ]; then
@@ -150,6 +154,10 @@ METASTOREDB_PASSWORD=`eval $PWCMD`
 OOZIEDB_PASSWORD=`eval $PWCMD`
 SENTRYDB_PASSWORD=`eval $PWCMD`
 HUEDB_PASSWORD=`eval $PWCMD`
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
+echo "*** SAVE THESE PASSWORDS"
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE rman DEFAULT CHARACTER SET utf8;'
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY '$RMANDB_PASSWORD';"
 echo "rman : $RMANDB_PASSWORD"
@@ -171,4 +179,7 @@ echo "sentry : $SENTRYDB_PASSWORD"
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
 $ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '$HUEDB_PASSWORD';"
 echo "hue : $HUEDB_PASSWORD"
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
 

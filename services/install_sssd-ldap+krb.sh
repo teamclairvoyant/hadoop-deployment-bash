@@ -127,6 +127,9 @@ while [[ $1 = -* ]]; do
   shift
 done
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
@@ -143,6 +146,7 @@ if [ -z "$_REALM_LOWER" -o -z "$_KRBSERVER" -o -z "$_LDAPSERVER" -o -z "$_LDAPSU
 check_root
 
 # main
+echo "Installing SSSD for LDAP+Kerberos..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   echo "** Installing software."
   yum $YUMOPTS install sssd-ldap sssd-krb5 oddjob oddjob-mkhomedir

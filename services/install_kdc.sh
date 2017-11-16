@@ -123,6 +123,9 @@ while [[ $1 = -* ]]; do
   shift
 done
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
@@ -139,6 +142,7 @@ if [ -z "$_REALM_UPPER" -o -z "$_CM_PRINCIPAL" ]; then print_help "$(basename $0
 check_root
 
 # main
+echo "Installing MIT KDC..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   yum -y -e1 -d1 install krb5-server krb5-workstation
 
@@ -252,7 +256,14 @@ EOF
   if [ -z "$_KDC_PASSWORD" ]; then
     _KDC_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
   fi
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
+  echo "*** SAVE THIS PASSWORD"
   echo "KDC : ${_KDC_PASSWORD}"
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
   kdb5_util -P "$_KDC_PASSWORD" create -s >/dev/null
 
   echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
@@ -260,7 +271,14 @@ EOF
   if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
     _CM_PRINCIPAL_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
   fi
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
+  echo "*** SAVE THIS PASSWORD"
   echo "${_CM_PRINCIPAL}@${_REALM_UPPER} : ${_CM_PRINCIPAL_PASSWORD}"
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
   kadmin.local >/dev/null <<EOF
 addpol default
 addprinc -pw $_CM_PRINCIPAL_PASSWORD $_CM_PRINCIPAL
@@ -385,7 +403,14 @@ EOF
   if [ -z "$_KDC_PASSWORD" ]; then
     _KDC_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
   fi
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
+  echo "*** SAVE THIS PASSWORD"
   echo "KDC : ${_KDC_PASSWORD}"
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
   kdb5_util -P "$_KDC_PASSWORD" create -s >/dev/null
 
   echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
@@ -393,7 +418,14 @@ EOF
   if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
     _CM_PRINCIPAL_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
   fi
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
+  echo "*** SAVE THIS PASSWORD"
   echo "${_CM_PRINCIPAL}@${_REALM_UPPER} : ${_CM_PRINCIPAL_PASSWORD}"
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
   kadmin.local >/dev/null <<EOF
 addpol default
 addprinc -pw $_CM_PRINCIPAL_PASSWORD $_CM_PRINCIPAL

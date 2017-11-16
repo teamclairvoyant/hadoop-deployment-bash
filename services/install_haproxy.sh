@@ -16,6 +16,10 @@
 
 exit 1
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
+echo "Installing HAproxy..."
 yum -y -d1 -e1 install haproxy
 
 chown root:root /etc/haproxy/haproxy.cfg

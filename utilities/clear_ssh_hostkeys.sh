@@ -14,6 +14,10 @@
 #
 # Copyright Clairvoyant 2016
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
+echo "Regenerating SSH host keys..."
 rm -f /etc/ssh/ssh_host_*
 service sshd restart
 

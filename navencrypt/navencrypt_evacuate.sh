@@ -86,6 +86,9 @@ while [[ $1 = -* ]]; do
   shift
 done
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we have no parameters.
 if [[ -z "$MOUNTPOINT" ]]; then print_help "$(basename $0)"; fi
 

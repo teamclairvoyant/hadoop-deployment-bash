@@ -14,5 +14,9 @@
 #
 # Copyright Clairvoyant 2017
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
+echo "Copying KMS TLS certs and keys..."
 install -m 0440 -o root -g kms /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/kms-keystore.jks
 

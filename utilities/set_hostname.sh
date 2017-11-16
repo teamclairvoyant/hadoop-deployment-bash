@@ -41,6 +41,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -54,6 +57,7 @@ if [ -z "$H" ]; then
   exit 1
 fi
 
+echo "Setting hostname to ${H}..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ $OSREL == 6 ]; then
     sed -e "/^HOSTNAME=/s|=.*|=$H|" -i /etc/sysconfig/network

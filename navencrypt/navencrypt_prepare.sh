@@ -106,6 +106,9 @@ while [[ $1 = -* ]]; do
   shift
 done
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we have no parameters.
 if [[ -z "$NAVPASS" ]]; then print_help "$(basename $0)"; fi
 if [[ -z "$DEVICE" ]]; then print_help "$(basename $0)"; fi

@@ -61,6 +61,9 @@ _install_oracle_jdbc() {
   popd
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0) $@"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -86,6 +89,9 @@ if [ -z "$http_proxy" ]; then
   fi
 fi
 
+echo "Installing Cloudera Manager Server..."
+echo "CM database is: $INSTALLDB"
+echo "CM version is: $SCMVERSION"
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   # Test to see if JDK 6 is present.
   if rpm -q jdk >/dev/null; then
@@ -124,12 +130,21 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     else
       echo "** ERROR: Argument must be either embedded, mysql, postgresql, or oracle."
     fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
     echo "** Now you must configure the Cloudera Manager server to connect to the external"
     echo "** database.  Please run:"
     echo "/usr/share/cmf/schema/scm_prepare_database.sh"
     echo "** and then:"
     echo "service cloudera-scm-server start"
     echo "chkconfig cloudera-scm-server on"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   # Because it may have been put there by some other process.
@@ -170,12 +185,21 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
     else
       echo "** ERROR: Argument must be either embedded, mysql, or postgresql, or oracle."
     fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
     echo "** Now you must configure the Cloudera Manager server to connect to the external"
     echo "** database.  Please run:"
     echo "/usr/share/cmf/schema/scm_prepare_database.sh"
     echo "** and then:"
     echo "service cloudera-scm-server start"
     echo "update-rc.d cloudera-scm-server-db defaults"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
 fi
 

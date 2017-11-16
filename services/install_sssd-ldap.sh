@@ -116,6 +116,9 @@ while [[ $1 = -* ]]; do
   shift
 done
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
@@ -132,6 +135,7 @@ if [ -z "$_LDAPSERVER" -o -z "$_LDAPSUFFIX" ]; then print_help "$(basename $0)";
 check_root
 
 # main
+echo "Installing SSSD for LDAP..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   echo "** Installing software."
   yum $YUMOPTS install sssd-ldap oddjob oddjob-mkhomedir

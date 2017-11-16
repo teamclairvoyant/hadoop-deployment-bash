@@ -108,6 +108,9 @@ _install_sqlserver_jdbc() {
   popd
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -120,6 +123,12 @@ if [ -z "$INSTALLDB" ]; then
   INSTALLDB=yes
 fi
 
+echo "Installing JDBC driver..."
+if [ "$INSTALLDB" == yes ]; then
+  echo "Driver type to install: mysql and postgresql"
+else
+  echo "Driver type to install: $INSTALLDB"
+fi
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   # Test to see if JDK 6 is present.
   if rpm -q jdk >/dev/null; then

@@ -20,6 +20,9 @@
 # 3 - JKS key password - required
 # 4 - Extra parameters for keytool (ie Subject Alternative Name (SAN)) - optional
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 #"CN=cmhost.sec.cloudera.com,OU=Support,O=Cloudera,L=Denver,ST=Colorado,C=US"
 DN="$1"
 SP="$2"
@@ -42,6 +45,7 @@ if [ -n "$EXT" ]; then
   EXT="-ext $EXT"
 fi
 
+echo "Generating TLS CSRs..."
 if [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
 elif [ -f /etc/profile.d/java.sh ]; then

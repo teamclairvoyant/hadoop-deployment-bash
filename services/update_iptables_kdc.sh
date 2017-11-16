@@ -40,6 +40,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
@@ -48,6 +51,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
   exit 3
 fi
 
+echo "Updating IPtables for KDC..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   service iptables save
 

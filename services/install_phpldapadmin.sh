@@ -113,6 +113,9 @@ while [[ $1 = -* ]]; do
   shift
 done
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
@@ -129,6 +132,7 @@ fi
 check_root
 
 # main
+echo "Installing phpLDAPadmin..."
 #_SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
 #_ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
 #_ROOTDN="cn=${_ROOTDN},${_SUFFIX}"

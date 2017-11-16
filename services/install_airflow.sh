@@ -144,6 +144,9 @@ while [[ $1 = -* ]]; do
   shift
 done
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Currently only EL7.
 discover_os
@@ -165,6 +168,7 @@ fi
 check_root
 
 # main
+echo "Installing Airflow..."
 if [ -n "$1" ]; then
   VERSION="==$1"
 fi

@@ -17,12 +17,16 @@
 # ARGV:
 # 1 - hdpadmin user password - required
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 PASS=$1
 if [ -z "$PASS" ]; then
   echo "ERROR: Missing hdpadmin user password."
   exit 1
 fi
 
+echo "Creating hdpadmin user..."
 useradd -c 'Hadoop Admin' -m hdpadmin
 echo "$PASS" | passwd --stdin hdpadmin
 

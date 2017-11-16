@@ -38,6 +38,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -45,6 +48,7 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
   exit 3
 fi
 
+echo "Installing JDBC driver(s) for Sqoop..."
 if [ -d /var/lib/sqoop ]; then
   if [ -f /usr/share/java/mysql-connector-java.jar ]; then
     ln -sf /usr/share/java/mysql-connector-java.jar /var/lib/sqoop/

@@ -38,6 +38,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
@@ -91,8 +94,15 @@ if curl -s -X GET -u "admin:admin" http://${CMHOST}:${CMPORT}/api/${API}/users/$
     } ]
   }" http://${CMHOST}:${CMPORT}/api/${API}/users
   echo ""
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
+  echo "*** SAVE THIS PASSWORD"
   echo "APIUSER : $APIUSER"
   echo "APIPASS : $APIPASS"
+  echo "****************************************"
+  echo "****************************************"
+  echo "****************************************"
 
   sed -e "/^APIUSER=/s|=.*|=${APIUSER}|" \
       -e "/^APIPASS=/s|=.*|=${APIPASS}|" \

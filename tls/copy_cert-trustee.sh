@@ -14,6 +14,10 @@
 #
 # Copyright Clairvoyant 2015
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
+echo "Copying Keytrustee TLS certs and keys..."
 if [ ! -d /var/lib/keytrustee/.keytrustee/.ssl-orig/ ]; then
   cp -a /var/lib/keytrustee/.keytrustee/.ssl/ /var/lib/keytrustee/.keytrustee/.ssl-orig/
 fi
