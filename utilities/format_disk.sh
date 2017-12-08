@@ -54,8 +54,6 @@ fi
 
 DISK=$1
 NUM=$2
-LABEL=gpt
-LABEL=msdos
 
 if [ -z "$DISK" ]; then
   echo "ERROR: Missing disk argument (ie sdb)."
@@ -67,6 +65,13 @@ if [ -z "$NUM" ]; then
 fi
 
 echo "Formatting disk /dev/${DISK}..."
+SIZE=`lsblk --all --bytes --list --output NAME,SIZE,TYPE /dev/${DISK} | awk '/disk$/{print $2}'`
+if [ "$SIZE" -ge 2199023255552 ]; then
+  LABEL=gpt
+else
+  LABEL=msdos
+fi
+
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   FS=xfs
   if ! rpm -q parted; then echo "Installing parted. Please wait...";yum -y -d1 -e1 install parted; fi
