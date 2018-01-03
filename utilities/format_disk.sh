@@ -63,6 +63,10 @@ if [ -z "$NUM" ]; then
   echo "ERROR: Missing mountpoint argument (ie 1)."
   exit 1
 fi
+if [ ! -b /dev/${DISK} ]; then
+  echo "ERROR: Disk device /dev/${DISK} does not exist."
+  exit 2
+fi
 
 echo "Formatting disk /dev/${DISK}..."
 SIZE=`lsblk --all --bytes --list --output NAME,SIZE,TYPE /dev/${DISK} | awk '/disk$/{print $2}'`
@@ -81,10 +85,10 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   if ! dpkg -l parted >/dev/null; then echo "Installing parted. Please wait...";apt-get -y -q install parted; fi
 fi
 
-if [ -b /dev/${DISK} -a ! -b /dev/${DISK}1 ]; then
+if [ ! -b /dev/${DISK}1 ]; then
   if blkid /dev/${DISK} | grep -q '^.*'; then
     echo "WARNING: Data detected on bare disk.  Exiting."
-    exit 2
+    exit 4
   fi
   parted -s /dev/${DISK} mklabel $LABEL mkpart primary $FS 1 100%
   sleep 2
@@ -95,7 +99,7 @@ if [ -b /dev/${DISK} -a ! -b /dev/${DISK}1 ]; then
   chattr +i /data/${NUM} && \
   mount /data/${NUM}
 else
-  echo "WARNING: Partition detected on disk.  Exiting."
-  exit 3
+  echo "WARNING: Existing partition detected on disk.  Exiting."
+  exit 5
 fi
 
