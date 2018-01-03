@@ -82,6 +82,10 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
 fi
 
 if [ -b /dev/${DISK} -a ! -b /dev/${DISK}1 ]; then
+  if blkid /dev/${DISK} | grep -q '^.*'; then
+    echo "WARNING: Data detected on bare disk.  Exiting."
+    exit 2
+  fi
   parted -s /dev/${DISK} mklabel $LABEL mkpart primary $FS 1 100%
   sleep 2
   mkfs -t $FS /dev/${DISK}1 && \
@@ -90,5 +94,8 @@ if [ -b /dev/${DISK} -a ! -b /dev/${DISK}1 ]; then
   mkdir -p /data/${NUM} && \
   chattr +i /data/${NUM} && \
   mount /data/${NUM}
+else
+  echo "WARNING: Partition detected on disk.  Exiting."
+  exit 3
 fi
 
