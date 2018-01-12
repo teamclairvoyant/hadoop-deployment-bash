@@ -128,6 +128,20 @@ vm.swappiness=1
 #net.ipv4.tcp_wmem="4096 16384 16777216"
 #net.ipv4.udp_mem="3145728 4194304 16777216"
 
+# Cloudera Professional Services recommendations:
+net.core.netdev_max_backlog = 250000
+net.core.optmem_max = 4194304
+net.core.rmem_default = 4194304
+net.core.rmem_max = 4194304
+net.core.wmem_default = 4194304
+net.core.wmem_max = 4194304
+net.ipv4.tcp_adv_win_scale = 1
+net.ipv4.tcp_low_latency = 1
+net.ipv4.tcp_sack = 1
+net.ipv4.tcp_timestamps = 0
+net.ipv4.tcp_rmem = 4096 87380 4194304
+net.ipv4.tcp_wmem = 4096 65536 4194304
+
 EOF
 chown root:root /etc/tuned/hadoop/tuned.conf
 chmod 0644 /etc/tuned/hadoop/tuned.conf
