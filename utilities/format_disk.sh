@@ -68,7 +68,6 @@ if [ ! -b /dev/${DISK} ]; then
   exit 2
 fi
 
-echo "Formatting disk /dev/${DISK}..."
 SIZE=`lsblk --all --bytes --list --output NAME,SIZE,TYPE /dev/${DISK} | awk '/disk$/{print $2}'`
 if [ "$SIZE" -ge 2199023255552 ]; then
   LABEL=gpt
@@ -90,6 +89,7 @@ if [ ! -b /dev/${DISK}1 ]; then
     echo "WARNING: Data detected on bare disk.  Exiting."
     exit 4
   fi
+  echo "Formatting disk /dev/${DISK}1 as ${FS} ..."
   parted -s /dev/${DISK} mklabel $LABEL mkpart primary $FS 1 100%
   sleep 2
   mkfs -t $FS /dev/${DISK}1 && \
@@ -98,6 +98,10 @@ if [ ! -b /dev/${DISK}1 ]; then
   mkdir -p /data/${NUM} && \
   chattr +i /data/${NUM} && \
   mount /data/${NUM}
+  echo "Disk /dev/${DISK}1 mounted at /data/${NUM}"
+  if [ "$FS" == ext4 ]; then
+    tune2fs -m 0 /dev/${DISK}1
+  fi
 else
   echo "WARNING: Existing partition detected on disk.  Exiting."
   exit 5
