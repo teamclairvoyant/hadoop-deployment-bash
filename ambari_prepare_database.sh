@@ -178,6 +178,9 @@ if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$ADMIN_USER" ] || [ -z "$ADMI
 # Lets not bother continuing unless we have the privs to do something.
 check_root
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then

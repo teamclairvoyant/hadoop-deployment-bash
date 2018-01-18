@@ -64,6 +64,9 @@ _install_oracle_jdbc() {
   popd
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
@@ -90,6 +93,9 @@ if [ -z "$http_proxy" ]; then
 fi
 
 OS_LOWER=$(echo "$OS" | tr '[:upper:]' '[:lower:]')
+echo "Installing Hortonworks Ambari Server..."
+echo "AMB database is: $INSTALLDB"
+echo "AMB version is: $AMBVERSION"
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # Test to see if JDK 6 is present.
   if rpm -q jdk >/dev/null; then
@@ -124,12 +130,21 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     else
       echo "** ERROR: Argument must be either embedded, mysql, postgresql, or oracle."
     fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
     echo "** Now you must configure the Hortonworks Ambari server to connect to the"
     echo "** external database.  Please run:"
     echo "${PWD}/ambari_prepare_database.sh"
     echo "** and then:"
     echo "service ambari-server start"
     echo "chkconfig ambari-server-db on"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   # Because it may have been put there by some other process.
@@ -161,12 +176,21 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
     else
       echo "** ERROR: Argument must be either embedded, mysql, or postgresql, or oracle."
     fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
     echo "** Now you must configure the Hortonworks Ambari server to connect to the"
     echo "** external database.  Please run:"
     echo "${PWD}/ambari_prepare_database.sh"
     echo "** and then:"
     echo "service ambari-server start"
     echo "update-rc.d ambari-server-db defaults"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
 fi
 

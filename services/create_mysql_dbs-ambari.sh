@@ -122,6 +122,9 @@ if [ -z "$MYSQL_HOST" ] || [ -z "$MYSQL_USER" ] || [ -z "$MYSQL_PASSWORD" ]; the
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
@@ -146,6 +149,10 @@ fi
 METASTOREDB_PASSWORD=$(eval "$PWCMD")
 OOZIEDB_PASSWORD=$(eval "$PWCMD")
 HUEDB_PASSWORD=$(eval "$PWCMD")
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
+echo "*** SAVE THESE PASSWORDS"
 $ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE metastore DEFAULT CHARACTER SET utf8;'
 $ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY '$METASTOREDB_PASSWORD';"
 echo "hive : $METASTOREDB_PASSWORD"
@@ -155,4 +162,7 @@ echo "oozie : $OOZIEDB_PASSWORD"
 $ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
 $ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '$HUEDB_PASSWORD';"
 echo "hue : $HUEDB_PASSWORD"
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
 

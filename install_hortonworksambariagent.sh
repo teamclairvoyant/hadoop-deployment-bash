@@ -43,6 +43,9 @@ discover_os () {
   fi
 }
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
@@ -68,6 +71,9 @@ if [ -z "$http_proxy" ]; then
   fi
 fi
 
+echo "Installing Hortonworks Ambari Agent..."
+echo "AMB server is: $AMBHOST"
+echo "AMB version is: $AMBVERSION"
 OS_LOWER=$(echo "$OS" | tr '[:upper:]' '[:lower:]')
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # Because it may have been put there by some other process.

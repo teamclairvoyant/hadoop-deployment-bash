@@ -129,6 +129,9 @@ if [ -z "$PG_HOST" ] || [ -z "$PG_USER" ] || [ -z "$PGPASSWORD" ]; then print_he
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
 
+echo "********************************************************************************"
+echo "*** $(basename $0)"
+echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
 if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
@@ -149,6 +152,10 @@ fi
 METASTOREDB_PASSWORD=$(eval "$PWCMD")
 OOZIEDB_PASSWORD=$(eval "$PWCMD")
 HUEDB_PASSWORD=$(eval "$PWCMD")
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
+echo "*** SAVE THESE PASSWORDS"
 $ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE hive LOGIN ENCRYPTED PASSWORD '$METASTOREDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
 $ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE metastore WITH OWNER = hive ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "hive : $METASTOREDB_PASSWORD"
@@ -158,4 +165,7 @@ echo "oozie : $OOZIEDB_PASSWORD"
 $ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE hue LOGIN ENCRYPTED PASSWORD '$HUEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
 $ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE hue WITH OWNER = hue ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "hue : $HUEDB_PASSWORD"
+echo "****************************************"
+echo "****************************************"
+echo "****************************************"
 
