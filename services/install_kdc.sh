@@ -113,7 +113,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename $0)"
       ;;
     -v|--version)
-      echo "Install MIT Kerberos Key Distributioon Center."
+      echo "Install MIT Kerberos Key Distribution Center."
       exit 0
       ;;
     *)
@@ -186,6 +186,7 @@ EOF
   chmod 0600 /var/kerberos/krb5kdc/kadm5.acl
   cat <<EOF >/var/kerberos/krb5kdc/kadm5.acl
 */admin@${_REALM_UPPER} *
+${_CM_PRINCIPAL}@${_REALM_UPPER} * accumulo/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * flume/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * hbase/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * hdfs/*@${_REALM_UPPER}
@@ -196,6 +197,7 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * hue/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * impala/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka_mirror_maker/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * kudu/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kms/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * llama/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * mapred/*@${_REALM_UPPER}
@@ -333,6 +335,7 @@ EOF
   chmod 0600 /etc/krb5kdc/kadm5.acl
   cat <<EOF >/etc/krb5kdc/kadm5.acl
 */admin@${_REALM_UPPER} *
+${_CM_PRINCIPAL}@${_REALM_UPPER} * accumulo/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * flume/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * hbase/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * hdfs/*@${_REALM_UPPER}
@@ -343,6 +346,7 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * hue/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * impala/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka_mirror_maker/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * kudu/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kms/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * llama/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * mapred/*@${_REALM_UPPER}
