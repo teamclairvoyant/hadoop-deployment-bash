@@ -14,6 +14,10 @@
 #
 # Copyright Clairvoyant 2017
 
+# https://access.redhat.com/sites/default/files/attachments/20150325_network_performance_tuning.pdf
+# https://docs.aws.amazon.com/AmazonS3/latest/dev/TCPWindowScaling.html
+# https://docs.aws.amazon.com/AmazonS3/latest/dev/TCPSelectiveAcknowledgement.html
+
 # Cloudera Professional Services recommendations:
 DATA="net.core.netdev_max_backlog = 250000
 net.core.optmem_max = 4194304

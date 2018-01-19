@@ -129,14 +129,17 @@ vm.swappiness=1
 #net.ipv4.udp_mem="3145728 4194304 16777216"
 
 # Cloudera Professional Services recommendations:
+# https://access.redhat.com/sites/default/files/attachments/20150325_network_performance_tuning.pdf
 net.core.netdev_max_backlog = 250000
 net.core.optmem_max = 4194304
 net.core.rmem_default = 4194304
 net.core.rmem_max = 4194304
 net.core.wmem_default = 4194304
 net.core.wmem_max = 4194304
+# https://docs.aws.amazon.com/AmazonS3/latest/dev/TCPWindowScaling.html
 net.ipv4.tcp_adv_win_scale = 1
 net.ipv4.tcp_low_latency = 1
+# https://docs.aws.amazon.com/AmazonS3/latest/dev/TCPSelectiveAcknowledgement.html
 net.ipv4.tcp_sack = 1
 net.ipv4.tcp_timestamps = 0
 net.ipv4.tcp_rmem = 4096 87380 4194304
