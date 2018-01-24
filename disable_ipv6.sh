@@ -58,6 +58,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   echo "** Disabling IPv6 kernel configuration..."
   # https://access.redhat.com/solutions/8709
   # https://wiki.centos.org/FAQ/CentOS7#head-8984faf811faccca74c7bcdd74de7467f2fcd8ee
+  # https://wiki.centos.org/FAQ/CentOS6#head-d47139912868bcb9d754441ecb6a8a10d41781df
   if [ -d /etc/sysctl.d ]; then
     if grep -q net.ipv6.conf.all.disable_ipv6 /etc/sysctl.conf; then
       sed -i -e '/^net.ipv6.conf.all.disable_ipv6/d' /etc/sysctl.conf
@@ -129,6 +130,7 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   echo "** sysctl method"
   echo "** Disabling IPv6 kernel configuration..."
   # https://wiki.debian.org/DebianIPv6#How_to_turn_off_IPv6
+  # https://wiki.ubuntu.com/IPv6#Disabling_IPv6
   # https://askubuntu.com/questions/440649/how-to-disable-ipv6-in-ubuntu-14-04
   if grep -q net.ipv6.conf.all.disable_ipv6 /etc/sysctl.conf; then
     sed -i -e '/^net.ipv6.conf.all.disable_ipv6/d' /etc/sysctl.conf
@@ -148,6 +150,8 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   chmod 0644 /etc/sysctl.d/cloudera-ipv6.conf
   service procps restart
 fi
+# https://www.suse.com/support/kb/doc.php?id=7015035
+# https://www.suse.com/support/kb/doc/?id=7012111
 
 echo "** After disabling IPv6:"
 ip -6 address
