@@ -168,6 +168,15 @@ IP6T=$(sudo -n ip6tables -nL | grep -vE '^Chain|^target|^$' | wc -l)
 echo "There are $IP6T active ip6tables rules."
 
 echo "****************************************"
+echo "*** IPv6"
+echo "** running config:"
+sysctl net.ipv6.conf.all.disable_ipv6
+sysctl net.ipv6.conf.default.disable_ipv6
+echo "** startup config:"
+grep -r net.ipv6.conf.all.disable_ipv6 /etc/sysctl.*
+grep -r net.ipv6.conf.default.disable_ipv6 /etc/sysctl.*
+
+echo "****************************************"
 echo "*** SElinux"
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   echo "** running config:"
