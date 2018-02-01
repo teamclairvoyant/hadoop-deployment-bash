@@ -54,8 +54,6 @@ fi
 
 DISK=$1
 NUM=$2
-LABEL=gpt
-LABEL=msdos
 
 if [ -z "$DISK" ]; then
   echo "ERROR: Missing disk argument (ie sdb)."
@@ -65,8 +63,18 @@ if [ -z "$NUM" ]; then
   echo "ERROR: Missing mountpoint argument (ie 1)."
   exit 1
 fi
+if [ ! -b /dev/${DISK} ]; then
+  echo "ERROR: Disk device /dev/${DISK} does not exist."
+  exit 2
+fi
 
-echo "Formatting disk /dev/${DISK}..."
+SIZE=`lsblk --all --bytes --list --output NAME,SIZE,TYPE /dev/${DISK} | awk '/disk$/{print $2}'`
+if [ "$SIZE" -ge 2199023255552 ]; then
+  LABEL=gpt
+else
+  LABEL=msdos
+fi
+
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   FS=xfs
   if ! rpm -q parted; then echo "Installing parted. Please wait...";yum -y -d1 -e1 install parted; fi
@@ -76,7 +84,12 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   if ! dpkg -l parted >/dev/null; then echo "Installing parted. Please wait...";apt-get -y -q install parted; fi
 fi
 
-if [ -b /dev/${DISK} -a ! -b /dev/${DISK}1 ]; then
+if [ ! -b /dev/${DISK}1 ]; then
+  if blkid /dev/${DISK} | grep -q '^.*'; then
+    echo "WARNING: Data detected on bare disk.  Exiting."
+    exit 4
+  fi
+  echo "Formatting disk /dev/${DISK}1 as ${FS} ..."
   parted -s /dev/${DISK} mklabel $LABEL mkpart primary $FS 1 100%
   sleep 2
   mkfs -t $FS /dev/${DISK}1 && \
@@ -85,5 +98,12 @@ if [ -b /dev/${DISK} -a ! -b /dev/${DISK}1 ]; then
   mkdir -p /data/${NUM} && \
   chattr +i /data/${NUM} && \
   mount /data/${NUM}
+  echo "Disk /dev/${DISK}1 mounted at /data/${NUM}"
+  if [ "$FS" == ext4 ]; then
+    tune2fs -m 0 /dev/${DISK}1
+  fi
+else
+  echo "WARNING: Existing partition detected on disk.  Exiting."
+  exit 5
 fi
 

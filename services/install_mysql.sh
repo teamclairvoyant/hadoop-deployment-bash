@@ -104,7 +104,7 @@ innodb_log_file_size = 512M
 #[mysqld_safe]
 #log-error=/var/log/mysqld.log
 #pid-file=/var/run/mysqld/mysqld.pid
-#sql_mode=STRICT_ALL_TABLES
+sql_mode=STRICT_ALL_TABLES
 EOF
   chown root:root /etc/my.cnf.d/cloudera.cnf
   chmod 0644 /etc/my.cnf.d/cloudera.cnf

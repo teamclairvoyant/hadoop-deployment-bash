@@ -74,7 +74,7 @@ grep ^"model name" /proc/cpuinfo |tail -1
 echo "** memory:"
 echo "memory          : `free -g |awk '/^Mem:/{print $2}'` GiB"
 echo "** Disks:"
-lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | egrep 'NAME|disk'
+lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
 echo "** Logical Volumes:"
 sudo -n pvs
 echo

@@ -14,6 +14,11 @@
 #
 # Copyright Clairvoyant 2017
 
+# https://access.redhat.com/sites/default/files/attachments/20150325_network_performance_tuning.pdf
+# https://docs.aws.amazon.com/AmazonS3/latest/dev/TCPWindowScaling.html
+# https://docs.aws.amazon.com/AmazonS3/latest/dev/TCPSelectiveAcknowledgement.html
+
+# Cloudera Professional Services recommendations:
 DATA="net.core.netdev_max_backlog = 250000
 net.core.optmem_max = 4194304
 net.core.rmem_default = 4194304
@@ -22,10 +27,15 @@ net.core.wmem_default = 4194304
 net.core.wmem_max = 4194304
 net.ipv4.tcp_adv_win_scale = 1
 net.ipv4.tcp_low_latency = 1
-net.ipv4.tcp_rmem = 4096 87380 4194304
 net.ipv4.tcp_sack = 1
 net.ipv4.tcp_timestamps = 0
+net.ipv4.tcp_rmem = 4096 87380 4194304
 net.ipv4.tcp_wmem = 4096 65536 4194304"
+
+# Page allocation errors are likely happening due to higher network load where
+# kernel cannot allocate a contiguous chunk of memory for a network interrupt.
+# This happens on 10GbE interfaces of various manufacturers.
+#vm.min_free_kbytes = 1048576
 
 # Function to discover basic OS details.
 discover_os () {
@@ -52,11 +62,12 @@ discover_os () {
 }
 
 _sysctld () {
-  FILE=/etc/sysctl.d/clairvoyant-network.conf
+  FILE=/etc/sysctl.d/cloudera-network.conf
 
   install -m 0644 -o root -g root /dev/null "$FILE"
   cat <<EOF >"${FILE}"
 # Tuning for Hadoop installation. CLAIRVOYANT
+# Based on Cloudera Professional Services recommendations.
 $DATA
 EOF
 }

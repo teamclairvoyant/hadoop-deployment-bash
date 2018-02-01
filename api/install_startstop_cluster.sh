@@ -49,21 +49,21 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
 fi
 
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  yum -y -e1 -d1 install jq ksh
+  yum -y -e1 -d1 install jq ksh curl
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
-  apt-get -y -q install jq ksh
+  apt-get -y -q install jq ksh curl
 fi
 
-#cp -p {start,stop}_cluster.ksh /usr/local/sbin/
-#chown 0:0 /usr/local/sbin/{start,stop}_cluster.ksh
-#chmod 700 /usr/local/sbin/{start,stop}_cluster.ksh
-install -o root -g root -m 0700 start_cluster.ksh /usr/local/sbin/start_cluster.ksh
-install -o root -g root -m 0700 stop_cluster.ksh /usr/local/sbin/stop_cluster.ksh
-rm -f /tmp/$$
-crontab -l | egrep -v 'stop_cluster.ksh|start_cluster.ksh' >/tmp/$$
-echo '00 08 * * * /usr/local/sbin/start_cluster.ksh >/dev/null'>>/tmp/$$
-echo '00 18 * * * /usr/local/sbin/stop_cluster.ksh >/dev/null'>>/tmp/$$
-crontab /tmp/$$
-rm -f /tmp/$$
+#cp -p {start,stop}_cluster_all.ksh /usr/local/sbin/
+#chown 0:0 /usr/local/sbin/{start,stop}_cluster_all.ksh
+#chmod 700 /usr/local/sbin/{start,stop}_cluster_all.ksh
+install -o root -g root -m 0755 start_cluster_all.ksh /usr/local/sbin/start_cluster_all.ksh
+install -o root -g root -m 0755 stop_cluster_all.ksh  /usr/local/sbin/stop_cluster_all.ksh
+#rm -f /tmp/$$
+#crontab -l | egrep -v 'stop_cluster_all.ksh|start_cluster_all.ksh' >/tmp/$$
+#echo '00 08 * * * /usr/local/sbin/start_cluster_all.ksh >/dev/null'>>/tmp/$$
+#echo '00 18 * * * /usr/local/sbin/stop_cluster_all.ksh >/dev/null'>>/tmp/$$
+#crontab /tmp/$$
+#rm -f /tmp/$$
 
