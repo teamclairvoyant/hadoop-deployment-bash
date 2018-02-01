@@ -60,6 +60,7 @@ for HOST in `cat HOSTLIST`; do
   ${GITREPO}/install_tools.sh \
   ${GITREPO}/change_swappiness.sh \
   ${GITREPO}/disable_iptables.sh \
+  ${GITREPO}/disable_ipv6.sh \
   ${GITREPO}/disable_selinux.sh \
   ${GITREPO}/disable_thp.sh \
   ${GITREPO}/install_ntp.sh \
@@ -89,6 +90,7 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./install_tools.sh; \
   sudo bash $BOPT ./change_swappiness.sh; \
   sudo bash $BOPT ./disable_iptables.sh; \
+  sudo bash $BOPT ./disable_ipv6.sh; \
   sudo bash $BOPT ./disable_selinux.sh; \
   sudo bash $BOPT ./disable_thp.sh; \
   sudo bash $BOPT ./install_ntp.sh; \
@@ -178,6 +180,7 @@ for HOST in `cat HOSTLIST`; do
   ${GITREPO}/install_tools.sh \
   ${GITREPO}/change_swappiness.sh \
   ${GITREPO}/disable_iptables.sh \
+  ${GITREPO}/disable_ipv6.sh \
   ${GITREPO}/disable_selinux.sh \
   ${GITREPO}/disable_thp.sh \
   ${GITREPO}/install_ntp.sh \
@@ -206,6 +209,7 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./install_tools.sh; \
   sudo bash $BOPT ./change_swappiness.sh; \
   sudo bash $BOPT ./disable_iptables.sh; \
+  sudo bash $BOPT ./disable_ipv6.sh; \
   sudo bash $BOPT ./disable_selinux.sh; \
   sudo bash $BOPT ./disable_thp.sh; \
   sudo bash $BOPT ./install_ntp.sh; \
