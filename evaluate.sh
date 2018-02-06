@@ -141,31 +141,39 @@ java -version 2>&1 || ${JAVA_HOME}/java -version 2>&1
 
 echo "****************************************"
 echo "*** Firewall"
-if [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
-  echo "** running config:"
-  service iptables status
-  service ip6tables status
-  echo "** startup config:"
-  chkconfig --list iptables
-  chkconfig --list ip6tables
-elif [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
-  echo "** running config:"
-  service firewalld status
-  service iptables status
-  service ip6tables status
-  echo "** startup config:"
-  chkconfig --list firewalld
-  chkconfig --list iptables
-  chkconfig --list ip6tables
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
-  echo "** running config:"
-  service ufw status
-  echo "** startup config:"
+echo "** running config:"
+IPT=$(sudo -n iptables -nL)
+RETVAL=$?
+IPTCOUNT=$(echo "$IPT" | grep -cvE '^Chain|^target|^$')
+if [ "$RETVAL" -ne 0 ]; then
+  echo "There are UNKOWN active iptables rules."
+else
+  echo "There are $IPTCOUNT active iptables rules."
 fi
-IPT=$(sudo -n iptables -nL | grep -vE '^Chain|^target|^$' | wc -l)
-echo "There are $IPT active iptables rules."
-IP6T=$(sudo -n ip6tables -nL | grep -vE '^Chain|^target|^$' | wc -l)
-echo "There are $IP6T active ip6tables rules."
+IP6T=$(sudo -n ip6tables -nL)
+IP6TCOUNT=$(echo "$IP6T" | grep -cvE '^Chain|^target|^$')
+if [ "$RETVAL" -ne 0 ]; then
+  echo "There are UNKOWN active ip6tables rules."
+else
+  echo "There are $IP6TCOUNT active ip6tables rules."
+fi
+echo "** startup config:"
+# There are multiple other ways for the firewall to be started (ie Shorewall).
+# We will not be probing for them.
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+  if [ "$OSREL" == "7" ]; then
+    systemctl --lines 0 status firewalld.service
+  fi
+  if [ "$OSREL" == "6" ]; then
+    chkconfig --list iptables
+    chkconfig --list ip6tables
+  fi
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  service ufw status
+  if [ "$OSVER" == "14.04" ]; then
+    initctl show-config ufw
+  fi
+fi
 
 echo "****************************************"
 echo "*** IPv6"
