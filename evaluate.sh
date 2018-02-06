@@ -314,7 +314,7 @@ echo "** startup config:"
 RETVAL=0
 chkconfig --list ntpd
 if [ \( "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer \) -a "$OSREL" == 7 ]; then
-  systemctl status chronyd.service
+  systemctl --lines 0 status chronyd.service
   RETVAL=$?
   # Do we want to support chrony? Does CM?
 fi
