@@ -69,10 +69,10 @@ popd >/dev/null
 #echo "** model:"
 #sudo -n dmidecode -s system-product-name
 echo "** cpu:"
-grep ^processor /proc/cpuinfo |tail -1
-grep ^"model name" /proc/cpuinfo |tail -1
+grep ^processor /proc/cpuinfo | tail -1
+grep ^"model name" /proc/cpuinfo | tail -1
 echo "** memory:"
-echo "memory          : `free -g |awk '/^Mem:/{print $2}'` GiB"
+echo "memory          : `free -g | awk '/^Mem:/{print $2}'` GiB"
 echo "** Disks:"
 lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
 echo "** Logical Volumes:"
@@ -218,7 +218,7 @@ echo "** startup config:"
 grep noatime /etc/fstab || echo "none"
 grep noatime /etc/navencrypt/ztab || echo "none"
 #grep noatime /etc/fstab || echo "WARNING: No filesystems mounted with noatime."
-#tune2fs -l /dev/sda |grep blah
+#tune2fs -l /dev/sda | grep blah
 
 echo "****************************************"
 echo "*** Entropy"
