@@ -87,6 +87,13 @@ echo "** Network interfaces:"
 ip addr
 echo "** Network routes:"
 ip route
+echo "** Network Bonding:"
+if [ -f /proc/net/bonding/bond0 ]; then
+  for BOND in /proc/net/bonding/bond*; do
+    echo "*** $(basename "$BOND")"
+    grep -E '^MII Status:|^Slave Interface:|^Bonding Mode:|^Speed:' "$BOND"
+  done
+fi
 
 # A stability bug is especially seen on hosts running kernel versions between
 # 2.6.32-491.el6 and 2.6.32-504.16.2.el6(exclusive), and mostly reported on
