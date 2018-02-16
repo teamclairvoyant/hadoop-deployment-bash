@@ -98,16 +98,42 @@ fi
 # A stability bug is especially seen on hosts running kernel versions between
 # 2.6.32-491.el6 and 2.6.32-504.16.2.el6(exclusive), and mostly reported on
 # machines with Haswell; upgrading kernel version to 2.6.32-504.16.2.el6 or
-# later is recommended.
+# later is recommended. TSB-63
 # https://www.cloudera.com/documentation/enterprise/release-notes/topics/cdh_rn_os_ki.html
-if [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
-  echo "****************************************"
-  echo "*** kernel"
-  echo "** running config:"
-  uname -r
-  echo "** startup config:"
+echo "****************************************"
+echo "*** kernel bugs"
+echo "** running config:"
+uname -r
+echo "** installed kernels:"
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   rpm -q kernel
+  echo "** running kernel has fix?:"
+  if rpm -q --changelog kernel-$(uname -r) | grep -q 'Ensure get_futex_key_refs() always implies a barrier'; then
+    echo "Kernel is OK (futex TSB-63)"
+  else
+    echo "Kernel is VULNERABLE (futex TSB-63)"
+  fi
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
+  dpkg -l linux-image-[0-9]\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+  echo "** running kernel has fix?:"
+  if uname -r | grep -q '^4\.'; then
+    echo "Kernel is OK (futex TSB-63)"
+  else
+    _VAL=$(apt-get changelog linux-image-$(uname -r))
+    RETVAL=$?
+    # We could not retreive the changelog.
+    if [ "$RETVAL" -ne 0 ]; then
+      echo "Kernel is UNKNOWN (futex TSB-63)"
+    else
+      if echo "${_VAL}" | grep -q 'futex: Ensure get_futex_key_refs() always implies a barrier'; then
+        echo "Kernel is OK (futex TSB-63)"
+      else
+        echo "Kernel is VULNERABLE (futex TSB-63)"
+      fi
+    fi
+  fi
 fi
+# TODO: TSB-189
 
 echo "****************************************"
 echo "*** vm.swappiness"
