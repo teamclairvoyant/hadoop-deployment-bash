@@ -41,6 +41,7 @@ fi
 echo "****************************************"
 echo "****************************************"
 echo `hostname`
+echo "$Id$"
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
@@ -69,10 +70,10 @@ popd >/dev/null
 #echo "** model:"
 #sudo -n dmidecode -s system-product-name
 echo "** cpu:"
-grep ^processor /proc/cpuinfo |tail -1
-grep ^"model name" /proc/cpuinfo |tail -1
+grep ^processor /proc/cpuinfo | tail -1
+grep ^"model name" /proc/cpuinfo | tail -1
 echo "** memory:"
-echo "memory          : `free -g |awk '/^Mem:/{print $2}'` GiB"
+echo "memory          : `free -g | awk '/^Mem:/{print $2}'` GiB"
 echo "** Disks:"
 lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
 echo "** Logical Volumes:"
@@ -87,20 +88,53 @@ echo "** Network interfaces:"
 ip addr
 echo "** Network routes:"
 ip route
+echo "** Network Bonding:"
+if [ -f /proc/net/bonding/bond0 ]; then
+  for BOND in /proc/net/bonding/bond*; do
+    echo "*** $(basename "$BOND")"
+    grep -E '^MII Status:|^Slave Interface:|^Bonding Mode:|^Speed:' "$BOND"
+  done
+fi
 
 # A stability bug is especially seen on hosts running kernel versions between
 # 2.6.32-491.el6 and 2.6.32-504.16.2.el6(exclusive), and mostly reported on
 # machines with Haswell; upgrading kernel version to 2.6.32-504.16.2.el6 or
-# later is recommended.
+# later is recommended. TSB-63
 # https://www.cloudera.com/documentation/enterprise/release-notes/topics/cdh_rn_os_ki.html
-if [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
-  echo "****************************************"
-  echo "*** kernel"
-  echo "** running config:"
-  uname -r
-  echo "** startup config:"
+echo "****************************************"
+echo "*** kernel bugs"
+echo "** running config:"
+uname -r
+echo "** installed kernels:"
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   rpm -q kernel
+  echo "** running kernel has fix?:"
+  if rpm -q --changelog kernel-$(uname -r) | grep -q 'Ensure get_futex_key_refs() always implies a barrier'; then
+    echo "Kernel is OK (futex TSB-63)"
+  else
+    echo "Kernel is VULNERABLE (futex TSB-63)"
+  fi
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
+  dpkg -l linux-image-[0-9]\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+  echo "** running kernel has fix?:"
+  if uname -r | grep -q '^4\.'; then
+    echo "Kernel is OK (futex TSB-63)"
+  else
+    _VAL=$(apt-get changelog linux-image-$(uname -r))
+    RETVAL=$?
+    # We could not retreive the changelog.
+    if [ "$RETVAL" -ne 0 ]; then
+      echo "Kernel is UNKNOWN (futex TSB-63)"
+    else
+      if echo "${_VAL}" | grep -q 'futex: Ensure get_futex_key_refs() always implies a barrier'; then
+        echo "Kernel is OK (futex TSB-63)"
+      else
+        echo "Kernel is VULNERABLE (futex TSB-63)"
+      fi
+    fi
+  fi
 fi
+# TODO: TSB-189
 
 echo "****************************************"
 echo "*** vm.swappiness"
@@ -141,31 +175,39 @@ java -version 2>&1 || ${JAVA_HOME}/java -version 2>&1
 
 echo "****************************************"
 echo "*** Firewall"
-if [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
-  echo "** running config:"
-  service iptables status
-  service ip6tables status
-  echo "** startup config:"
-  chkconfig --list iptables
-  chkconfig --list ip6tables
-elif [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
-  echo "** running config:"
-  service firewalld status
-  service iptables status
-  service ip6tables status
-  echo "** startup config:"
-  chkconfig --list firewalld
-  chkconfig --list iptables
-  chkconfig --list ip6tables
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
-  echo "** running config:"
-  service ufw status
-  echo "** startup config:"
+echo "** running config:"
+IPT=$(sudo -n iptables -nL)
+RETVAL=$?
+IPTCOUNT=$(echo "$IPT" | grep -cvE '^Chain|^target|^$')
+if [ "$RETVAL" -ne 0 ]; then
+  echo "There are UNKOWN active iptables rules."
+else
+  echo "There are $IPTCOUNT active iptables rules."
 fi
-IPT=$(sudo -n iptables -nL | grep -vE '^Chain|^target|^$' | wc -l)
-echo "There are $IPT active iptables rules."
-IP6T=$(sudo -n ip6tables -nL | grep -vE '^Chain|^target|^$' | wc -l)
-echo "There are $IP6T active ip6tables rules."
+IP6T=$(sudo -n ip6tables -nL)
+IP6TCOUNT=$(echo "$IP6T" | grep -cvE '^Chain|^target|^$')
+if [ "$RETVAL" -ne 0 ]; then
+  echo "There are UNKOWN active ip6tables rules."
+else
+  echo "There are $IP6TCOUNT active ip6tables rules."
+fi
+echo "** startup config:"
+# There are multiple other ways for the firewall to be started (ie Shorewall).
+# We will not be probing for them.
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+  if [ "$OSREL" == "7" ]; then
+    systemctl --lines 0 status firewalld.service
+  fi
+  if [ "$OSREL" == "6" ]; then
+    chkconfig --list iptables
+    chkconfig --list ip6tables
+  fi
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  service ufw status
+  if [ "$OSVER" == "14.04" ]; then
+    initctl show-config ufw
+  fi
+fi
 
 echo "****************************************"
 echo "*** IPv6"
@@ -210,7 +252,7 @@ echo "** startup config:"
 grep noatime /etc/fstab || echo "none"
 grep noatime /etc/navencrypt/ztab || echo "none"
 #grep noatime /etc/fstab || echo "WARNING: No filesystems mounted with noatime."
-#tune2fs -l /dev/sda |grep blah
+#tune2fs -l /dev/sda | grep blah
 
 echo "****************************************"
 echo "*** Entropy"
@@ -306,7 +348,7 @@ echo "** startup config:"
 RETVAL=0
 chkconfig --list ntpd
 if [ \( "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer \) -a "$OSREL" == 7 ]; then
-  systemctl status chronyd.service
+  systemctl --lines 0 status chronyd.service
   RETVAL=$?
   # Do we want to support chrony? Does CM?
 fi
