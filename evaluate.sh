@@ -373,12 +373,20 @@ echo -n "** system IP is: "
 echo $IP
 echo -n "** system hostname is: "
 hostname
-DNS=$(host `hostname`)
-echo "** forward:"
-echo $DNS
-echo "** reverse:"
-host $(echo $DNS | awk '{print $NF}')
-#python -c 'import socket; print socket.getfqdn(), socket.gethostbyname(socket.getfqdn())'
+if which host >/dev/null 2>&1; then
+  DNS=$(host `hostname`)
+  echo "** forward:"
+  echo $DNS
+  echo "** reverse:"
+  host $(echo $DNS | awk '{print $NF}')
+else
+  echo "Not DNS."
+  #DNS=$(python -c 'import socket; print socket.getfqdn(), "has address", socket.gethostbyname(socket.getfqdn())')
+  echo "** forward:"
+  python -c 'import socket; print socket.getfqdn()'
+  echo "** reverse:"
+  python -c 'import socket; print socket.gethostbyname(socket.getfqdn())'
+fi
 
 echo "****************************************"
 echo "*** Cloudera Software"
