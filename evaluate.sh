@@ -434,6 +434,12 @@ case "$INET" in
   *) echo "The network is down or very slow";;
 esac
 
+if [ "$OS" == RedHatEnterpriseServer ]; then
+  echo "****************************************"
+  echo "*** RedHat Subscription"
+  subscription-manager version
+fi
+
 #echo "****************************************"
 #echo "*** "
 #echo "** running config:"
