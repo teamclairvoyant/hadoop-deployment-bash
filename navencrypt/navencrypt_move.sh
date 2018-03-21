@@ -116,7 +116,7 @@ set -u
 umask 022
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
-  if [ -d $EMOUNTPOINT ]; then
+  if [ ! -d $EMOUNTPOINT ]; then
     echo "Moving data from ${MOUNTPOINT} to ${EMOUNTPOINT} for encryption..."
     printf '%s' $NAVPASS |
     navencrypt-move encrypt @${CATEGORY} $MOUNTPOINT $EMOUNTPOINT

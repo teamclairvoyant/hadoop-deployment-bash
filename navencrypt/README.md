@@ -65,7 +65,7 @@ GITREPO=~/git/teamclairvoyant/bash
 MOUNTPOINT=/data/0
 
 scp -p -o StrictHostKeyChecking=no ${GITREPO}/navencrypt/navencrypt_evacuate.sh ${HOST}:
-ssh -t $HOST "sudo bash -x navencrypt_evacuate.sh $MOUNTPOINT"
+ssh -t $HOST "sudo bash -x navencrypt_evacuate.sh --mountpoint $MOUNTPOINT"
 ```
 
 THESE SCRIPTS FORMAT DISKS, WIPE FILESYSTEMS, AND EAT BABIES.

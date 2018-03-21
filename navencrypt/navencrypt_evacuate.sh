@@ -38,7 +38,7 @@ print_help () {
   printf "        [-h|--help]\n"
   printf "        [-v|--version]\n"
   printf "\n"
-  printf "   ex.  $1 --navpass \"mypasssword\" --mountpoint /data/2\n"
+  printf "   ex.  $1 --mountpoint /data/2\n"
   exit 1
 }
 
