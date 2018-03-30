@@ -61,10 +61,10 @@ echo "Setting hostname to ${H}..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ $OSREL == 6 ]; then
     sed -e "/^HOSTNAME=/s|=.*|=$H|" -i /etc/sysconfig/network
-    hostname $H
   else
     hostnamectl set-hostname $H
   fi
+  hostname $H
 
   if rpm -q cloud-init; then
     echo 'preserve_hostname: True' >/etc/cloud/cloud.cfg.d/04_hostname.cfg
