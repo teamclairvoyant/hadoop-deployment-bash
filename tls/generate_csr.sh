@@ -65,7 +65,7 @@ chown root:root /opt/cloudera/security/jks/localhost-keystore.jks
 keytool -certreq -alias localhost \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -file /opt/cloudera/security/x509/localhost.csr -storepass $SP \
--keypass $KP -ext EKU=serverAuth,clientAuth $EXT
+-keypass $KP -ext EKU=serverAuth,clientAuth -ext KU=digitalSignature,keyEncipherment $EXT
 
 rm -f /tmp/localhost-keystore.p12.$$
 
