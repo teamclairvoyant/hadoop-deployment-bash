@@ -17,6 +17,7 @@
 # https://access.redhat.com/sites/default/files/attachments/20150325_network_performance_tuning.pdf
 # https://docs.aws.amazon.com/AmazonS3/latest/dev/TCPWindowScaling.html
 # https://docs.aws.amazon.com/AmazonS3/latest/dev/TCPSelectiveAcknowledgement.html
+# http://www.cloudera.com/documentation/other/reference-architecture/PDF/cloudera_ref_arch_metal.pdf
 
 # Cloudera Professional Services recommendations:
 DATA="net.core.netdev_max_backlog = 250000
