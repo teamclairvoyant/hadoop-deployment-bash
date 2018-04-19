@@ -140,7 +140,10 @@ echo "Installing phpLDAPadmin..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   setsebool -P httpd_can_connect_ldap=on
 
-  yum $YUMOPTS install epel-release || rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  yum -y -e1 -d1 install epel-release
+  if ! rpm -q epel-release; then
+    rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  fi
   yum $YUMOPTS install httpd phpldapadmin
 
   if [ ! -f /etc/httpd/conf.d/phpldapadmin.conf-orig ]; then
