@@ -90,8 +90,8 @@ elif [ "$OS" == RedHatEnterpriseServer ]; then
     exit 1
   fi
 
+  subscription-manager repos --enable=rhel-${OSREL}-server-optional-rpms
   echo "** Find the correct kernel-headers and kernel-devel that match the running kernel."
-  #subscription-manager repos --enable=rhel-${OSREL}-server-optional-rpms
   yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r)
 
   yum -y -e1 -d1 install epel-release

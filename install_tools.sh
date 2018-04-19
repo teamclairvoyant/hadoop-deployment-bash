@@ -54,6 +54,9 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if ! rpm -q epel-release; then
     rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
   fi
+  if [ "$OS" == RedHatEnterpriseServer ]; then
+    subscription-manager repos --enable=rhel-${OSREL}-server-optional-rpms
+  fi
   yum -y -e1 -d1 install wget unzip deltarpm
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
