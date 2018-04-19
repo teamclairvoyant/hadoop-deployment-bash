@@ -170,7 +170,7 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
     mkdir -p -m 0755 $MOUNTPOINT && \
     chattr +i $MOUNTPOINT && \
     printf '%s' $NAVPASS |
-    navencrypt-prepare -t $FSTYPE -o $FSMOUNTOPT ${DEVICE}${PART} $MOUNTPOINT -
+    navencrypt-prepare -t $FSTYPE -o $FSMOUNTOPT --use-uuid ${DEVICE}${PART} $MOUNTPOINT -
     RETVAL=$?
     if [ "$RETVAL" -ne 0 ]; then
       echo "** ERROR: Could not format ${DEVICE} for ${MOUNTPOINT}."
