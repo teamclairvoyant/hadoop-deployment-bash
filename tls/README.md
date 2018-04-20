@@ -106,7 +106,7 @@ for HOST in $MACHINE; do
 done
 
 scp -p cmtruststore.jks ${CMSERVERHOST}:
-ssh -t $CMSERVERHOST 'sudo install -o root -g root -m 0644 cmtruststore.jks \
+ssh -t $CMSERVERHOST 'sudo install -o root -g cloudera-scm -m 0440 cmtruststore.jks \
   /opt/cloudera/security/jks/cmtruststore.jks'
 ```
 

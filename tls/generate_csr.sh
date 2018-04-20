@@ -57,8 +57,8 @@ keytool -genkeypair -alias localhost -keyalg RSA -sigalg SHA256withRSA \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -keysize 2048 -dname "$DN" -storepass $SP -keypass $KP
 
-chmod 0644 /opt/cloudera/security/jks/localhost-keystore.jks
-chown root:root /opt/cloudera/security/jks/localhost-keystore.jks
+chmod 0440 /opt/cloudera/security/jks/localhost-keystore.jks
+chown root:cloudera-scm /opt/cloudera/security/jks/localhost-keystore.jks
 
 # https://www.cloudera.com/documentation/enterprise/5-9-x/topics/cm_sg_create_deploy_certs.html#concept_frd_1px_nw
 # X509v3 Extended Key Usage:
