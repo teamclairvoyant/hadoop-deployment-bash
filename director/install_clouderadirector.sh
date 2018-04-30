@@ -95,3 +95,6 @@ lp.encryption.twoWayCipherConfig: `python -c 'import base64, os; print base64.b6
 echo "Starting Director..."
 service cloudera-director-server start
 
+echo ""
+echo "Now open http://$(hostname -f):7189/ in your web browser."
+
