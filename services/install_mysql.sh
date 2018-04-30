@@ -58,6 +58,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     yum -y -e1 -d1 install mariadb-server
   fi
 
+  echo "Tuning config for Cloudera Manager and 4 GiB RAM."
   cat <<EOF >/etc/my.cnf.d/cloudera.cnf
 # CLAIRVOYANT
 # https://www.cloudera.com/documentation/enterprise/latest/topics/cm_ig_mysql.html
@@ -123,6 +124,11 @@ EOF
 EOF
   chown root:root /etc/my.cnf.d/replication.cnf
   chmod 0644 /etc/my.cnf.d/replication.cnf
+
+  if [ -f /tmp/director.cnf ]; then
+    echo "Found Cloudera Director config.  Using it in place of Cloudera Manager config."
+    install -m 0644 -o root -g root /tmp/director.cnf /etc/my.cnf.d/cloudera.cnf
+  fi
 
   if [ $OSREL == 6 ]; then
     service mysql start
