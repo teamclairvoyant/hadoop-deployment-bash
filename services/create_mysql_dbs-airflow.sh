@@ -29,7 +29,7 @@ print_help () {
   echo "Usage:  $1 --host <hostname> --user <username> --password <password>"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
-  echo "   ex.  $1"
+  echo "   ex.  $1 --host dbhost --user foo --password bar"
   exit 1
 }
 
