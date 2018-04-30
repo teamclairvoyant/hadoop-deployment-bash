@@ -17,7 +17,7 @@
 # ARGV:
 # 1 - TLS certificate Common Name - required
 # 2 - JKS store password - required
-# 3 - JKS key password - required
+# 3 - JKS key password (should be the same as JKS store password) - required
 # 4 - Extra parameters for keytool (ie Subject Alternative Name (SAN)) - optional
 
 echo "********************************************************************************"
@@ -26,7 +26,8 @@ echo "**************************************************************************
 #"CN=cmhost.sec.cloudera.com,OU=Support,O=Cloudera,L=Denver,ST=Colorado,C=US"
 DN="$1"
 SP="$2"
-KP="$3"
+#KP="$3"
+KP="$SP"
 #"SAN=DNS:`hostname`,DNS:my-lb.domain.com"
 EXT="$4"
 if [ -z "$DN" ]; then
@@ -56,8 +57,8 @@ keytool -genkeypair -alias localhost -keyalg RSA -sigalg SHA256withRSA \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -keysize 2048 -dname "$DN" -storepass $SP -keypass $KP
 
-chmod 0644 /opt/cloudera/security/jks/localhost-keystore.jks
-chown root:root /opt/cloudera/security/jks/localhost-keystore.jks
+chmod 0440 /opt/cloudera/security/jks/localhost-keystore.jks
+chown root:cloudera-scm /opt/cloudera/security/jks/localhost-keystore.jks
 
 # https://www.cloudera.com/documentation/enterprise/5-9-x/topics/cm_sg_create_deploy_certs.html#concept_frd_1px_nw
 # X509v3 Extended Key Usage:
@@ -65,7 +66,7 @@ chown root:root /opt/cloudera/security/jks/localhost-keystore.jks
 keytool -certreq -alias localhost \
 -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
 -file /opt/cloudera/security/x509/localhost.csr -storepass $SP \
--keypass $KP -ext EKU=serverAuth,clientAuth $EXT
+-keypass $KP -ext EKU=serverAuth,clientAuth -ext KU=digitalSignature,keyEncipherment $EXT
 
 rm -f /tmp/localhost-keystore.p12.$$
 

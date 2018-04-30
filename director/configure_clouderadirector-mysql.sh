@@ -12,17 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2017
+# Copyright Clairvoyant 2018
 #
 if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
 #
 ##### START CONFIG ###################################################
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-# https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
-PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 
 # Function to print the help screen.
 print_help () {
@@ -39,13 +36,6 @@ check_root () {
     echo "You must have root priviledges to run this program."
     exit 2
   fi
-}
-
-# Function to print and error message and exit.
-err_msg () {
-  local CODE=$1
-  echo "ERROR: Could not install required package. Exiting."
-  exit "$CODE"
 }
 
 # Function to discover basic OS details.
@@ -106,7 +96,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename "$0")"
       ;;
     -v|--version)
-      echo "Create the Hortonworks Ambari users and databases in MySQL."
+      echo "Create the director user and database in MySQL."
       exit 0
       ;;
     *)
@@ -120,52 +110,29 @@ done
 if [ -z "$MYSQL_HOST" ] || [ -z "$MYSQL_USER" ] || [ -z "$MYSQL_PASSWORD" ]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
-#check_root
+check_root
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 # main
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
-  $ECHO sudo yum -y -e1 -d1 install epel-release
-  if ! rpm -q epel-release; then
-    $ECHO sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
-  fi
-  if [ "$OSREL" == 6 ]; then
-    $ECHO sudo yum -y -e1 -d1 install mysql apg || err_msg 4
-  else
-    $ECHO sudo yum -y -e1 -d1 install mariadb apg || err_msg 4
-  fi
-  if rpm -q apg; then export PWCMD='apg ] && [ 1 -M NCL -m 20 -x 20 -n 1'; fi
-elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
-  export DEBIAN_FRONTEND=noninteractive
-  $ECHO sudo apt-get -y -q install mysql-client apg || err_msg 4
-  if dpkg -l apg >/dev/null; then export PWCMD='apg ] && [ 1 -M NCL -m 20 -x 20 -n 1'; fi
-fi
-METASTOREDB_PASSWORD=$(eval "$PWCMD")
-OOZIEDB_PASSWORD=$(eval "$PWCMD")
-HUEDB_PASSWORD=$(eval "$PWCMD")
-echo "****************************************"
-echo "****************************************"
-echo "****************************************"
-echo "*** SAVE THESE PASSWORDS"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE metastore DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY '$METASTOREDB_PASSWORD';"
-echo "hive : $METASTOREDB_PASSWORD"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE oozie DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY '$OOZIEDB_PASSWORD';"
-echo "oozie : $OOZIEDB_PASSWORD"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '$HUEDB_PASSWORD';"
-echo "hue : $HUEDB_PASSWORD"
-echo "****************************************"
-echo "****************************************"
-echo "****************************************"
+echo "Configuring Cloudera Director to use MySQL..."
+sed -e '/^# CLAIRVOYANT START$/,/^# CLAIRVOYANT END$/d' \
+    -e "/lp.database.url:/a\\
+# CLAIRVOYANT START\\
+lp.database.type: mysql\\
+lp.database.username: $MYSQL_USER\\
+lp.database.password: $MYSQL_PASSWORD\\
+lp.database.host: $MYSQL_HOST\\
+# CLAIRVOYANT END" \
+    -i /etc/cloudera-director-server/application.properties
+echo "Restarting Director..."
+service cloudera-director-server restart
 

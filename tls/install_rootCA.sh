@@ -65,6 +65,9 @@ keytool -importcert -file /opt/cloudera/security/CAcerts/ca.cert.pem -alias CAce
 keytool -importcert -file /opt/cloudera/security/CAcerts/intermediate.cert.pem -alias CAcertint -keystore ${JAVA_HOME}/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
 
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+  if [ "$OS" == RedHatEnterpriseServer ]; then
+    subscription-manager repos --enable=rhel-${OSREL}-server-optional-rpms
+  fi
   if ! rpm -q openssl-perl; then yum -y -e1 -d1 install openssl-perl; fi
   c_rehash /opt/cloudera/security/CAcerts/
 

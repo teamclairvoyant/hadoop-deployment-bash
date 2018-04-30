@@ -12,16 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2018
 
 echo "********************************************************************************"
 echo "*** $(basename $0)"
 echo "********************************************************************************"
-echo "Making TLS security directories..."
-mkdir -p -m 0755 /opt/cloudera/security
-mkdir -p -m 0755 /opt/cloudera/security/x509
-mkdir -p -m 0755 /opt/cloudera/security/jks
-mkdir -p -m 0755 /opt/cloudera/security/CAcerts
-mkdir -p -m 0755 /opt/cloudera/security/keytabs
-mkdir -p -m 0755 /opt/cloudera/security/jaas
+echo "Configuring JDK to disable all except TLS v1.2..."
+if [ -f /etc/profile.d/jdk.sh ]; then
+  . /etc/profile.d/jdk.sh
+elif [ -f /etc/profile.d/java.sh ]; then
+  . /etc/profile.d/java.sh
+fi
+
+if [ -z "${JAVA_HOME}" ]; then echo "ERROR: \$JAVA_HOME is not set."; exit 10; fi
+
+if [ ! -f ${JAVA_HOME}/jre/lib/security/java.security-orig ]; then
+  /bin/cp -p ${JAVA_HOME}/jre/lib/security/java.security ${JAVA_HOME}/jre/lib/security/java.security-orig
+fi
+
+if ! grep ^jdk.tls.disabledAlgorithms= ${JAVA_HOME}/jre/lib/security/java.security | grep -q "TLSv1.1, TLSv1,"; then
+  sed -ie '/^jdk.tls.disabledAlgorithms=/s|SSLv3|TLSv1.1, TLSv1, SSLv3|' ${JAVA_HOME}/jre/lib/security/java.security
+fi
 

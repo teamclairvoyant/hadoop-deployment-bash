@@ -58,8 +58,8 @@ fi
 #cp -p {start,stop}_cluster_all.ksh /usr/local/sbin/
 #chown 0:0 /usr/local/sbin/{start,stop}_cluster_all.ksh
 #chmod 700 /usr/local/sbin/{start,stop}_cluster_all.ksh
-install -o root -g root -m 0755 start_cluster_all.ksh /usr/local/sbin/start_cluster_all.ksh
-install -o root -g root -m 0755 stop_cluster_all.ksh  /usr/local/sbin/stop_cluster_all.ksh
+install -o root -g root -m 0755 $(dirname $0)/start_cluster_all.ksh /usr/local/sbin/start_cluster_all.ksh
+install -o root -g root -m 0755 $(dirname $0)/stop_cluster_all.ksh  /usr/local/sbin/stop_cluster_all.ksh
 #rm -f /tmp/$$
 #crontab -l | egrep -v 'stop_cluster_all.ksh|start_cluster_all.ksh' >/tmp/$$
 #echo '00 08 * * * /usr/local/sbin/start_cluster_all.ksh >/dev/null'>>/tmp/$$

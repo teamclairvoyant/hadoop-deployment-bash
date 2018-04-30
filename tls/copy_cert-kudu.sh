@@ -12,16 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2018
 
 echo "********************************************************************************"
 echo "*** $(basename $0)"
 echo "********************************************************************************"
-echo "Making TLS security directories..."
-mkdir -p -m 0755 /opt/cloudera/security
-mkdir -p -m 0755 /opt/cloudera/security/x509
-mkdir -p -m 0755 /opt/cloudera/security/jks
-mkdir -p -m 0755 /opt/cloudera/security/CAcerts
-mkdir -p -m 0755 /opt/cloudera/security/keytabs
-mkdir -p -m 0755 /opt/cloudera/security/jaas
+echo "Copying Kudu TLS certs and keys..."
+install -m 0444 -o kudu -g kudu /opt/cloudera/security/x509/localhost.pem /opt/cloudera/security/x509/kudu.crt
+install -m 0440 -o kudu -g kudu /opt/cloudera/security/x509/localhost.e.key /opt/cloudera/security/x509/kudu.key
 

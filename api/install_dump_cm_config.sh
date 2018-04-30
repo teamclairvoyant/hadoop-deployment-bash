@@ -108,7 +108,7 @@ if curl -s -X GET -u "admin:admin" http://${CMHOST}:${CMPORT}/api/${API}/users/$
       -e "/^APIPASS=/s|=.*|=${APIPASS}|" \
       -e "/^CMHOST=/s|=.*|=${CMHOST}|" \
       -e "/^CMPORT=/s|=.*|=${CMPORT}|" \
-      dump_cm_config.sh >/usr/local/sbin/dump_cm_config.sh
+      $(dirname $0)/dump_cm_config.sh >/usr/local/sbin/dump_cm_config.sh
   chown 0:0 /usr/local/sbin/dump_cm_config.sh
   chmod 700 /usr/local/sbin/dump_cm_config.sh
   rm -f /tmp/$$

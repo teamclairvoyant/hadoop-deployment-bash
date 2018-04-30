@@ -188,7 +188,10 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   yum $YUMOPTS install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel python-devel wget cyrus-sasl-devel.x86_64
 
   #echo "** Installing python pip."
-  #yum $YUMOPTS install epel-release || rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  #yum -y -e1 -d1 install epel-release
+  #if ! rpm -q epel-release; then
+  #  rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  #fi
   #yum $YUMOPTS install python-pip
 
   #echo "** Installing python setuptools."

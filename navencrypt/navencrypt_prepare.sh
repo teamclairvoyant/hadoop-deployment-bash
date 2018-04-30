@@ -29,6 +29,7 @@ if [ $DEBUG ]; then set -x; fi
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
 FSTYPE=xfs
 FSMOUNTOPT=noatime
+FORCE=no
 
 # Function to print the help screen.
 print_help () {
@@ -39,6 +40,7 @@ print_help () {
   printf "         -m|--mountpoint       Mountpoint of the encrypted filesystem.\n"
   printf "        [-t|--fstype]          Filesystem type.  Default is xfs.\n"
   printf "        [-o|--mountoptions]    Filesystem mount options.  Default is noatime.\n"
+  printf "        [-f|--force]           Force wipe any existing data.\n"
   printf "        [-h|--help]\n"
   printf "        [-v|--version]\n"
   printf "\n"
@@ -92,6 +94,9 @@ while [[ $1 = -* ]]; do
       shift
       FSMOUNTOPT=$1
       ;;
+    -f|--force)
+      FORCE=yes
+      ;;
     -h|--help)
       print_help "$(basename $0)"
       ;;
@@ -123,7 +128,7 @@ umask 022
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   # Check to make sure we do not wipe a LVM.
-  if ! echo $DEVICE | grep -q ^/dev/sd ;then
+  if ! echo $DEVICE | grep -qE '^/dev/sd|^/dev/xvd' ;then
     printf "** ERROR: ${DEVICE} is not an sd device. Exiting..."
     exit 7
   fi
@@ -158,11 +163,19 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
       fi
     fi
     echo "** Preparing ${DEVICE} for encryption..."
+    if [ "$FORCE" == yes ]; then
+      dd if=/dev/zero of=${DEVICE}${PART} ibs=1M count=1
+    fi
     mkdir -p -m 0755 $(dirname $MOUNTPOINT)
     mkdir -p -m 0755 $MOUNTPOINT && \
     chattr +i $MOUNTPOINT && \
     printf '%s' $NAVPASS |
-    navencrypt-prepare -t $FSTYPE -o $FSMOUNTOPT ${DEVICE}${PART} $MOUNTPOINT -
+    navencrypt-prepare -t $FSTYPE -o $FSMOUNTOPT --use-uuid ${DEVICE}${PART} $MOUNTPOINT -
+    RETVAL=$?
+    if [ "$RETVAL" -ne 0 ]; then
+      echo "** ERROR: Could not format ${DEVICE} for ${MOUNTPOINT}."
+      exit $RETVAL
+    fi
   else
     printf "** ERROR: Device ${DEVICE} does not exist. Exiting..."
     exit 4

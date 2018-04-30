@@ -35,7 +35,7 @@ print_help () {
   echo "        [-p|--passwd <LDAP superuser password>]"
   echo "        [-h|--help]"
   echo "        [-v|--version]"
-  echo "   ex.  $1"
+  echo "   ex.  $1 --domain HADOOP.COM"
   exit 1
 }
 

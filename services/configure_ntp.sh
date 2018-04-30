@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2018
 
-# ARGV:
-# 1 - Name to set on the local machine - required
+DATE=`date +'%Y%m%d%H%M%S'`
 
 # Function to discover basic OS details.
 discover_os () {
@@ -41,6 +40,16 @@ discover_os () {
   fi
 }
 
+is_virtual () {
+  egrep -qi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
+  return $?
+}
+
+is_aws () {
+  grep -qi 'amazon' /sys/devices/virtual/dmi/id/*
+  return $?
+}
+
 echo "********************************************************************************"
 echo "*** $(basename $0)"
 echo "********************************************************************************"
@@ -51,28 +60,21 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
   exit 3
 fi
 
-H=$1
-if [ -z "$H" ]; then
-  echo "ERROR: Missing hostname."
-  exit 1
+echo "Configuring Network Time Protocol..."
+# Add in a way to set the "server" lines.
+# May need CLI ARG parsing.
+# https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/set-time.html#configure-amazon-time-service
+if is_aws; then
+  cp -p /etc/ntp.conf /etc/ntp.conf.${DATE}
+  sed -e '/# CLAIRVOYANT-AWS$/d' -i /etc/ntp.conf
+  sed -e '/^server /s|^server|#server|' \
+      -e '/^#server /a\
+server 169.254.169.123 prefer iburst                               # CLAIRVOYANT-AWS' \
+      -i /etc/ntp.conf
 fi
-
-echo "Setting hostname to ${H}..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  if [ $OSREL == 6 ]; then
-    sed -e "/^HOSTNAME=/s|=.*|=$H|" -i /etc/sysconfig/network
-  else
-    hostnamectl set-hostname $H
-  fi
-  hostname $H
-
-  if rpm -q cloud-init; then
-    echo 'preserve_hostname: True' >/etc/cloud/cloud.cfg.d/04_hostname.cfg
-    chown root:root /etc/cloud/cloud.cfg.d/04_hostname.cfg
-    chmod 0644 /etc/cloud/cloud.cfg.d/04_hostname.cfg
-  fi
+  service ntpd restart
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
-  hostnamectl set-hostname $H || \
-  echo "$H" >/etc/hostname && hostname $H
+  service ntp restart
 fi
 

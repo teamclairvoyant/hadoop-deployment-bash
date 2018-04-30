@@ -32,7 +32,7 @@ REPOHOST=yum.localdomain
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
   scp -p -o StrictHostKeyChecking=no ${GITREPO}/install_clouderanavigatorencrypt.sh ${GITREPO}/install_entropy.sh ${HOST}:
-  ssh -t $HOST "sudo bash -x install_entropy.sh; sudo bash -x install_clouderanavigatorencrypt.sh $REPOHOST"
+  ssh -t $HOST "sudo bash install_entropy.sh; sudo bash install_clouderanavigatorencrypt.sh $REPOHOST"
 done
 ```
 
@@ -52,20 +52,20 @@ KTPASS=password_from_kts    # Read the docs to determine this value.
 KEYTYPE=single-passphrase
 
 scp -p -o StrictHostKeyChecking=no ${GITREPO}/navencrypt/navencrypt_register.sh ${HOST}:
-ssh -t $HOST "sudo bash -x navencrypt_register.sh --navpass $NAVPASS --server $NAVSERVER1 --passive-server $NAVSERVER2 --org $MYORG --auth $KTPASS --key-type $KEYTYPE"
+ssh -t $HOST "sudo bash navencrypt_register.sh --navpass $NAVPASS --server $NAVSERVER1 --passive-server $NAVSERVER2 --org $MYORG --auth $KTPASS --key-type $KEYTYPE"
 ```
 
 THESE SCRIPTS FORMAT DISKS, WIPE FILESYSTEMS, AND EAT BABIES.
 
 (Did you read the part of the docs that said the cluster should be stopped at this point?)
 
-On the chance that you are bolting on Navigator Encrypt *after* you have built out your CDH cluster, run navencrypt_evacuate.sh on each disk/mountpoint in order to suffle your data around.
+On the chance that you are bolting on Navigator Encrypt *after* you have built out your CDH cluster, run navencrypt_evacuate.sh on each disk/mountpoint in order to suffle your data around.  This may fill up the parent filesystem.
 ```
 GITREPO=~/git/teamclairvoyant/bash
 MOUNTPOINT=/data/0
 
 scp -p -o StrictHostKeyChecking=no ${GITREPO}/navencrypt/navencrypt_evacuate.sh ${HOST}:
-ssh -t $HOST "sudo bash -x navencrypt_evacuate.sh $MOUNTPOINT"
+ssh -t $HOST "sudo bash navencrypt_evacuate.sh --mountpoint $MOUNTPOINT"
 ```
 
 THESE SCRIPTS FORMAT DISKS, WIPE FILESYSTEMS, AND EAT BABIES.
@@ -75,10 +75,10 @@ THESE SCRIPTS FORMAT DISKS, WIPE FILESYSTEMS, AND EAT BABIES.
 GITREPO=~/git/teamclairvoyant/bash
 NAVPASS=password            # Can be different on each host.  Do not lose it.
 DEVICE=/dev/sdb
-MOUNTPOINT=/data/0
+EMOUNTPOINT=/navencrypt/0
 
 scp -p -o StrictHostKeyChecking=no ${GITREPO}/navencrypt/navencrypt_prepare.sh ${HOST}:
-ssh -t $HOST "sudo bash -x navencrypt_prepare.sh --navpass $NAVPASS --device $DEVICE --mountpoint $MOUNTPOINT"
+ssh -t $HOST "sudo bash navencrypt_prepare.sh --navpass $NAVPASS --device $DEVICE --mountpoint $EMOUNTPOINT"
 ```
 
 THESE SCRIPTS FORMAT DISKS, WIPE FILESYSTEMS, AND EAT BABIES.
@@ -94,7 +94,7 @@ EMOUNTPOINT=/navencrypt/0
 CATEGORY=hadoop             # Can be whatever string you desire.  Is used by ACLs.
 
 scp -p -o StrictHostKeyChecking=no ${GITREPO}/navencrypt/navencrypt_move.sh ${HOST}:
-ssh -t $HOST "sudo bash -x navencrypt_move.sh --navpass $NAVPASS --mountpoint $MOUNTPOINT --emountpoint $EMOUNTPOINT --category $CATEGORY"
+ssh -t $HOST "sudo bash navencrypt_move.sh --navpass $NAVPASS --mountpoint $MOUNTPOINT --emountpoint $EMOUNTPOINT --category $CATEGORY"
 ```
 
 TODO: Insert notes about [ACLs](https://www.cloudera.com/documentation/enterprise/latest/topics/navigator_encrypt_acl.html) here.

@@ -51,7 +51,10 @@ fi
 echo "Installing Kerberos client..."
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   yum -y -e1 -d1 install krb5-workstation
-  yum -y -e1 -d1 install epel-release || rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  yum -y -e1 -d1 install epel-release
+  if ! rpm -q epel-release; then
+    rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  fi
   yum -y -e1 -d1 install kstart k5start
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive

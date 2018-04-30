@@ -49,7 +49,10 @@ if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$
 fi
 
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  yum -y -e1 -d1 install epel-release || rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  yum -y -e1 -d1 install epel-release
+  if ! rpm -q epel-release; then
+    rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  fi
   yum -y -e1 -d1 install python-pip
   pip install cm_api
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then

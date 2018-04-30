@@ -63,6 +63,20 @@ defaults
 #    server oozie1 OOZIEHOST1:11000 check
 #    server oozie2 OOZIEHOST2:11000 check
 
+## Setup for HttpFS.
+#frontend httpfs
+#    bind 0.0.0.0:14000
+#    mode http
+#    default_backend httpfs_servers
+#    option httplog
+#
+#backend httpfs_servers
+#    mode http
+#    option httplog
+#    balance roundrobin
+#    server httpfs0 HTTPFSHOST1:14000 check
+#    server httpfs1 HTTPFSHOST2:14000 check
+
 ## Setup for Hue.
 #frontend hue
 #    bind 0.0.0.0:8889
@@ -83,6 +97,35 @@ defaults
 #    balance source
 #    server hue1 HUEHOST1:8888 cookie ServerA check inter 2s fall 3
 #    server hue2 HUEHOST2:8888 cookie ServerB check inter 2s fall 3
+
+## Setup for Solr.
+#frontend solr
+#    bind 0.0.0.0:8983
+#    mode http
+#    default_backend solr_servers
+#    option httplog
+#
+#backend solr_servers
+#    mode http
+#    option httplog
+#    balance roundrobin
+#    server solr0 SOLRHOST1:8983 check
+#    server solr1 SOLRHOST2:8983 check
+#    server solr2 SOLRHOST2:8983 check
+#    server solr3 SOLRHOST2:8983 check
+#    server solr4 SOLRHOST2:8983 check
+
+### Setup for Solr Server.
+##listen solr
+##    bind 0.0.0.0:8983
+##    timeout client 1h
+##    timeout server 1h
+##    balance leastconn
+##    server solr0 SOLRHOST1:8983 check
+##    server solr1 SOLRHOST2:8983 check
+##    server solr2 SOLRHOST3:8983 check
+##    server solr3 SOLRHOST4:8983 check
+##    server solr4 SOLRHOST5:8983 check
 
 ## Setup for HiveServer2.
 #listen hiveserver2

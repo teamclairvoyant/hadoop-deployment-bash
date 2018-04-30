@@ -90,11 +90,14 @@ elif [ "$OS" == RedHatEnterpriseServer ]; then
     exit 1
   fi
 
+  subscription-manager repos --enable=rhel-${OSREL}-server-optional-rpms
   echo "** Find the correct kernel-headers and kernel-devel that match the running kernel."
-  #subscription-manager repos --enable=rhel-${OSREL}-server-optional-rpms
   yum -y -e1 -d1 install kernel-headers-$(uname -r) kernel-devel-$(uname -r)
 
-  yum -y -e1 -d1 install epel-release || rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  yum -y -e1 -d1 install epel-release
+  if ! rpm -q epel-release; then
+    rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+  fi
   wget -q http://${YUMHOST}/navigator-encrypt/latest/cloudera-navencrypt.repo -O /etc/yum.repos.d/cloudera-navencrypt.repo
   chown root:root /etc/yum.repos.d/cloudera-navencrypt.repo
   chmod 0644 /etc/yum.repos.d/cloudera-navencrypt.repo
