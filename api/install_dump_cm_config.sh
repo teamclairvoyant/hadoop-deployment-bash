@@ -117,6 +117,7 @@ if curl -s -X GET -u "admin:admin" http://${CMHOST}:${CMPORT}/api/${API}/users/$
   crontab /tmp/$$
   rm -f /tmp/$$
 else
-  echo "APIUSER ${APIUSER} already exists.  Exiting."
+  echo "WARNING: APIUSER ${APIUSER} already exists.  Exiting without installing crontab."
+  exit 2
 fi
 
