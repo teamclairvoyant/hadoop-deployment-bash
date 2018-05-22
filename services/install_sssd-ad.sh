@@ -160,16 +160,16 @@ EOF
   realm join $_DOMAIN_LOWER $OPTS || exit $?
 
   sed -e '/^use_fully_qualified_names .*/d' \
-      -e "/^\[domain/a\
-use_fully_qualified_names = False" -i /etc/sssd/sssd.conf
-  sed -e '/^ default_ccache_name = .*/d' \
-      -e '/^ # We have to use FILE:.*/d' \
-      -e '/^ # https://community.hortonworks.com/.*/d' \
-      -e '/^ #default_ccache_name = FILE:/tmp/krb5cc_%{uid}$/d' \
-      -e "/^ rdns = /a\
- # We have to use FILE: until JVM can support something better.
- # https://community.hortonworks.com/questions/11288/kerberos-cache-in-ipa-redhat-idm-keyring-solved.html
- #default_ccache_name = FILE:/tmp/krb5cc_%{uid}" -i /etc/sssd/sssd.conf
+      -e '/^\[domain/a\
+use_fully_qualified_names = False' -i /etc/sssd/sssd.conf
+  sed -e '/^default_ccache_name = .*/d' \
+      -e '/^# We have to use FILE:.*/d' \
+      -e '/^# https:\/\/community.hortonworks.com\/.*/d' \
+      -e '/^#default_ccache_name = FILE:\/tmp\/krb5cc_%{uid}$/d' \
+      -e '/^\[domain/a\
+# We have to use FILE: until JVM can support something better.\
+# https://community.hortonworks.com/questions/11288/kerberos-cache-in-ipa-redhat-idm-keyring-solved.html\
+#default_ccache_name = FILE:/tmp/krb5cc_%{uid}' -i /etc/sssd/sssd.conf
   service sssd restart
 
 elif [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 6 ]; then
