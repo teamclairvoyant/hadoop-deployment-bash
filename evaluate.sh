@@ -437,7 +437,7 @@ esac
 if [ "$OS" == RedHatEnterpriseServer ]; then
   echo "****************************************"
   echo "*** RedHat Subscription"
-  subscription-manager version
+  sudo -n /sbin/subscription-manager version
 fi
 
 #echo "****************************************"
