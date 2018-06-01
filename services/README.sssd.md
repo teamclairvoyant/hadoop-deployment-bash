@@ -19,9 +19,10 @@ Pass `--help` to each script to see the options.
 ```
 GITREPO=~/git/teamclairvoyant/bash
 ADDOMAIN=HADOOP.COM
+PASSWORD=hahahahaha
 
 scp -p -o StrictHostKeyChecking=no ${GITREPO}/services/install_sssd-ad.sh ${HOST}:
-ssh -t $HOST "sudo bash -x install_sssd-ad.sh --domain $ADDOMAIN"
+ssh -t $HOST "sudo bash -x install_sssd-ad.sh --domain $ADDOMAIN --batch <<< $PASSWORD"
 ```
 
 ### LDAP and Kerberos

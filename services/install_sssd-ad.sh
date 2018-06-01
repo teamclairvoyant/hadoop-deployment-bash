@@ -33,6 +33,7 @@ print_help () {
   echo "        $1 [-u|--user <User name to use for enrollment>]"
   echo "        $1 [-o|--computer-ou <Computer OU DN to join>]"
   echo "        $1 [-i|--automatic-id-mapping] # Turn off automatic id mapping"
+  echo "        $1 [-b|--batch] # Do not prompt for passwords"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
   echo "   ex.  $1"
@@ -109,6 +110,10 @@ while [[ $1 = -* ]]; do
       shift
       _ID="--automatic-id-mapping=no"
       ;;
+    -b|--batch)
+      shift
+      _BATCH7="--unattended"
+      ;;
     -h|--help)
       print_help "$(basename $0)"
       ;;
@@ -145,7 +150,7 @@ check_root
 echo "Installing SSSD for Active Directory..."
 if [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
   # EL7
-  OPTS="$_USER $_OU7 $_ID"
+  OPTS="$_USER $_OU7 $_ID $_BATCH7"
   echo "** Installing software."
   yum $YUMOPTS install sssd adcli realmd PackageKit
 
