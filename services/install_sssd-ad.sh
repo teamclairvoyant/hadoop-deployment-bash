@@ -87,7 +87,7 @@ discover_os () {
 #fi
 
 # Process arguments.
-while [[ $1 = -* ]]; do
+while [[ "$1" = -* ]]; do
   case $1 in
     -d|--domain)
       shift
@@ -102,7 +102,7 @@ while [[ $1 = -* ]]; do
       shift
       #_OU7="--computer-ou=\"$1\"" # Deal with spaces in the OU name.
       #_OU6="--domain-ou=\"$1\""   # Deal with spaces in the OU name. 
-      _OU7="--computer-ou=$1"
+       _OU7="'$1'"
       _OU6="--domain-ou=$1"
       ;;
     -i|--automatic-id-mapping)
@@ -145,7 +145,7 @@ check_root
 echo "Installing SSSD for Active Directory..."
 if [ \( "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS \) -a "$OSREL" == 7 ]; then
   # EL7
-  OPTS="$_USER $_OU7 $_ID"
+  OPTS="$_USER $_ID"
   echo "** Installing software."
   yum $YUMOPTS install sssd adcli realmd PackageKit
 
@@ -157,7 +157,7 @@ EOF
 
   echo "** Discovering and joining domain..."
   realm discover $_DOMAIN_LOWER && \
-  realm join $_DOMAIN_LOWER $OPTS || exit $?
+  realm join $_DOMAIN_LOWER $OPTS --computer-ou="'$_OU7'" || exit $?
 
   sed -e '/^use_fully_qualified_names .*/d' \
       -e "/^\[domain/a\
