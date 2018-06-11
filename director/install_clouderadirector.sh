@@ -92,6 +92,12 @@ chmod 0640 /etc/cloudera-director-server/application.properties
 sed -i -e '/lp.encryption.twoWayCipher:/a\
 lp.encryption.twoWayCipher: desede' -e "/lp.encryption.twoWayCipherConfig:/a\
 lp.encryption.twoWayCipherConfig: `python -c 'import base64, os; print base64.b64encode(os.urandom(24))'`" /etc/cloudera-director-server/application.properties
+## https://www.cloudera.com/documentation/director/latest/topics/director_create_java_clusters.html
+#echo "Forcing use of JDK 8..."
+#sed -e '/^# lp.bootstrap.packages.javaPackage:/a\
+#lp.bootstrap.packages.cmJavaPackages: .*=oracle-j2sdk1.8\
+#lp.bootstrap.packages.defaultCmJavaPackage: oracle-j2sdk1.8' \
+#    -i /etc/cloudera-director-server/application.properties
 echo "Starting Director..."
 service cloudera-director-server start
 
