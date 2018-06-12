@@ -66,20 +66,30 @@ _jdk_major_version() {
 
 _install_oracle_jdbc() {
   pushd $(dirname $0)
-  if [ ! -f ojdbc6.jar ]; then
-    echo "** NOTICE: ojdbc6.jar not found.  Please manually download from"
+  if [ ! -f ojdbc6.jar ] && [ ! -f ojdbc8.jar ]; then
+    echo "** NOTICE: ojdbc6.jar or ojdbc8.jar not found.  Please manually download from"
     echo "   http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html"
+    echo "   or"
+    echo "   http://www.oracle.com/technetwork/database/features/jdbc/jdbc-ucp-122-3110062.html"
     echo "   and place in the same directory as this script."
     exit 1
-  else
-    cp -p ojdbc6.jar /tmp/ojdbc6.jar
   fi
   if [ ! -d /usr/share/java ]; then
     install -o root -g root -m 0755 -d /usr/share/java
   fi
-  install -o root -g root -m 0644 /tmp/ojdbc6.jar /usr/share/java/
-  ln -sf ojdbc6.jar /usr/share/java/oracle-connector-java.jar
-  ls -l /usr/share/java/oracle-connector-java.jar /usr/share/java/ojdbc6.jar
+  if [ -f ojdbc6.jar ]; then
+    cp -p ojdbc6.jar /tmp/ojdbc6.jar
+    install -o root -g root -m 0644 /tmp/ojdbc6.jar /usr/share/java/
+    ln -sf ojdbc6.jar /usr/share/java/oracle-connector-java.jar
+    ls -l /usr/share/java/ojdbc6.jar
+  fi
+  if [ -f ojdbc8.jar ]; then
+    cp -p ojdbc8.jar /tmp/ojdbc8.jar
+    install -o root -g root -m 0644 /tmp/ojdbc8.jar /usr/share/java/
+    ln -sf ojdbc8.jar /usr/share/java/oracle-connector-java.jar
+    ls -l /usr/share/java/ojdbc8.jar
+  fi
+  ls -l /usr/share/java/oracle-connector-java.jar
   popd
 }
 
