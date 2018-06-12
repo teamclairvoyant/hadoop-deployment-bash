@@ -17,7 +17,7 @@
 exit 1
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Installing HAproxy..."
 yum -y -d1 -e1 install haproxy
@@ -28,6 +28,7 @@ cat <<EOF >/etc/haproxy/haproxy.cfg
 # CLAIRVOYANT
 # http://gethue.com/hadoop-tutorial-how-to-distribute-impala-query-load/
 # https://www.cloudera.com/documentation/enterprise/5-8-x/topics/impala_proxy.html
+# https://www.cloudera.com/documentation/enterprise/latest/topics/hue_sec_ha.html
 global
     log 127.0.0.1 local2
     chroot /var/lib/haproxy
@@ -51,7 +52,8 @@ defaults
 
 ## Setup for Oozie.
 #frontend oozie
-#    bind 0.0.0.0:11000
+#    bind 0.0.0.0:11000 # http
+##   bind 0.0.0.0:11443 # https
 #    mode http
 #    default_backend oozie_servers
 #    option httplog
@@ -100,7 +102,8 @@ defaults
 
 ## Setup for Solr.
 #frontend solr
-#    bind 0.0.0.0:8983
+#    bind 0.0.0.0:8983 # http
+##   bind 0.0.0.0:8985 # https
 #    mode http
 #    default_backend solr_servers
 #    option httplog
