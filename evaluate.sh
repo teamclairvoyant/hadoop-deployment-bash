@@ -181,6 +181,13 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   else
     echo "Kernel is VULNERABLE (futex TSB-63)"
   fi
+  if rpm -q --changelog kernel-$(uname -r) | grep -Eq 'allow JVM to implement its own stack guard pages|fix new crash in unmapped_area_topdown()'; then
+    echo "Kernel is OK (JVM crash TSB-2017-242)"
+  elif rpm -q --changelog kernel-$(uname -r) | grep -q '^- \[mm\] enlarge stack guard gap (Larry Woodman) .*{CVE-2017-1000364}'; then
+    echo "Kernel is VULNERABLE (JVM crash TSB-2017-242)"
+  else
+    echo "Kernel is OK (JVM crash TSB-2017-242)"
+  fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l linux-image-[0-9]\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
   echo "** running kernel has fix?:"
@@ -192,11 +199,19 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
     # We could not retreive the changelog.
     if [ "$RETVAL" -ne 0 ]; then
       echo "Kernel is UNKNOWN (futex TSB-63)"
+      echo "Kernel is UNKNOWN (JVM crash TSB-2017-242)"
     else
+      # TODO: The following is unreliable
+      echo "The following is unreliable:"
       if echo "${_VAL}" | grep -q 'futex: Ensure get_futex_key_refs() always implies a barrier'; then
         echo "Kernel is OK (futex TSB-63)"
       else
         echo "Kernel is VULNERABLE (futex TSB-63)"
+      fi
+      if echo "${_VAL}" | grep -q 'fix new crash in unmapped_area_topdown()'; then
+        echo "Kernel is OK (JVM crash TSB-2017-242)"
+      else
+        echo "Kernel is VULNERABLE (JVM crash TSB-2017-242)"
       fi
     fi
   fi
