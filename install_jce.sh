@@ -67,16 +67,20 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     unzip -o -j /tmp/jce_policy-6.zip -d /usr/java/jdk1.6.0_31/jre/lib/security/
   fi
 
-  if rpm -q oracle-j2sdk1.7 || test -d /usr/java/jdk1.7.0_*; then
+  if rpm -q oracle-j2sdk1.7 || rpm -qa | grep jdk1.7.0_ || test -d /usr/java/jdk1.7.0_*; then
     wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip -O /tmp/jce_policy-7.zip
-    unzip -o -j /tmp/jce_policy-7.zip -d /usr/java/jdk1.7.0_67-cloudera/jre/lib/security/
+    for _DIR in /usr/java/jdk1.7.0_*; do
+      unzip -o -j /tmp/jce_policy-7.zip -d "${_DIR}/jre/lib/security/"
+    done
   fi
 
-  if rpm -q oracle-j2sdk1.8 || test -d /usr/java/jdk1.8.0_*; then
+  if rpm -q oracle-j2sdk1.8 || rpm -q jdk1.8 || rpm -qa | grep jdk1.8.0_ || test -d /usr/java/jdk1.8.0_*; then
     wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip -O /tmp/jce_policy-8.zip
-    unzip -o -j /tmp/jce_policy-8.zip -d /usr/java/jdk1.8.0_*/jre/lib/security/
+    for _DIR in /usr/java/jdk1.8.0_*; do
+      unzip -o -j /tmp/jce_policy-8.zip -d "${_DIR}/jre/lib/security/"
+    done
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
