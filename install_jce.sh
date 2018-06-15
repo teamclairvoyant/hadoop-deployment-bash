@@ -14,6 +14,13 @@
 #
 # Copyright Clairvoyant 2015
 
+# The original intent of this script was to install the unlimited strength JCE
+# to *all* Oracle JDKs installed on the system.  With the advent of the JCE
+# being delivered within the JDK, and the added complexity of trying to
+# determine versions, this script *will not* install the JCE at all if it sees
+# JDK 1.8.0_151 or newer.  This script *will* configure JDK 1.8.0_151 -
+# 1.8.0_160 to enable the unlimited policy.
+
 # Function to discover basic OS details.
 discover_os () {
   if command -v lsb_release >/dev/null; then
@@ -60,6 +67,32 @@ if [ -z "$http_proxy" ]; then
 fi
 
 echo "Installing Oracle Java Cryptography Extentions..."
+# https://stackoverflow.com/questions/7334754/correct-way-to-check-java-version-from-bash-script
+if type -p java >/dev/null; then
+  _JAVA=java
+  JAVA_HOME=${JAVA_HOME:-/usr/java/default}
+elif [ -n "$JAVA_HOME" ] && [ -x "${JAVA_HOME}/bin/java" ]; then
+  _JAVA="${JAVA_HOME}/bin/java"
+else
+  echo "** WARNING: Java not found."
+fi
+if [ -n "$_JAVA" ]; then
+  _JAVA_VERSION=$("$_JAVA" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+  _JAVA_VERSION_MAJ=$(echo "${_JAVA_VERSION}" | awk -F. '{print $1}')
+  _JAVA_VERSION_MIN=$(echo "${_JAVA_VERSION}" | awk -F. '{print $2}')
+  _JAVA_VERSION_PATCH=$(echo "${_JAVA_VERSION}" | awk -F. '{print $3}' | sed -e 's|_.*||')
+  _JAVA_VERSION_RELEASE=$(echo "${_JAVA_VERSION}" | awk -F_ '{print $2}')
+else
+  _JAVA_VERSION_MAJ=0
+  _JAVA_VERSION_MIN=0
+  _JAVA_VERSION_PATCH=0
+  _JAVA_VERSION_RELEASE=0
+fi
+if [ "${_JAVA_VERSION_MAJ}" -eq 1 ] && [ "${_JAVA_VERSION_MIN}" -eq 8 ] && [ "${_JAVA_VERSION_RELEASE}" -ge 161 ]; then
+  echo "NOTICE: Unlimited JCE is built-in for JDK version ${_JAVA_VERSION}. Exiting..."
+  exit 0
+fi
+
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if rpm -q jdk || test -d /usr/java/jdk1.6.0_*; then
     wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
@@ -75,6 +108,12 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     done
   fi
 
+  if [ "${_JAVA_VERSION_MAJ}" -eq 1 ] && [ "${_JAVA_VERSION_MIN}" -eq 8 ] && [ "${_JAVA_VERSION_RELEASE}" -ge 151 ]; then
+    echo "INFO: Vanilla JCE is built-in for JDK version ${_JAVA_VERSION}. Enabling unlimited policy..."
+    sed -e '/^crypto.policy=/d' -i ${JAVA_HOME}/jre/lib/security/java.security
+    echo "crypto.policy=unlimited" >>${JAVA_HOME}/jre/lib/security/java.security
+    exit 0
+  fi
   if rpm -q oracle-j2sdk1.8 || rpm -q jdk1.8 || rpm -qa | grep jdk1.8.0_ || test -d /usr/java/jdk1.8.0_*; then
     wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip -O /tmp/jce_policy-8.zip
@@ -94,6 +133,12 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
     apt-get -y -q install oracle-java7-unlimited-jce-policy
   fi
 
+  if [ "${_JAVA_VERSION_MAJ}" -eq 1 ] && [ "${_JAVA_VERSION_MIN}" -eq 8 ] && [ "${_JAVA_VERSION_RELEASE}" -ge 151 ]; then
+    echo "INFO: Vanilla JCE is built-in for JDK version ${_JAVA_VERSION}. Enabling unlimited policy..."
+    sed -e '/^crypto.policy=/d' -i ${JAVA_HOME}/jre/lib/security/java.security
+    echo "crypto.policy=unlimited" >>${JAVA_HOME}/jre/lib/security/java.security
+    exit 0
+  fi
   if dpkg -l oracle-java8-installer >/dev/null || test -d /usr/lib/jvm/java-8-oracle; then
     apt-get -y -q install oracle-java8-unlimited-jce-policy
   fi
