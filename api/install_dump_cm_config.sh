@@ -73,6 +73,8 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   fi
 fi
 
+ADMINUSER=admin
+ADMINPASS=admin
 APIUSER=api
 APIPASS=`eval $PWCMD`
 CMHOST=localhost
@@ -84,8 +86,8 @@ if ! (exec 6<>/dev/tcp/${CMHOST}/${CMPORT}); then
   exit 1
 fi
 
-if curl -s -X GET -u "admin:admin" http://${CMHOST}:${CMPORT}/api/${API}/users/${APIUSER} | grep -q "does not exist"; then
-  curl -s -X POST -u "admin:admin" -H "content-type:application/json" -d \
+if curl -s -X GET -u "${ADMINUSER}:${ADMINPASS}" http://${CMHOST}:${CMPORT}/api/${API}/users/${APIUSER} | grep -q "does not exist"; then
+  curl -s -X POST -u "${ADMINUSER}:${ADMINPASS}" -H "content-type:application/json" -d \
   "{
     \"items\" : [ {
       \"name\" : \"$APIUSER\",
