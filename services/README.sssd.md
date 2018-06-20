@@ -49,3 +49,19 @@ scp -p -o StrictHostKeyChecking=no ${GITREPO}/services/install_sssd-ldap.sh ${HO
 ssh -t $HOST "sudo bash -x install_sssd-ldap.sh --ldapserver $LDAP --suffix $BASE"
 ```
 
+## Authorization
+
+In order to restrict which users can authenticate to the system (for example via SSH) SSSD can be configured for [client-side access control](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/windows_integration_guide/realmd-logins) in order [to only allow certain users or groups](https://www.freedesktop.org/software/realmd/docs/realm.html).
+
+### Active Directory
+
+Users:
+```
+realm permit user@example.com
+realm permit 'AD.EXAMPLE.COM\user'
+```
+
+Groups:
+```
+realm permit -g group@example.com
+```
