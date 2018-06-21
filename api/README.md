@@ -26,7 +26,7 @@ MACHINE=cmserver
 
 scp -p -o StrictHostKeyChecking=no ${GITREPO}/api/install_dump_cm_config.sh \
   ${GITREPO}/api/dump_cm_config.sh ${MACHINE}:
-ssh -t $MACHINE 'sudo bash -x install_dump_cm_config.sh'
+ssh -t $MACHINE 'sudo bash -x install_dump_cm_config.sh -u admin -p admin -H localhost -P 7180'
 ```
 
 Grab the passwords that are output from the above command.
