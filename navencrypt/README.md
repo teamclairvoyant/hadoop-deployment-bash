@@ -78,7 +78,7 @@ DEVICE=/dev/sdb
 EMOUNTPOINT=/navencrypt/0
 
 scp -p -o StrictHostKeyChecking=no ${GITREPO}/navencrypt/navencrypt_prepare.sh ${HOST}:
-ssh -t $HOST "sudo bash navencrypt_prepare.sh --navpass $NAVPASS --device $DEVICE --mountpoint $EMOUNTPOINT"
+ssh -t $HOST "sudo bash navencrypt_prepare.sh --navpass $NAVPASS --device $DEVICE --emountpoint $EMOUNTPOINT"
 ```
 
 THESE SCRIPTS FORMAT DISKS, WIPE FILESYSTEMS, AND EAT BABIES.
