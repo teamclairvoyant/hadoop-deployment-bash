@@ -442,9 +442,10 @@ fi
 echo "****************************************"
 echo "*** Cloudera Software"
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  rpm -qa ^cloudera\*
+  rpm -qa ^cloudera\* ^navencrypt\*
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l \*cloudera\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+  dpkg -l \*navencrypt\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Cloudera Hadoop Packages"
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
