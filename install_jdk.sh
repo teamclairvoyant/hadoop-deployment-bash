@@ -101,8 +101,8 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   elif [ "$USECLOUDERA" = 8 ]; then
     pushd /tmp
     wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-      http://download.oracle.com/otn-pub/java/jdk/8u172-b11/a58eab1ec242421181065cdc37240b08/jdk-8u172-linux-x64.rpm -O jdk-8u172-linux-x64.rpm
-    rpm -Uv jdk-8u172-linux-x64.rpm
+      http://download.oracle.com/otn-pub/java/jdk/8u181-b13/96a7b8442fe848ef90c96a2fad6ed6d1/jdk-8u181-linux-x64.rpm -O jdk-8u181-linux-x64.rpm
+    rpm -Uv jdk-8u181-linux-x64.rpm
     popd
   else
     echo "ERROR: Unknown Java version.  Please choose 7 or 8."
