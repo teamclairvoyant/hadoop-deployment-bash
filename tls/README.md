@@ -191,3 +191,19 @@ MACHINE=somehost
 scp -p ${GITREPO}/tls/configure_openldap_tls.sh ${MACHINE}:
 ssh -t $MACHINE 'sudo bash ./configure_openldap_tls.sh'
 ```
+
+## Configure Cloudera Director for TLS
+
+Configure an existing [Cloudera Director](https://www.cloudera.com/products/product-components/cloudera-director.html) server installation to use the Cloudera TLS certificates.  This script depends on having followed the [Install a TLS Signed Certificate](#install-a-tls-signed-certificate) instructions.  The configuration also disables SSLv2, SSLv3, TLSv1.0, and TLSv1.1 protocols.
+
+### Installation
+
+```
+GITREPO=~/git/teamclairvoyant/bash
+MACHINE=somehost
+CMPASS=$CMPASS
+
+scp -p ${GITREPO}/tls/configure_clouderadirector_tls.sh ${MACHINE}:
+ssh -t $MACHINE "sudo bash ./configure_clouderadirector_tls.sh $CMPASS"
+```
+

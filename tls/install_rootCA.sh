@@ -43,8 +43,7 @@ echo "*** $(basename $0)"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
-#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -80,6 +79,12 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     update-ca-trust extract
   fi
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
-  :
+  pushd /opt/cloudera/security/CAcerts/
+  for SRC in *.pem; do
+    DST=$(echo "$SRC" | sed 's|pem$|crt|')
+    cp -p "/opt/cloudera/security/CAcerts/${SRC}" "/usr/local/share/ca-certificates/${DST}"
+  done
+  popd
+  update-ca-certificates
 fi
 

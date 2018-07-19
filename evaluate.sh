@@ -167,13 +167,6 @@ echo "** startup config:"
 grep swap /etc/fstab || echo "none"
 
 echo "****************************************"
-echo "*** JAVA_HOME"
-echo JAVA_HOME=$JAVA_HOME
-echo PATH=$PATH
-echo "** default java version:"
-java -version 2>&1 || ${JAVA_HOME}/java -version 2>&1
-
-echo "****************************************"
 echo "*** Firewall"
 echo "** running config:"
 IPT=$(sudo -n iptables -nL)
@@ -268,12 +261,55 @@ echo "** available entropy:"
 cat /proc/sys/kernel/random/entropy_avail
 
 echo "****************************************"
+echo "*** Java"
+echo "** installed Java(s):"
+if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+  rpm -qa | egrep 'jdk|jre|^java-|j2sdk' | sort
+elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+  dpkg -l \*jdk\* \*jre\* java-\* \*j2sdk\* oracle-java\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+fi
+# Which is our standard?
+echo "** which java:"
+which java
+echo "** default java version:"
+# https://stackoverflow.com/questions/7334754/correct-way-to-check-java-version-from-bash-script
+if type -p java >/dev/null; then
+  #echo "Java executable found in PATH."
+  _JAVA=java
+elif [ -n "$JAVA_HOME" ] && [ -x "${JAVA_HOME}/bin/java" ]; then
+  #echo "Java executable found in JAVA_HOME."
+  _JAVA="${JAVA_HOME}/bin/java"
+else
+  echo "Java not found."
+fi
+if [ -n "$_JAVA" ]; then
+  #java -version 2>&1 || ${JAVA_HOME}/java -version 2>&1
+  "$_JAVA" -version 2>&1
+  _JAVA_VERSION=$("$_JAVA" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+  _JAVA_VERSION_MAJ=$(echo "${_JAVA_VERSION}" | awk -F. '{print $1}')
+  _JAVA_VERSION_MIN=$(echo "${_JAVA_VERSION}" | awk -F. '{print $2}')
+  _JAVA_VERSION_PATCH=$(echo "${_JAVA_VERSION}" | awk -F. '{print $3}' | sed -e 's|_.*||')
+  _JAVA_VERSION_RELEASE=$(echo "${_JAVA_VERSION}" | awk -F_ '{print $2}')
+else
+  _JAVA_VERSION_MAJ=0
+  _JAVA_VERSION_MIN=0
+  _JAVA_VERSION_PATCH=0
+  _JAVA_VERSION_RELEASE=0
+fi
+
+echo "****************************************"
+echo "*** JAVA_HOME"
+echo JAVA_HOME=$JAVA_HOME
+echo PATH=$PATH
+
+echo "****************************************"
 echo "*** JCE"
 if which unzip >/dev/null 2>&1; then
   UNZIP=true
 else
   UNZIP=false
 fi
+_JCE_FOUND=false
 for _DIR in /usr/java/default/jre/lib/security \
             /usr/java/jdk1.6.0_31/jre/lib/security \
             /usr/java/jdk1.7.0_67-cloudera/jre/lib/security \
@@ -283,43 +319,58 @@ for _DIR in /usr/java/default/jre/lib/security \
             /usr/lib/jvm/default-java/jre/lib/security \
             /usr/lib/jvm/java-7-oracle/jre/lib/security \
             /usr/lib/jvm/java-8-oracle/jre/lib/security; do
-  if [ -d "$_DIR" ]; then
+  if [ -f "${_DIR}/local_policy.jar" ]; then
+    _JCE_FOUND=true
     if [ "$UNZIP" == true ]; then
       # http://harshj.com/checking-if-your-jre-has-the-unlimited-strength-policy-files-in-place/
-      unzip -c "${_DIR}"/local_policy.jar default_local.policy | grep -q javax.crypto.CryptoAllPermission && echo -n "unlimited" || echo -n "vanilla  "
+      unzip -c "${_DIR}"/local_policy.jar default_local.policy | grep -q javax.crypto.CryptoAllPermission && echo -n "unlimited         " || echo -n "vanilla           "
       echo " JCE in $_DIR"
     else
       #ls -l "${_DIR}"/*.jar
       sha1sum "${_DIR}"/*.jar
     fi
+  elif [ "${_JAVA_VERSION_MAJ}" -eq 1 ] && [ "${_JAVA_VERSION_MIN}" -eq 8 ] && [ "${_JAVA_VERSION_RELEASE}" -ge 151 ]; then
+  # https://www.cloudera.com/documentation/enterprise/release-notes/topics/rn_consolidated_pcm.html#jce
+  # Enabling Unlimited Strength Encryption for JDK 1.8.0_151 (and later)
+  #
+  # As of JDK 1.8.0_151, unlimited strength encryption can be enabled using the
+  # java.security file as documented in the JDK 1.8.0_151 release notes. You do
+  # not need to install the JCE policy files.
+  #
+  # As of JDK 1.8.0_161, unlimited strength encryption has been enabled by
+  # default. No further action is required.
+    _JCE_FOUND=true
+    if [ -f "${_DIR}"/java.security ]; then
+      if grep -q ^crypto.policy=unlimited "${_DIR}"/java.security; then
+        echo "unlimited built-in JCE in $_DIR"
+      elif grep -q ^crypto.policy=limited "${_DIR}"/java.security; then
+        echo "vanilla   built-in JCE in $_DIR"
+      else
+        if [ "${_JAVA_VERSION_RELEASE}" -ge 161 ]; then
+          echo "unlimited built-in JCE in $_DIR"
+        elif [ "${_JAVA_VERSION_RELEASE}" -ge 151 ]; then
+          echo "vanilla   built-in JCE in $_DIR"
+        fi
+      fi
+    fi
   fi
 done
+if [ "$_JCE_FOUND" == "false" ]; then
+  echo "JCE not found."
+fi
 
 echo "****************************************"
 echo "*** JDBC"
+echo "** JDBC packages:"
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   rpm -q mysql-connector-java postgresql-jdbc
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l libmysql-java libpostgresql-jdbc-java | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
+echo "** JDBC files:"
 ls -l /usr/share/java/mysql-connector-java.jar
 ls -l /usr/share/java/oracle-connector-java.jar /usr/share/java/ojdbc?.jar
 ls -l /usr/share/java/sqlserver-connector-java.jar /usr/share/java/sqljdbc*.jar
-
-echo "****************************************"
-echo "*** Java"
-echo "** installed Java(s):"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  rpm -qa | egrep 'jdk|jre|^java-|j2sdk' | sort
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
-  #dpkg -l | egrep 'jdk|jre|^java-|j2sdk'
-  dpkg -l \*jdk\* \*jre\* java-\* \*j2sdk\* oracle-java\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
-fi
-echo "** default java version:"
-java -version 2>&1
-# Which is our standard?
-echo "** which java:"
-which java
 
 echo "****************************************"
 echo "*** Kerberos"
@@ -391,9 +442,10 @@ fi
 echo "****************************************"
 echo "*** Cloudera Software"
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  rpm -qa ^cloudera\*
+  rpm -qa ^cloudera\* ^navencrypt\*
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l \*cloudera\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+  dpkg -l \*navencrypt\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Cloudera Hadoop Packages"
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
@@ -401,6 +453,8 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
+echo "*** Cloudera Parcels"
+ls -l /opt/cloudera/parcels
 
 echo "****************************************"
 echo "*** Hortonworks Software"
@@ -437,7 +491,7 @@ esac
 if [ "$OS" == RedHatEnterpriseServer ]; then
   echo "****************************************"
   echo "*** RedHat Subscription"
-  subscription-manager version
+  sudo -n /sbin/subscription-manager version
 fi
 
 #echo "****************************************"

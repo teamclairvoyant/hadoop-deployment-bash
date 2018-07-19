@@ -33,18 +33,18 @@ FORCE=no
 
 # Function to print the help screen.
 print_help () {
-  printf "Usage:  $1 --navpass <password> --device <device> --mountpoint <mountpoint> [--fstype <fstype>] [--mountoptions <options>]\n"
+  printf "Usage:  $1 --navpass <password> --device <device> --emountpoint <emountpoint> [--fstype <fstype>] [--mountoptions <options>]\n"
   printf "\n"
   printf "         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n"
   printf "         -d|--device           Disk device to encrypt.  Device will be wiped.\n"
-  printf "         -m|--mountpoint       Mountpoint of the encrypted filesystem.\n"
+  printf "         -e|--emountpoint      Mountpoint of the encrypted filesystem.\n"
   printf "        [-t|--fstype]          Filesystem type.  Default is xfs.\n"
   printf "        [-o|--mountoptions]    Filesystem mount options.  Default is noatime.\n"
   printf "        [-f|--force]           Force wipe any existing data.\n"
   printf "        [-h|--help]\n"
   printf "        [-v|--version]\n"
   printf "\n"
-  printf "   ex.  $1 --navpass \"mypasssword\" --device /dev/sdb --mountpoint /navencrypt/2\n"
+  printf "   ex.  $1 --navpass \"mypasssword\" --device /dev/sdb --emountpoint /navencrypt/2\n"
   exit 1
 }
 
@@ -82,9 +82,9 @@ while [[ $1 = -* ]]; do
       shift
       DEVICE=$1
       ;;
-    -m|--mountpoint)
+    -e|--emountpoint)
       shift
-      MOUNTPOINT=$(echo $1 | sed -e 's|/$||')
+      EMOUNTPOINT=$(echo $1 | sed -e 's|/$||')
       ;;
     -t|--fstype)
       shift
@@ -117,7 +117,7 @@ echo "**************************************************************************
 # Check to see if we have no parameters.
 if [[ -z "$NAVPASS" ]]; then print_help "$(basename $0)"; fi
 if [[ -z "$DEVICE" ]]; then print_help "$(basename $0)"; fi
-if [[ -z "$MOUNTPOINT" ]]; then print_help "$(basename $0)"; fi
+if [[ -z "$EMOUNTPOINT" ]]; then print_help "$(basename $0)"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
@@ -166,14 +166,14 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
     if [ "$FORCE" == yes ]; then
       dd if=/dev/zero of=${DEVICE}${PART} ibs=1M count=1
     fi
-    mkdir -p -m 0755 $(dirname $MOUNTPOINT)
-    mkdir -p -m 0755 $MOUNTPOINT && \
-    chattr +i $MOUNTPOINT && \
+    mkdir -p -m 0755 $(dirname $EMOUNTPOINT)
+    mkdir -p -m 0755 $EMOUNTPOINT && \
+    chattr +i $EMOUNTPOINT && \
     printf '%s' $NAVPASS |
-    navencrypt-prepare -t $FSTYPE -o $FSMOUNTOPT --use-uuid ${DEVICE}${PART} $MOUNTPOINT -
+    navencrypt-prepare -t $FSTYPE -o $FSMOUNTOPT --use-uuid ${DEVICE}${PART} $EMOUNTPOINT -
     RETVAL=$?
     if [ "$RETVAL" -ne 0 ]; then
-      echo "** ERROR: Could not format ${DEVICE} for ${MOUNTPOINT}."
+      echo "** ERROR: Could not format ${DEVICE} for ${EMOUNTPOINT}."
       exit $RETVAL
     fi
   else

@@ -20,10 +20,11 @@ if [ $DEBUG ]; then set -x; fi
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+MYSQL_TLS=no
 
 # Function to print the help screen.
 print_help () {
-  echo "Usage:  $1 --host <hostname> --user <username> --password <password>"
+  echo "Usage:  $1 --host <hostname> --user <username> --password <password> [--tls]"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
   echo "   ex.  $1 --host dbhost --user foo --password bar"
@@ -92,6 +93,9 @@ while [[ $1 = -* ]]; do
       shift
       MYSQL_PASSWORD=$1
       ;;
+    -t|--tls)
+      MYSQL_TLS=yes
+      ;;
     -H|--help)
       print_help "$(basename "$0")"
       ;;
@@ -123,6 +127,12 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Ubun
 fi
 
 # main
+if [ "$MYSQL_TLS" == "yes" ]; then
+  STRING='lp.database.url: jdbc:mysql://${lp.database.host}:${lp.database.port}/${lp.database.name}?verifyServerCertificate=true&useSSL=true&requireSSL=true'
+else
+  STRING=''
+fi
+
 echo "Configuring Cloudera Director to use MySQL..."
 sed -e '/^# CLAIRVOYANT START$/,/^# CLAIRVOYANT END$/d' \
     -e "/lp.database.url:/a\\
@@ -131,6 +141,9 @@ lp.database.type: mysql\\
 lp.database.username: $MYSQL_USER\\
 lp.database.password: $MYSQL_PASSWORD\\
 lp.database.host: $MYSQL_HOST\\
+lp.database.port: 3306\\
+lp.database.name: director\\
+$STRING\\
 # CLAIRVOYANT END" \
     -i /etc/cloudera-director-server/application.properties
 echo "Restarting Director..."
