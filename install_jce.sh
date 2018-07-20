@@ -95,13 +95,13 @@ fi
 
 if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if rpm -q jdk || test -d /usr/java/jdk1.6.0_*; then
-    wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    wget -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jce_policy/6/jce_policy-6.zip -O /tmp/jce_policy-6.zip
     unzip -o -j /tmp/jce_policy-6.zip -d /usr/java/jdk1.6.0_31/jre/lib/security/
   fi
 
   if rpm -q oracle-j2sdk1.7 || rpm -qa | grep jdk1.7.0_ || test -d /usr/java/jdk1.7.0_*; then
-    wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    wget -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip -O /tmp/jce_policy-7.zip
     for _DIR in /usr/java/jdk1.7.0_*; do
       unzip -o -j /tmp/jce_policy-7.zip -d "${_DIR}/jre/lib/security/"
@@ -115,7 +115,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     exit 0
   fi
   if rpm -q oracle-j2sdk1.8 || rpm -q jdk1.8 || rpm -qa | grep jdk1.8.0_ || test -d /usr/java/jdk1.8.0_*; then
-    wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    wget -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip -O /tmp/jce_policy-8.zip
     for _DIR in /usr/java/jdk1.8.0_*; do
       unzip -o -j /tmp/jce_policy-8.zip -d "${_DIR}/jre/lib/security/"
@@ -124,7 +124,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
 elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   if dpkg -l oracle-j2sdk1.7 >/dev/null || test -d /usr/lib/jvm/java-7-oracle-cloudera; then
-    wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    wget -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jce/7/UnlimitedJCEPolicyJDK7.zip -O /tmp/jce_policy-7.zip
     unzip -o -j /tmp/jce_policy-7.zip -d /usr/lib/jvm/java-7-oracle-cloudera/jre/lib/security/
   fi
