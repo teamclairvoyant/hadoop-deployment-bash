@@ -84,8 +84,15 @@ echo
 sudo -n lvs
 echo "** Filesystems:"
 df -h -t ext2 -t ext3 -t ext4 -t xfs
-echo "** Network interfaces:"
+echo "** Network interfaces (raw):"
 ip addr
+echo "** Network interfaces:"
+for _NIC in $(ls /sys/class/net/ | grep -v ^lo$); do
+  _IP=$(ip addr show dev $_NIC)
+  echo "$_IP" | awk '/inet/{print "'${_NIC}' : IP:",$2}'
+  echo "$_IP" | awk '/mtu/{print "'${_NIC}' : MTU:",$5}'
+  ethtool $_NIC 2>/dev/null | grep -E 'Speed:|Duplex:|Port:' | sed "s|^[[:space:]]*|${_NIC} : |g"
+done
 echo "** Network routes:"
 ip route
 echo "** Network Bonding:"
