@@ -18,7 +18,11 @@ echo "**************************************************************************
 echo "*** $(basename $0)"
 echo "********************************************************************************"
 echo "Copying Keytrustee TLS certs and keys..."
-if [ ! -d /var/lib/keytrustee/.keytrustee/.ssl-orig/ ]; then
+if [ ! -d /var/lib/keytrustee/.keytrustee/.ssl/ ]; then
+  install -m 0700 -o keytrustee -g keytrustee -d /var/lib/keytrustee
+  install -m 0700 -o keytrustee -g keytrustee -d /var/lib/keytrustee/.keytrustee
+  install -m 0700 -o keytrustee -g keytrustee -d /var/lib/keytrustee/.keytrustee/.ssl
+elif [ ! -d /var/lib/keytrustee/.keytrustee/.ssl-orig/ ]; then
   cp -a /var/lib/keytrustee/.keytrustee/.ssl/ /var/lib/keytrustee/.keytrustee/.ssl-orig/
 fi
 cat /opt/cloudera/security/CAcerts/ca.cert.pem /opt/cloudera/security/CAcerts/intermediate.cert.pem >/opt/cloudera/security/x509/ca-chain.cert.pem
