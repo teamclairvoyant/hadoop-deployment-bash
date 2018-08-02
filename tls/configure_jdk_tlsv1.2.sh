@@ -22,6 +22,8 @@ if [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
 elif [ -f /etc/profile.d/java.sh ]; then
   . /etc/profile.d/java.sh
+elif [ -d /usr/java/default ]; then
+  JAVA_HOME=/usr/java/default
 fi
 
 if [ -z "${JAVA_HOME}" ]; then echo "ERROR: \$JAVA_HOME is not set."; exit 10; fi
