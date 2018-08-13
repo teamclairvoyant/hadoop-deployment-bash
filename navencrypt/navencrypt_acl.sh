@@ -102,5 +102,8 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   navencrypt acl --add --rule="ALLOW @* * *"
   printf '%s' $NAVPASS | \
   navencrypt acl --list --all
+else
+  printf "** WARNING: This host is not yet registered.  Skipping..."
+  exit 3
 fi
 

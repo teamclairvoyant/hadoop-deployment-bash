@@ -53,11 +53,14 @@ if [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
 elif [ -f /etc/profile.d/java.sh ]; then
   . /etc/profile.d/java.sh
+elif [ -d /usr/java/default ]; then
+  JAVA_HOME=/usr/java/default
 fi
 
 if [ -z "${JAVA_HOME}" ]; then echo "ERROR: \$JAVA_HOME is not set."; exit 10; fi
 
 if [ ! -f ${JAVA_HOME}/jre/lib/security/jssecacerts ]; then
+  #TODO: On el7: /usr/java/default/jre/lib/security/cacerts -> /etc/pki/java/cacerts
   /bin/cp -p ${JAVA_HOME}/jre/lib/security/cacerts ${JAVA_HOME}/jre/lib/security/jssecacerts
 fi
 keytool -importcert -file /opt/cloudera/security/CAcerts/ca.cert.pem -alias CAcert -keystore ${JAVA_HOME}/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts

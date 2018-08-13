@@ -94,13 +94,15 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     ln -s $TARGET /usr/java/default
   elif [ "$USECLOUDERA" = 7 ]; then
     pushd /tmp
-    wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    echo "*** Downloading Oracle JDK 7u80..."
+    wget -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn/java/jdk/7u80-b15/jdk-7u80-linux-x64.rpm -O jdk-7u80-linux-x64.rpm
     rpm -Uv jdk-7u80-linux-x64.rpm
     popd
   elif [ "$USECLOUDERA" = 8 ]; then
     pushd /tmp
-    wget -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    echo "*** Downloading Oracle JDK 8u181..."
+    wget -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jdk/8u181-b13/96a7b8442fe848ef90c96a2fad6ed6d1/jdk-8u181-linux-x64.rpm -O jdk-8u181-linux-x64.rpm
     rpm -Uv jdk-8u181-linux-x64.rpm
     popd

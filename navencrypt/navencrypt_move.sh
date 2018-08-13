@@ -116,10 +116,21 @@ set -u
 umask 022
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
-  if [ ! -d $EMOUNTPOINT ]; then
-    echo "Moving data from ${MOUNTPOINT} to ${EMOUNTPOINT} for encryption..."
-    printf '%s' $NAVPASS |
-    navencrypt-move encrypt @${CATEGORY} $MOUNTPOINT $EMOUNTPOINT
+  if [ -d $MOUNTPOINT ]; then
+    if [ -d $EMOUNTPOINT ]; then
+      echo "Moving data from ${MOUNTPOINT} to ${EMOUNTPOINT} for encryption..."
+      printf '%s' $NAVPASS |
+      navencrypt-move encrypt @${CATEGORY} $MOUNTPOINT $EMOUNTPOINT
+    else
+      printf "** ERROR: Destination mountpoint ${EMOUNTPOINT} is not a directory. Exiting..."
+      exit 5
+    fi
+  else
+    printf "** ERROR: Source mountpoint ${MOUNTPOINT} is not a directory. Exiting..."
+    exit 4
   fi
+else
+  printf "** WARNING: This host is not yet registered.  Skipping..."
+  exit 3
 fi
 
