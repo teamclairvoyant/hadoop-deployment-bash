@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2018
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Configuring JDK to disable all except TLS v1.2..."
 if [ -f /etc/profile.d/jdk.sh ]; then

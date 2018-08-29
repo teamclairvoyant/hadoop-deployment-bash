@@ -18,7 +18,7 @@ SFILE=/etc/sudoers.d/90-cloud-init-users
 TFILE=/etc/sudoers.d/90-cloud-init-users_requiretty
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Disabling sudo requiretty..."
 if [ -f $SFILE ]; then

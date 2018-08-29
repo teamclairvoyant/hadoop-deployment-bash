@@ -18,7 +18,7 @@
 # 1 - Whether to enable Level 3 agent authN to server. - optional
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 LEVEL3=$1
 if [ -n "$LEVEL3" ]; then

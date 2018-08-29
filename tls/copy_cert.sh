@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Copying Hadoop TLS certs and keys..."
 install -m 0440 -o root -g hadoop /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/hdfsyarn-keystore.jks

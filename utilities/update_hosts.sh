@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Updating /etc/hosts..."
 IP=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/local-ipv4)

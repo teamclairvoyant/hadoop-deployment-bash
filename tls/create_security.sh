@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Making TLS security directories..."
 mkdir -p -m 0755 /opt/cloudera/security
