@@ -267,7 +267,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   install -o root -g root -m0644 "${FILEPATH}"/airflow/airflow.cfg /var/lib/airflow/
   install -o root -g root -m0644 "${FILEPATH}"/airflow/unittests.cfg /var/lib/airflow/
   install -o root -g root -m0644 "${FILEPATH}"/airflow/airflow.logrotate /etc/logrotate.d/
-  install -o root -g root -m0755 "${FILEPATH}"/airflow/mkuser.sh /tmp/mkuser.sh
+  install -o root -g root -m0755 "${FILEPATH}"/airflow/mkuser.py /tmp/mkuser.py
 
   systemd-tmpfiles --create --prefix=/run
 
@@ -283,7 +283,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
 
   echo "** Initializing Airflow database."
   su - airflow -c 'airflow initdb'
-  su - airflow -c '/tmp/mkuser.sh'
+  su - airflow -c '/tmp/mkuser.py'
 
   echo "** Starting Airflow services."
   service airflow-webserver start
