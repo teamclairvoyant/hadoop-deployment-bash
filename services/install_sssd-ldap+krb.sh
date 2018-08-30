@@ -20,7 +20,6 @@ if [ -n "$DEBUG" ]; then set -x; fi
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-YUMOPTS="-y -e1 -d1"
 DATE=$(date '+%Y%m%d%H%M%S')
 _TLS=no
 
@@ -156,7 +155,7 @@ check_root
 echo "Installing SSSD for LDAP+Kerberos..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   echo "** Installing software."
-  yum "$YUMOPTS" install sssd-ldap sssd-krb5 oddjob oddjob-mkhomedir
+  yum -y -e1 -d1 install sssd-ldap sssd-krb5 oddjob oddjob-mkhomedir
 
   echo "** Writing configs..."
   cp -p /etc/krb5.conf /etc/krb5.conf."${DATE}"

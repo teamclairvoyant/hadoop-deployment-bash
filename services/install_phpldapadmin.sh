@@ -22,7 +22,6 @@ if [ -n "$DEBUG" ]; then set -x; fi
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-YUMOPTS="-y -e1 -d1"
 DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
@@ -148,11 +147,11 @@ echo "Installing phpLDAPadmin..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   setsebool -P httpd_can_connect_ldap=on
 
-  yum "$YUMOPTS" install epel-release
+  yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
     rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
   fi
-  yum "$YUMOPTS" install httpd phpldapadmin
+  yum -y -e1 -d1 install httpd phpldapadmin
 
   if [ ! -f /etc/httpd/conf.d/phpldapadmin.conf-orig ]; then
     cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf-orig

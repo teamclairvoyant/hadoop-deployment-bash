@@ -24,7 +24,6 @@ _ROOTDN="Manager"
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-YUMOPTS="-y -e1 -d1"
 DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
@@ -142,7 +141,7 @@ _ROOTDN=$(echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||")
 _ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
 
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
-  yum "$YUMOPTS" install openldap-servers openldap-clients
+  yum -y -e1 -d1 install openldap-servers openldap-clients
 
   _PASS=$(apg -a 1 -M NCL -m 20 -x 20 -n 1)
   if [ -z "$_PASS" ]; then

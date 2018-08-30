@@ -20,7 +20,6 @@ if [ -n "$DEBUG" ]; then set -x; fi
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-YUMOPTS="-y -e1 -d1"
 DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
@@ -158,7 +157,7 @@ if \( [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] \) && [ "$OSREL
   # EL7
   OPTS="$_USER $_OU7 $_ID $_BATCH7"
   echo "** Installing software."
-  yum "$YUMOPTS" install sssd adcli realmd PackageKit
+  yum -y -e1 -d1 install sssd adcli realmd PackageKit
 
   cat <<EOF >/etc/realmd.conf
 [users]
@@ -189,7 +188,7 @@ elif \( [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] \) && [ "$OSR
   # EL6
   OPTS="$_USER $_OU6"
   echo "** Installing software."
-  yum "$YUMOPTS" install sssd oddjob oddjob-mkhomedir adcli
+  yum -y -e1 -d1 install sssd oddjob oddjob-mkhomedir adcli
 
   echo "** Discovering and joining domain..."
   adcli info "$_DOMAIN_LOWER" && \

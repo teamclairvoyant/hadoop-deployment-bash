@@ -28,7 +28,6 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 FILEPATH=$(dirname "$0")
 PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 #PIPOPTS="-q"
-YUMOPTS="-y -e1 -d1"
 
 # Function to print the help screen.
 print_help() {
@@ -191,18 +190,18 @@ fi
 
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   echo "** Installing software dependencies via YUM."
-  yum "$YUMOPTS" groupinstall "Development tools"
-  yum "$YUMOPTS" install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel python-devel wget cyrus-sasl-devel.x86_64
+  yum -y -e1 -d1 groupinstall "Development tools"
+  yum -y -e1 -d1 install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel python-devel wget cyrus-sasl-devel.x86_64
 
   #echo "** Installing python pip."
-  #yum "$YUMOPTS" install epel-release
+  #yum -y -e1 -d1 install epel-release
   #if ! rpm -q epel-release; then
   #  rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
   #fi
-  #yum "$YUMOPTS" install python-pip
+  #yum -y -e1 -d1 install python-pip
 
   #echo "** Installing python setuptools."
-  #yum "$YUMOPTS" install python-setuptools
+  #yum -y -e1 -d1 install python-setuptools
   #easy_install pip
 
   echo "** Installing python easy_install."
@@ -212,7 +211,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if [ ! -f /usr/bin/pip ]; then
     echo "** Installing python pip."
     easy_install pip || \
-    ( yum "$YUMOPTS" reinstall python-setuptools && \
+    ( yum -y -e1 -d1 reinstall python-setuptools && \
     easy_install pip )
   fi
 
@@ -226,7 +225,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     if [ -z "$DB_PORT" ]; then DB_PORT=$MYSQL_PORT; fi
     #####
     echo "** Installing Airflow[mysql]."
-    yum "$YUMOPTS" install mysql-devel
+    yum -y -e1 -d1 install mysql-devel
     pip "$PIPOPTS" install 'airflow[mysql]'
     DBCONNSTRING="mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/airflow"
 
@@ -234,7 +233,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     if [ -z "$DB_PORT" ]; then DB_PORT=$PGSQL_PORT; fi
     #####
     echo "** Installing Airflow[postgres]."
-    yum "$YUMOPTS" install postgresql-devel
+    yum -y -e1 -d1 install postgresql-devel
     pip "$PIPOPTS" install 'airflow[postgres]'
     DBCONNSTRING="postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/airflow"
   fi
@@ -242,7 +241,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   #####
   echo "** Installing Airflow[kerberos]."
   pip "$PIPOPTS" install 'airflow[kerberos]'
-  yum "$YUMOPTS" install libffi-devel
+  yum -y -e1 -d1 install libffi-devel
   echo "** Installing Airflow[crypto]."
   pip "$PIPOPTS" install 'airflow[crypto]'
   #pip "$PIPOPTS" install 'airflow[jdbc]'
