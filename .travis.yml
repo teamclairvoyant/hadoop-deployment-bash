@@ -2,7 +2,7 @@ language: shell
 sudo: false
 
 script:
-  - bash -c 'shopt -s globstar; shellcheck **/*.{sh,ksh,bash}'
+  - bash -c 'shopt -s globstar; shellcheck **/*.{sh,ksh}'
 
 matrix:
   fast_finish: true
