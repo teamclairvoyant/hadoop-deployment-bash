@@ -102,22 +102,17 @@ while [[ $1 = -* ]]; do
       ;;
     -u|--user)
       shift
-      _USER="-U $1"
+      _USER="$1"
       ;;
     -o|--computer-ou)
       shift
-      #_OU7="--computer-ou=\"$1\"" # Deal with spaces in the OU name.
-      #_OU6="--domain-ou=\"$1\""   # Deal with spaces in the OU name. 
-      _OU7="--computer-ou=$1"
-      _OU6="--domain-ou=$1"
+      _OU="$1"
       ;;
     -i|--automatic-id-mapping)
-      shift
-      _ID="--automatic-id-mapping=no"
+      _ID=true
       ;;
     -b|--batch)
-      shift
-      _BATCH7="--unattended"
+      _BATCH=true
       ;;
     -h|--help)
       print_help "$(basename "$0")"
@@ -153,9 +148,9 @@ check_root
 
 # main
 echo "Installing SSSD for Active Directory..."
-if \( [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] \) && [ "$OSREL" == 7 ]; then
+if { [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; } && [ "$OSREL" == 7 ]; then
   # EL7
-  OPTS="$_USER $_OU7 $_ID $_BATCH7"
+  OPTS=(${_USER:+"--user=${_USER}"} ${_OU:+"--computer-ou=${_OU}"} ${_ID:+"--automatic-id-mapping=no"} ${_BATCH:+"--unattended"})
   echo "** Installing software."
   yum -y -e1 -d1 install sssd adcli realmd PackageKit
 
@@ -167,7 +162,7 @@ EOF
 
   echo "** Discovering and joining domain..."
   realm discover "$_DOMAIN_LOWER" && \
-  realm join "$_DOMAIN_LOWER" $OPTS || exit $?
+  realm join "$_DOMAIN_LOWER" "${OPTS[@]}" || exit $?
 
   # shellcheck disable=SC1004
   sed -e '/^use_fully_qualified_names .*/d' \
@@ -184,15 +179,15 @@ use_fully_qualified_names = False' -i /etc/sssd/sssd.conf
 #default_ccache_name = FILE:/tmp/krb5cc_%{uid}' -i /etc/sssd/sssd.conf
   service sssd restart
 
-elif \( [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] \) && [ "$OSREL" == 6 ]; then
+elif { [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; } && [ "$OSREL" == 6 ]; then
   # EL6
-  OPTS="$_USER $_OU6"
+  OPTS=(${_USER:+"--login-user=${_USER}"} ${_OU:+"--domain-ou=${_OU}"})
   echo "** Installing software."
   yum -y -e1 -d1 install sssd oddjob oddjob-mkhomedir adcli
 
   echo "** Discovering and joining domain..."
   adcli info "$_DOMAIN_LOWER" && \
-  adcli join "$_DOMAIN_LOWER" $OPTS || exit $?
+  adcli join "$_DOMAIN_LOWER" "${OPTS[@]}" || exit $?
 
   echo "** Writing configs..."
   cat <<EOF >/etc/krb5.conf
