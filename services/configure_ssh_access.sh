@@ -19,7 +19,7 @@
 # authentication and specifically denies root login.
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Configuring PasswordAuthentication SSH access..."
 DATE=$(date '+%Y%m%d%H%M%S')

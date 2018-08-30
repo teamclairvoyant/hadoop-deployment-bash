@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034,SC2086,SC1091
+# shellcheck disable=SC1091
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #
 # Copyright Clairvoyant 2017
 #
-if [ $DEBUG ]; then set -x; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -274,5 +274,6 @@ if [ -f /etc/profile.d/java.sh ]; then
 elif [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
 fi
+# shellcheck disable=SC2086
 ambari-server setup --java-home="$JAVA_HOME" $OPTS
 

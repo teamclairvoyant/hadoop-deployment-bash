@@ -14,8 +14,7 @@
 #
 # Copyright Clairvoyant 2015
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -150,7 +149,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
 
   yum "$YUMOPTS" install epel-release
   if ! rpm -q epel-release; then
-    rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+    rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
   fi
   yum "$YUMOPTS" install httpd phpldapadmin
 

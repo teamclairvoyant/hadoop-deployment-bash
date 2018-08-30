@@ -63,6 +63,7 @@ echo "Updating IPtables for KDC..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   service iptables save
 
+  # shellcheck disable=SC1004
   sed -i -e '/--dport 22/i\
   -A INPUT -p tcp -m state --state NEW -m tcp --dport 88  -j ACCEPT\
   -A INPUT -p tcp -m state --state NEW -m tcp --dport 464 -j ACCEPT\

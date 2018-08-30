@@ -14,7 +14,7 @@
 #
 # Copyright Clairvoyant 2018
 
-DATE=`date +'%Y%m%d%H%M%S'`
+DATE=$(date +'%Y%m%d%H%M%S')
 
 # Function to discover basic OS details.
 discover_os() {
@@ -49,7 +49,7 @@ discover_os() {
 }
 
 is_virtual() {
-  egrep -qi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
+  grep -Eqi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
   return $?
 }
 
@@ -63,7 +63,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -73,16 +73,17 @@ echo "Configuring Network Time Protocol..."
 # May need CLI ARG parsing.
 # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/set-time.html#configure-amazon-time-service
 if is_aws; then
-  cp -p /etc/ntp.conf /etc/ntp.conf.${DATE}
+  cp -p /etc/ntp.conf "/etc/ntp.conf.${DATE}"
   sed -e '/# CLAIRVOYANT-AWS$/d' -i /etc/ntp.conf
+  # shellcheck disable=SC1004
   sed -e '/^server /s|^server|#server|' \
       -e '/^#server /a\
 server 169.254.169.123 prefer iburst                               # CLAIRVOYANT-AWS' \
       -i /etc/ntp.conf
 fi
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   service ntpd restart
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   service ntp restart
 fi
 

@@ -14,8 +14,7 @@
 #
 # Copyright Clairvoyant 2015
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -148,7 +147,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if [ "$USEHAVEGED" == "yes" ]; then
     yum -y -e1 -d1 install epel-release
     if ! rpm -q epel-release; then
-      rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+      rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
     fi
     yum -y -e1 -d1 install haveged
     service haveged start

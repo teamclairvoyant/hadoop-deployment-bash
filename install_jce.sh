@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1090
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -63,12 +64,12 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
   exit 3
 fi
 
-PROXY=$(egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
+PROXY=$(grep -Eh '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
 eval "$PROXY"
 export http_proxy
 export https_proxy
 if [ -z "$http_proxy" ]; then
-  PROXY=$(egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*)
+  PROXY=$(grep -El 'http_proxy=|https_proxy=' /etc/profile.d/*)
   if [ -n "$PROXY" ]; then
     . "$PROXY"
   fi
@@ -88,12 +89,12 @@ if [ -n "$_JAVA" ]; then
   _JAVA_VERSION=$("$_JAVA" -version 2>&1 | awk -F '"' '/version/ {print $2}')
   _JAVA_VERSION_MAJ=$(echo "${_JAVA_VERSION}" | awk -F. '{print $1}')
   _JAVA_VERSION_MIN=$(echo "${_JAVA_VERSION}" | awk -F. '{print $2}')
-  _JAVA_VERSION_PATCH=$(echo "${_JAVA_VERSION}" | awk -F. '{print $3}' | sed -e 's|_.*||')
+  #_JAVA_VERSION_PATCH=$(echo "${_JAVA_VERSION}" | awk -F. '{print $3}' | sed -e 's|_.*||')
   _JAVA_VERSION_RELEASE=$(echo "${_JAVA_VERSION}" | awk -F_ '{print $2}')
 else
   _JAVA_VERSION_MAJ=0
   _JAVA_VERSION_MIN=0
-  _JAVA_VERSION_PATCH=0
+  #_JAVA_VERSION_PATCH=0
   _JAVA_VERSION_RELEASE=0
 fi
 if [ "${_JAVA_VERSION_MAJ}" -eq 1 ] && [ "${_JAVA_VERSION_MIN}" -eq 8 ] && [ "${_JAVA_VERSION_RELEASE}" -ge 161 ]; then
@@ -118,8 +119,8 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
 
   if [ "${_JAVA_VERSION_MAJ}" -eq 1 ] && [ "${_JAVA_VERSION_MIN}" -eq 8 ] && [ "${_JAVA_VERSION_RELEASE}" -ge 151 ]; then
     echo "INFO: Vanilla JCE is built-in for JDK version ${_JAVA_VERSION}. Enabling unlimited policy..."
-    sed -e '/^crypto.policy=/d' -i ${JAVA_HOME}/jre/lib/security/java.security
-    echo "crypto.policy=unlimited" >>${JAVA_HOME}/jre/lib/security/java.security
+    sed -e '/^crypto.policy=/d' -i "${JAVA_HOME}/jre/lib/security/java.security"
+    echo "crypto.policy=unlimited" >>"${JAVA_HOME}/jre/lib/security/java.security"
     exit 0
   fi
   if rpm -q oracle-j2sdk1.8 || rpm -q jdk1.8 || rpm -qa | grep jdk1.8.0_ || test -d /usr/java/jdk1.8.0_*; then
@@ -143,8 +144,8 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
 
   if [ "${_JAVA_VERSION_MAJ}" -eq 1 ] && [ "${_JAVA_VERSION_MIN}" -eq 8 ] && [ "${_JAVA_VERSION_RELEASE}" -ge 151 ]; then
     echo "INFO: Vanilla JCE is built-in for JDK version ${_JAVA_VERSION}. Enabling unlimited policy..."
-    sed -e '/^crypto.policy=/d' -i ${JAVA_HOME}/jre/lib/security/java.security
-    echo "crypto.policy=unlimited" >>${JAVA_HOME}/jre/lib/security/java.security
+    sed -e '/^crypto.policy=/d' -i "${JAVA_HOME}/jre/lib/security/java.security"
+    echo "crypto.policy=unlimited" >>"${JAVA_HOME}/jre/lib/security/java.security"
     exit 0
   fi
   if dpkg -l oracle-java8-installer >/dev/null || test -d /usr/lib/jvm/java-8-oracle; then

@@ -14,8 +14,7 @@
 #
 # Copyright Clairvoyant 2015
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -92,14 +91,14 @@ discover_os() {
 # Process arguments.
 while [[ $1 = -* ]]; do
   case $1 in
-    -d|--domain)
-      shift
-      _DOMAIN_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
-      ;;
-    -r|--rootdn)
-      shift
-      _ROOTDN="$1"
-      ;;
+#    -d|--domain)
+#      shift
+#      _DOMAIN_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+#      ;;
+#    -r|--rootdn)
+#      shift
+#      _ROOTDN="$1"
+#      ;;
     -h|--help)
       print_help "$(basename "$0")"
       ;;

@@ -14,8 +14,7 @@
 #
 # Copyright Clairvoyant 2016
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 #AIRFLOWUID="-u 999"
@@ -207,10 +206,9 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   #easy_install pip
 
   echo "** Installing python easy_install."
-  pushd /tmp
+  cd /tmp || exit
   wget -q https://bootstrap.pypa.io/ez_setup.py
   python ez_setup.py
-  popd
   if [ ! -f /usr/bin/pip ]; then
     echo "** Installing python pip."
     easy_install pip || \
@@ -222,14 +220,14 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   pip "$PIPOPTS" install airflow"${VERSION}"
   # Fix a bug in celery 4
   pip "$PIPOPTS" install 'celery<4'
-  pip "$PIPOPTS" install airflow[celery]
+  pip "$PIPOPTS" install 'airflow[celery]'
 
   if [ "$DB_TYPE" == "mysql" ]; then
     if [ -z "$DB_PORT" ]; then DB_PORT=$MYSQL_PORT; fi
     #####
     echo "** Installing Airflow[mysql]."
     yum "$YUMOPTS" install mysql-devel
-    pip "$PIPOPTS" install airflow[mysql]
+    pip "$PIPOPTS" install 'airflow[mysql]'
     DBCONNSTRING="mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/airflow"
 
   elif [ "$DB_TYPE" == "postgresql" ]; then
@@ -237,25 +235,25 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     #####
     echo "** Installing Airflow[postgres]."
     yum "$YUMOPTS" install postgresql-devel
-    pip "$PIPOPTS" install airflow[postgres]
+    pip "$PIPOPTS" install 'airflow[postgres]'
     DBCONNSTRING="postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/airflow"
   fi
 
   #####
   echo "** Installing Airflow[kerberos]."
-  pip "$PIPOPTS" install airflow[kerberos]
+  pip "$PIPOPTS" install 'airflow[kerberos]'
   yum "$YUMOPTS" install libffi-devel
   echo "** Installing Airflow[crypto]."
-  pip "$PIPOPTS" install airflow[crypto]
-  #pip "$PIPOPTS" install airflow[jdbc]
+  pip "$PIPOPTS" install 'airflow[crypto]'
+  #pip "$PIPOPTS" install 'airflow[jdbc]'
   echo "** Installing Airflow[hive]."
-  pip "$PIPOPTS" install airflow[hive]
-  #pip "$PIPOPTS" install airflow[hdfs]
-  #pip "$PIPOPTS" install airflow[ldap]
-  pip "$PIPOPTS" install airflow[password]
+  pip "$PIPOPTS" install 'airflow[hive]'
+  #pip "$PIPOPTS" install 'airflow[hdfs]'
+  #pip "$PIPOPTS" install 'airflow[ldap]'
+  pip "$PIPOPTS" install 'airflow[password]'
   echo "** Installing Airflow[rabbitmq]."
-  pip "$PIPOPTS" install airflow[rabbitmq]
-  #pip "$PIPOPTS" install airflow[s3]
+  pip "$PIPOPTS" install 'airflow[rabbitmq]'
+  #pip "$PIPOPTS" install 'airflow[s3]'
 
   echo "** Installing Airflow configs."
   install -o root -g airflow -m0750 -d /var/lib/airflow

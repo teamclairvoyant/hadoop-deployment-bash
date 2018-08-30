@@ -21,7 +21,7 @@
 #     1 = print_help function (or incorrect commandline)
 #     2 = ERROR: Must be root.
 #
-if [ $DEBUG ]; then set -x; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -33,25 +33,25 @@ FORCE=no
 
 # Function to print the help screen.
 print_help() {
-  printf "Usage:  %s --navpass <password> --device <device> --emountpoint <emountpoint> [--fstype <fstype>] [--mountoptions <options>]\n" "$1"
-  printf "\n"
-  printf "         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n"
-  printf "         -d|--device           Disk device to encrypt.  Device will be wiped.\n"
-  printf "         -e|--emountpoint      Mountpoint of the encrypted filesystem.\n"
-  printf "        [-t|--fstype]          Filesystem type.  Default is xfs.\n"
-  printf "        [-o|--mountoptions]    Filesystem mount options.  Default is noatime.\n"
-  printf "        [-f|--force]           Force wipe any existing data.\n"
-  printf "        [-h|--help]\n"
-  printf "        [-v|--version]\n"
-  printf "\n"
-  printf "   ex.  %s --navpass \"mypasssword\" --device /dev/sdb --emountpoint /navencrypt/2\n" "$1"
+  printf 'Usage:  %s --navpass <password> --device <device> --emountpoint <emountpoint> [--fstype <fstype>] [--mountoptions <options>]\n' "$1"
+  printf '\n'
+  printf '         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n'
+  printf '         -d|--device           Disk device to encrypt.  Device will be wiped.\n'
+  printf '         -e|--emountpoint      Mountpoint of the encrypted filesystem.\n'
+  printf '        [-t|--fstype]          Filesystem type.  Default is xfs.\n'
+  printf '        [-o|--mountoptions]    Filesystem mount options.  Default is noatime.\n'
+  printf '        [-f|--force]           Force wipe any existing data.\n'
+  printf '        [-h|--help]\n'
+  printf '        [-v|--version]\n'
+  printf '\n'
+  printf '   ex.  %s --navpass "mypasssword" --device /dev/sdb --emountpoint /navencrypt/2\n' "$1"
   exit 1
 }
 
 # Function to check for root priviledges.
 check_root() {
   if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
-    printf "You must have root priviledges to run this program.\n"
+    printf 'You must have root priviledges to run this program.\n'
     exit 2
   fi
 }
@@ -84,6 +84,7 @@ while [[ $1 = -* ]]; do
       ;;
     -e|--emountpoint)
       shift
+      # shellcheck disable=SC2001
       EMOUNTPOINT=$(echo "$1" | sed -e 's|/$||')
       ;;
     -t|--fstype)
@@ -101,7 +102,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename "$0")"
       ;;
     -v|--version)
-      printf "\tPrepare a device for Navigator Encrypt data encryption.\n"
+      printf '\tPrepare a device for Navigator Encrypt data encryption.\n'
       exit 0
       ;;
     *)
@@ -112,7 +113,7 @@ while [[ $1 = -* ]]; do
 done
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we have no parameters.
 if [[ -z "$NAVPASS" ]]; then print_help "$(basename "$0")"; fi
@@ -164,9 +165,11 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
     fi
     echo "** Preparing ${DEVICE} for encryption..."
     if [ "$FORCE" == yes ]; then
-      dd if=/dev/zero of=${DEVICE}${PART} ibs=1M count=1
+      dd if=/dev/zero of="${DEVICE}${PART}" ibs=1M count=1
     fi
-    mkdir -p -m 0755 "$(dirname $EMOUNTPOINT)"
+    # shellcheck disable=SC2174
+    mkdir -p -m 0755 "$(dirname "$EMOUNTPOINT")"
+    # shellcheck disable=SC2174
     mkdir -p -m 0755 "$EMOUNTPOINT" && \
     chattr +i "$EMOUNTPOINT" && \
     printf '%s' "$NAVPASS" |

@@ -60,10 +60,10 @@ echo "Installing tools..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
-    rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+    rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
   fi
   if [ "$OS" == RedHatEnterpriseServer ]; then
-    subscription-manager repos --enable=rhel-${OSREL}-server-optional-rpms
+    subscription-manager repos --enable="rhel-${OSREL}-server-optional-rpms"
   fi
   yum -y -e1 -d1 install wget unzip deltarpm
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then

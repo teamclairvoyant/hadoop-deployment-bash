@@ -21,31 +21,29 @@
 #     1 = print_help function (or incorrect commandline)
 #     2 = ERROR: Must be root.
 #
-if [ $DEBUG ]; then set -x; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
-FSTYPE=xfs
-FSMOUNTOPT=noatime
 
 # Function to print the help screen.
 print_help() {
-  printf "Usage:  %s --mountpoint <mountpoint>\n" "$1"
-  printf "\n"
-  printf "         -m|--mountpoint       Mountpoint of the unencrypted filesystem.\n"
-  printf "        [-h|--help]\n"
-  printf "        [-v|--version]\n"
-  printf "\n"
-  printf "   ex.  %s --mountpoint /data/2\n" "$1"
+  printf 'Usage:  %s --mountpoint <mountpoint>\n' "$1"
+  printf '\n'
+  printf '         -m|--mountpoint       Mountpoint of the unencrypted filesystem.\n'
+  printf '        [-h|--help]\n'
+  printf '        [-v|--version]\n'
+  printf '\n'
+  printf '   ex.  %s --mountpoint /data/2\n' "$1"
   exit 1
 }
 
 # Function to check for root priviledges.
 check_root() {
   if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
-    printf "You must have root priviledges to run this program.\n"
+    printf 'You must have root priviledges to run this program.\n'
     exit 2
   fi
 }
@@ -76,7 +74,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename "$0")"
       ;;
     -v|--version)
-      printf "\tMove data off the disks before encrypting with Navigator Encrypt.\n"
+      printf '\tMove data off the disks before encrypting with Navigator Encrypt.\n'
       exit 0
       ;;
     *)
@@ -87,7 +85,7 @@ while [[ $1 = -* ]]; do
 done
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we have no parameters.
 if [[ -z "$MOUNTPOINT" ]]; then print_help "$(basename "$0")"; fi
@@ -110,12 +108,14 @@ if [ -d "${MOUNTPOINT}tmp" ]; then
   exit 5
 fi
 
-ESCMOUNTPOINT=$(echo "$MOUNTPOINT" | sed -e 's|/|\\/|g')
+ESCMOUNTPOINT="${MOUNTPOINT//\//\\/}"
 FULLDEVICE=$(mount | awk "\$3~/${ESCMOUNTPOINT}\$/{print \$1}")
-ESCFULLDEVICE=$(echo "$FULLDEVICE" | sed -e 's|/|\\/|g')
+ESCFULLDEVICE="${FULLDEVICE//\//\\/}"
 # Find the parent device (ie not the partition).
+# shellcheck disable=SC2001
 DEVICE=$(echo "$FULLDEVICE" | sed -e 's|[0-9]$||')
 if [ ! -b "$DEVICE" ]; then
+  # shellcheck disable=SC2001
   DEVICE=$(echo "$DEVICE" | sed -e 's|.$||')
   if [ ! -b "$DEVICE" ]; then
     echo "** ERROR: ${DEVICE} does not exist. Exiting..."
@@ -139,6 +139,7 @@ fi
 
 set -euo pipefail
 echo "** Moving data off of ${MOUNTPOINT}..."
+# shellcheck disable=SC2174
 mkdir -p -m 0755 "${MOUNTPOINT}tmp"
 mv "${MOUNTPOINT}/"* "${MOUNTPOINT}tmp/"
 umount "$MOUNTPOINT"

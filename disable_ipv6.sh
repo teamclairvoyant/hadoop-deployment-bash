@@ -75,6 +75,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
       sed -i -e '/^net.ipv6.conf.default.disable_ipv6/d' /etc/sysctl.conf
     fi
     echo "# Tuning for Hadoop installation." >/etc/sysctl.d/cloudera-ipv6.conf
+    # shellcheck disable=SC2129
     echo "# CLAIRVOYANT" >>/etc/sysctl.d/cloudera-ipv6.conf
     echo "net.ipv6.conf.all.disable_ipv6 = 1" >>/etc/sysctl.d/cloudera-ipv6.conf
     echo "net.ipv6.conf.default.disable_ipv6 = 1" >>/etc/sysctl.d/cloudera-ipv6.conf
@@ -84,7 +85,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     if [ "$OSREL" == 7 ]; then
       dracut -f
     elif [ "$OSREL" == 6 ]; then
-      cp -p /etc/hosts /etc/hosts.${DATE}
+      cp -p /etc/hosts /etc/hosts."${DATE}"
       sed -i -e 's/^[[:space:]]*::/#::/' /etc/hosts
     fi
   else
@@ -104,7 +105,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
 #  if [ "$OSREL" == 7 ]; then
 #    echo "** kernel module method"
 #    echo "** Disabling IPv6 kernel module..."
-#    cp -p /etc/default/grub /etc/default/grub.${DATE}
+#    cp -p /etc/default/grub /etc/default/grub."${DATE}"
 #    # Alternatively use "ipv6.disable_ipv6=1".
 #    if grep -q ipv6.disable /etc/default/grub; then
 #      sed -i -e '/^GRUB_CMDLINE_LINUX=/s|ipv6.disable=.|ipv6.disable=1|' /etc/default/grub
@@ -150,6 +151,7 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   #  sed -i -e '/^net.ipv6.conf.lo.disable_ipv6/d' /etc/sysctl.conf
   #fi
   echo "# Tuning for Hadoop installation." >/etc/sysctl.d/cloudera-ipv6.conf
+  # shellcheck disable=SC2129
   echo "# CLAIRVOYANT" >>/etc/sysctl.d/cloudera-ipv6.conf
   echo "net.ipv6.conf.all.disable_ipv6 = 1" >>/etc/sysctl.d/cloudera-ipv6.conf
   echo "net.ipv6.conf.default.disable_ipv6 = 1" >>/etc/sysctl.d/cloudera-ipv6.conf
@@ -170,7 +172,7 @@ exit 0
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if rpm -q postfix >/dev/null; then
     echo "** Disabling IPv6 in Postfix..."
-    cp -p /etc/postfix/main.cf /etc/postfix/main.cf.${DATE}
+    cp -p /etc/postfix/main.cf /etc/postfix/main.cf."${DATE}"
 #mja needs work : assumes 127.0.0.1
     postconf inet_interfaces
     postconf -e inet_interfaces=127.0.0.1
@@ -181,7 +183,7 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
 fi
 
 echo "** Disabling IPv6 in /etc/ssh/sshd_config..."
-cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.${DATE}
+cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config."${DATE}"
 sed -e '/# CLAIRVOYANT$/d' \
     -e '/^AddressFamily /d' \
     -e '/^ListenAddress /d' \
@@ -197,7 +199,7 @@ service ssh restart
 
 if [ -f /etc/netconfig ]; then
   echo "** Disabling IPv6 in netconfig..."
-  cp -p /etc/netconfig /etc/netconfig.${DATE}
+  cp -p /etc/netconfig /etc/netconfig."${DATE}"
   sed -e '/inet6/d' -i /etc/netconfig
 fi
 

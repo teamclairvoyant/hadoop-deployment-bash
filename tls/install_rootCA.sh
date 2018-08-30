@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -76,7 +77,7 @@ keytool -importcert -file /opt/cloudera/security/CAcerts/intermediate.cert.pem -
 
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if [ "$OS" == RedHatEnterpriseServer ]; then
-    subscription-manager repos --enable=rhel-${OSREL}-server-optional-rpms
+    subscription-manager repos --enable="rhel-${OSREL}-server-optional-rpms"
   fi
   if ! rpm -q openssl-perl; then yum -y -e1 -d1 install openssl-perl; fi
   c_rehash /opt/cloudera/security/CAcerts/
@@ -90,12 +91,12 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     update-ca-trust extract
   fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
-  pushd /opt/cloudera/security/CAcerts/
+  cd /opt/cloudera/security/CAcerts/ || exit
   for SRC in *.pem; do
+    # shellcheck disable=SC2001
     DST=$(echo "$SRC" | sed 's|pem$|crt|')
     cp -p "/opt/cloudera/security/CAcerts/${SRC}" "/usr/local/share/ca-certificates/${DST}"
   done
-  popd
   update-ca-certificates
 fi
 

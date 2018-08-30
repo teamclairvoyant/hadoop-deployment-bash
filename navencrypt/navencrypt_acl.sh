@@ -21,7 +21,7 @@
 #     1 = print_help function (or incorrect commandline)
 #     2 = ERROR: Must be root.
 #
-if [ $DEBUG ]; then set -x; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -30,20 +30,20 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin
 
 # Function to print the help screen.
 print_help() {
-  printf "Usage:  %s --navpass <password>\n" "$1"
-  printf "\n"
-  printf "         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n"
-  printf "        [-h|--help]\n"
-  printf "        [-v|--version]\n"
-  printf "\n"
-  printf "   ex.  %s --navpass \"mypasssword\"\n" "$1"
+  printf 'Usage:  %s --navpass <password>\n' "$1"
+  printf '\n'
+  printf '         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n'
+  printf '        [-h|--help]\n'
+  printf '        [-v|--version]\n'
+  printf '\n'
+  printf '   ex.  %s --navpass "mypasssword"\n' "$1"
   exit 1
 }
 
 # Function to check for root priviledges.
 check_root() {
   if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
-    printf "You must have root priviledges to run this program.\n"
+    printf 'You must have root priviledges to run this program.\n'
     exit 2
   fi
 }
@@ -74,7 +74,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename "$0")"
       ;;
     -v|--version)
-      printf "\tSet the Navigator Encrypt access control list to allow all access.\n"
+      printf '\tSet the Navigator Encrypt access control list to allow all access.\n'
       exit 0
       ;;
     *)
@@ -85,7 +85,7 @@ while [[ $1 = -* ]]; do
 done
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we have no parameters.
 if [[ -z "$NAVPASS" ]]; then print_help "$(basename "$0")"; fi

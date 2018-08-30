@@ -71,12 +71,12 @@ if [ -z "$NUM" ]; then
   echo "ERROR: Missing mountpoint argument (ie 1)."
   exit 1
 fi
-if [ ! -b /dev/${DISK} ]; then
+if [ ! -b "/dev/${DISK}" ]; then
   echo "ERROR: Disk device /dev/${DISK} does not exist."
   exit 2
 fi
 
-SIZE=`lsblk --all --bytes --list --output NAME,SIZE,TYPE /dev/${DISK} | awk '/disk$/{print $2}'`
+SIZE=$(lsblk --all --bytes --list --output NAME,SIZE,TYPE "/dev/${DISK}" | awk '/disk$/{print $2}')
 if [ "$SIZE" -ge 2199023255552 ]; then
   LABEL=gpt
 else
@@ -101,7 +101,7 @@ if [ -b /dev/"${DISK}" ] && [ ! -b /dev/"${DISK}"1 ]; then
   parted -s /dev/"${DISK}" mklabel "$LABEL" mkpart primary "$FS" 1 100%
   sleep 2
   mkfs -t "$FS" /dev/"${DISK}"1 && \
-  sed -i -e "/^\/dev\/${DISK}1/d" /etc/fstab && \
+  sed -i -e "/^\\/dev\\/${DISK}1/d" /etc/fstab && \
   echo "/dev/${DISK}1 /data/${NUM} $FS defaults,noatime 1 2" >>/etc/fstab && \
   mkdir -p /data/"${NUM}" && \
   chattr +i /data/"${NUM}" && \

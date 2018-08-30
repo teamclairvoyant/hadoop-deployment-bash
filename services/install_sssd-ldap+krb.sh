@@ -14,8 +14,7 @@
 #
 # Copyright Clairvoyant 2016
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 

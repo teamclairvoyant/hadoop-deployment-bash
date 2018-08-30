@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1090
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,12 +74,12 @@ if [ -z "$USECLOUDERA" ]; then
 fi
 SCMVERSION=$2
 
-PROXY=$(egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
+PROXY=$(grep -Eh '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
 eval "$PROXY"
 export http_proxy
 export https_proxy
 if [ -z "$http_proxy" ]; then
-  PROXY=$(egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*)
+  PROXY=$(grep -El 'http_proxy=|https_proxy=' /etc/profile.d/*)
   if [ -n "$PROXY" ]; then
     . "$PROXY"
   fi
@@ -89,7 +90,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if [ "$USECLOUDERA" = yes ]; then
     # Because it may have been put there by some other process.
     if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
-      wget -q https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo -O /etc/yum.repos.d/cloudera-manager.repo
+      wget -q "https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
       chown root:root /etc/yum.repos.d/cloudera-manager.repo
       chmod 0644 /etc/yum.repos.d/cloudera-manager.repo
       if [ -n "$SCMVERSION" ]; then
@@ -101,19 +102,17 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     TARGET=$(basename "$DIRNAME")
     ln -s "$TARGET" /usr/java/default
   elif [ "$USECLOUDERA" = 7 ]; then
-    pushd /tmp
+    cd /tmp || exit
     echo "*** Downloading Oracle JDK 7u80..."
     wget -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn/java/jdk/7u80-b15/jdk-7u80-linux-x64.rpm -O jdk-7u80-linux-x64.rpm
     rpm -Uv jdk-7u80-linux-x64.rpm
-    popd
   elif [ "$USECLOUDERA" = 8 ]; then
-    pushd /tmp
+    cd /tmp || exit
     echo "*** Downloading Oracle JDK 8u181..."
     wget -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
       http://download.oracle.com/otn-pub/java/jdk/8u181-b13/96a7b8442fe848ef90c96a2fad6ed6d1/jdk-8u181-linux-x64.rpm -O jdk-8u181-linux-x64.rpm
     rpm -Uv jdk-8u181-linux-x64.rpm
-    popd
   else
     echo "ERROR: Unknown Java version.  Please choose 7 or 8."
     exit 10
@@ -128,13 +127,13 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
       elif [ "$OS" == Ubuntu ]; then
         OS_LOWER=ubuntu
       fi
-      wget -q https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list -O /etc/apt/sources.list.d/cloudera-manager.list
+      wget -q "https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list" -O /etc/apt/sources.list.d/cloudera-manager.list
       chown root:root /etc/apt/sources.list.d/cloudera-manager.list
       chmod 0644 /etc/apt/sources.list.d/cloudera-manager.list
       if [ -n "$SCMVERSION" ]; then
         sed -e "s|-cm5 |-cm${SCMVERSION} |" -i /etc/apt/sources.list.d/cloudera-manager.list
       fi
-      curl -s http://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/archive.key | apt-key add -
+      curl -s "http://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/archive.key" | apt-key add -
     fi
     apt-get -y -qq update
     apt-get -y -q install oracle-j2sdk1.7

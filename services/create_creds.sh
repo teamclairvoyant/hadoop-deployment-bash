@@ -14,8 +14,7 @@
 #
 # Copyright Clairvoyant 2015
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -25,8 +24,6 @@ _ROOTDN="Manager"
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-YUMOPTS="-y -e1 -d1"
-DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
 print_help() {

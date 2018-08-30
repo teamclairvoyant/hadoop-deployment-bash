@@ -180,6 +180,7 @@ EOF
 chown root:root /etc/tuned/hadoop-virtual/tuned.conf
 chmod 0644 /etc/tuned/hadoop-virtual/tuned.conf
 
+# shellcheck disable=SC2063
 if virt-what | grep -q '.*'; then
   tuned-adm profile hadoop-virtual
 else

@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1090
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,12 +54,12 @@ discover_os() {
 }
 
 _get_proxy() {
-  PROXY=$(egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
+  PROXY=$(grep -Eh '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
   eval "$PROXY"
   export http_proxy
   export https_proxy
   if [ -z "$http_proxy" ]; then
-    PROXY=$(egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*)
+    PROXY=$(grep -El 'http_proxy=|https_proxy=' /etc/profile.d/*)
     if [ -n "$PROXY" ]; then
       . "$PROXY"
     fi
@@ -73,7 +74,7 @@ _jdk_major_version() {
 }
 
 _install_oracle_jdbc() {
-  pushd "$(dirname "$0")"
+  cd "$(dirname "$0")" || exit
   if [ ! -f ojdbc6.jar ] && [ ! -f ojdbc8.jar ]; then
     echo "** NOTICE: ojdbc6.jar or ojdbc8.jar not found.  Please manually download from"
     echo "   http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html"
@@ -98,12 +99,11 @@ _install_oracle_jdbc() {
     ls -l /usr/share/java/ojdbc8.jar
   fi
   ls -l /usr/share/java/oracle-connector-java.jar
-  popd
 }
 
 _install_sqlserver_jdbc() {
   # https://www.cloudera.com/documentation/enterprise/5-10-x/topics/cdh_ig_jdbc_driver_install.html
-  pushd /tmp
+  cd /tmp || exit
   _get_proxy
   SQLSERVER_VERSION=6.0.8112.100
   wget -q -c -O /tmp/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz https://download.microsoft.com/download/0/2/A/02AAE597-3865-456C-AE7F-613F99F850A8/enu/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz
@@ -123,7 +123,6 @@ _install_sqlserver_jdbc() {
   else
     echo "ERROR: Java version either not supported or not detected."
   fi
-  popd
 }
 
 echo "********************************************************************************"

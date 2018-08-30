@@ -59,7 +59,7 @@ fi
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
-    rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+    rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
   fi
   yum -y -e1 -d1 install python-pip
   pip install cm_api

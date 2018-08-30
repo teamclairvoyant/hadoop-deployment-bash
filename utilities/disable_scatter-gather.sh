@@ -72,6 +72,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     systemctl start rc-local
   fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
+  # shellcheck disable=SC1004
   sed -e '/ethtool -K eth0 sg off/d' \
       -e '/^exit 0/i \
 /usr/sbin/ethtool -K eth0 sg off' \

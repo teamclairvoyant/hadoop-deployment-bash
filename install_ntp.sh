@@ -49,13 +49,14 @@ discover_os() {
 }
 
 is_virtual() {
-  egrep -qi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
+  grep -Eqi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
   return $?
 }
 
 tinker_ntp.conf() {
   cp -p /etc/ntp.conf /etc/ntp.conf."${DATE}"
   sed -e '/# CLAIRVOYANT$/d' -i /etc/ntp.conf
+  # shellcheck disable=SC1004
   sed -e '1i\
 # Keep ntpd from panicking in the event of a large clock skew when # CLAIRVOYANT\
 # a VM guest is suspended and resumed.                             # CLAIRVOYANT\

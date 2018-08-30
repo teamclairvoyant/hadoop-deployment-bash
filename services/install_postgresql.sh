@@ -70,6 +70,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   else
     cp -p /var/lib/pgsql/data/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf."${DATE}"
   fi
+  # shellcheck disable=SC1004
   sed -e '/# CLAIRVOYANT$/d' \
       -e '/^host\s*all\s*all\s*127.0.0.1\/32\s*\sident$/i\
 host    all             all             0.0.0.0/0               md5 # CLAIRVOYANT' \
@@ -119,6 +120,7 @@ EOF
   echo "****************************************"
   echo "****************************************"
 
+  # shellcheck disable=SC1117
   su - postgres -c 'psql' <<EOF
 \password
 $_PASS

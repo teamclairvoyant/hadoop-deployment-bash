@@ -14,8 +14,7 @@
 #
 # Copyright Clairvoyant 2017
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -224,6 +223,7 @@ EOF
   else
     cp -p /etc/krb5.conf /etc/krb5.conf."${DATE}"
   fi
+  # shellcheck disable=SC2174
   mkdir -p -m 0755 /etc/krb5.conf.d/
   cat <<EOF >/etc/krb5.conf
 # Configuration snippets may be placed in this directory as well
@@ -373,6 +373,7 @@ EOF
   else
     cp -p /etc/krb5.conf /etc/krb5.conf."${DATE}"
   fi
+  # shellcheck disable=SC2174
   mkdir -p -m 0755 /etc/krb5.conf.d/
   cat <<EOF >/etc/krb5.conf
 # Configuration snippets may be placed in this directory as well

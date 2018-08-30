@@ -122,7 +122,7 @@ EOF
 # CLAIRVOYANT
 [mysqld]
 # replication config START
-#server-id=$(printf "%d\n" "0x$(hostid)")
+#server-id=$(printf '%d\n' "0x$(hostid)")
 #log-bin=mysql-bin
 #relay-log=mysql-relay-bin
 #expire_logs_days=10

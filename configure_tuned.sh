@@ -47,7 +47,7 @@ discover_os() {
 }
 
 is_virtual() {
-  egrep -qi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
+  grep -Eqi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
   return $?
 }
 
@@ -70,7 +70,7 @@ fi
 echo "Configuring tuned..."
 if [ "$OSREL" == 6 ]; then
   PROFILE=$(tuned-adm active | awk '{print $NF}' | head -1)
-  sed -e '/^vm.swappiness/s|= .*|= 1|' -i /etc/tune-profiles/${PROFILE}/sysctl.ktune
+  sed -e '/^vm.swappiness/s|= .*|= 1|' -i "/etc/tune-profiles/${PROFILE}/sysctl.ktune"
 fi
 if [ "$OSREL" == 7 ]; then
   PROFILE=$(tuned-adm active | awk '{print $NF}')

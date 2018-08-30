@@ -14,7 +14,7 @@
 #
 # Copyright Clairvoyant 2015
 #
-if [ $DEBUG ]; then set -x; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -151,7 +151,7 @@ else
 fi
 BASEURL=${CMSCHEME}://${CMHOST}:${CMPORT}
 
-if ! (exec 6<>/dev/tcp/${CMHOST}/${CMPORT}); then
+if ! (exec 6<>"/dev/tcp/${CMHOST}/${CMPORT}"); then
   echo "ERROR: cloudera-scm-server not listening on host: ${CMHOST} port: ${CMPORT}..."
   exit 10
 fi
@@ -205,11 +205,11 @@ if curl -s $OPT -X GET -u "${ADMINUSER}:${ADMINPASS}" "${BASEURL}/api/${API}/use
       -e "/^APIPASS=/s|=.*|=${APIPASS}|" \
       -e "/^CMHOST=/s|=.*|=${CMHOST}|" \
       -e "/^CMPORT=/s|=.*|=${CMPORT}|" \
-      $(dirname $0)/dump_cm_config.sh >/usr/local/sbin/dump_cm_config.sh
+      "$(dirname "$0")/dump_cm_config.sh" >/usr/local/sbin/dump_cm_config.sh
   chown 0:0 /usr/local/sbin/dump_cm_config.sh
   chmod 700 /usr/local/sbin/dump_cm_config.sh
   rm -f /tmp/$$
-  crontab -l | egrep -v 'dump_cm_config.sh' >/tmp/$$
+  crontab -l | grep -Ev 'dump_cm_config.sh' >/tmp/$$
   echo '1 0 * * * /usr/local/sbin/dump_cm_config.sh >/var/log/cm_config.dump'>>/tmp/$$
   crontab /tmp/$$
   rm -f /tmp/$$

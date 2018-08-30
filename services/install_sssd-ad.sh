@@ -14,14 +14,12 @@
 #
 # Copyright Clairvoyant 2016
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 YUMOPTS="-y -e1 -d1"
 DATE=$(date '+%Y%m%d%H%M%S')
 
@@ -172,9 +170,11 @@ EOF
   realm discover "$_DOMAIN_LOWER" && \
   realm join "$_DOMAIN_LOWER" $OPTS || exit $?
 
+  # shellcheck disable=SC1004
   sed -e '/^use_fully_qualified_names .*/d' \
       -e '/^\[domain/a\
 use_fully_qualified_names = False' -i /etc/sssd/sssd.conf
+  # shellcheck disable=SC1004
   sed -e '/^default_ccache_name = .*/d' \
       -e '/^# We have to use FILE:.*/d' \
       -e '/^# https:\/\/community.hortonworks.com\/.*/d' \

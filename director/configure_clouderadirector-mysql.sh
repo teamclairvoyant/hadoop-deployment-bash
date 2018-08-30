@@ -14,7 +14,7 @@
 #
 # Copyright Clairvoyant 2018
 #
-if [ $DEBUG ]; then set -x; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -136,6 +136,7 @@ fi
 
 # main
 if [ "$MYSQL_TLS" == "yes" ]; then
+  # shellcheck disable=SC2016
   STRING='lp.database.url: jdbc:mysql://${lp.database.host}:${lp.database.port}/${lp.database.name}?verifyServerCertificate=true&useSSL=true&requireSSL=true'
 else
   STRING=''

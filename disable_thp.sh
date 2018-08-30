@@ -75,6 +75,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   echo never >/sys/kernel/mm/transparent_hugepage/defrag
   echo never >/sys/kernel/mm/transparent_hugepage/enabled
+  # shellcheck disable=SC1004
   sed -e '/transparent_hugepage/d' \
       -e '/^exit 0/i \
 echo never >/sys/kernel/mm/transparent_hugepage/defrag\
