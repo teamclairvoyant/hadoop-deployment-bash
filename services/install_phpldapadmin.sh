@@ -18,7 +18,7 @@ if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
-_ROOTDN="Manager"
+#_ROOTDN="Manager"
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
@@ -27,9 +27,10 @@ DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
 print_help() {
-  echo "Usage:  $1 --domain <dns domain or kerberos realm>"
-  echo "        [-r|--rootdn <LDAP superuser>]"
-  echo "        [-p|--passwd <LDAP superuser password>]"
+  echo "Usage:  $1"
+#  echo "Usage:  $1 --domain <dns domain or kerberos realm>"
+#  echo "        [-r|--rootdn <LDAP superuser>]"
+#  echo "        [-p|--passwd <LDAP superuser password>]"
   echo "        [-h|--help]"
   echo "        [-v|--version]"
   echo "   ex.  $1"
@@ -94,18 +95,18 @@ discover_os() {
 # Process arguments.
 while [[ $1 = -* ]]; do
   case $1 in
-    -d|--domain)
-      shift
-      _DOMAIN_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
-      ;;
-    -r|--rootdn)
-      shift
-      _ROOTDN="$1"
-      ;;
-    -p|--passwd)
-      shift
-      _ROOTPW="$1"
-      ;;
+#    -d|--domain)
+#      shift
+#      _DOMAIN_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+#      ;;
+#    -r|--rootdn)
+#      shift
+#      _ROOTDN="$1"
+#      ;;
+#    -p|--passwd)
+#      shift
+#      _ROOTPW="$1"
+#      ;;
     -h|--help)
       print_help "$(basename "$0")"
       ;;
