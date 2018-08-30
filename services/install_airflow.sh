@@ -156,7 +156,7 @@ echo "**************************************************************************
 # Check to see if we are on a supported OS.
 # Currently only EL7.
 discover_os
-if \( [ "$OS" != RedHatEnterpriseServer ] || [ "$OS" != CentOS ] \) && [ "$OSREL" != 7 ]; then
+if { [ "$OS" != RedHatEnterpriseServer ] || [ "$OS" != CentOS ]; } && [ "$OSREL" != 7 ]; then
 #if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
