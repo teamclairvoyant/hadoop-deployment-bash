@@ -467,6 +467,13 @@ else
   echo "** reverse:"
   python -c 'import socket; print socket.gethostbyname(socket.getfqdn())'
 fi
+echo "** /etc/hosts:"
+HOSTCOUNT=$(grep -cvE 'localhost|^127.0.0.1|^::1|^#|^[[:space:]]*#' /etc/hosts)
+echo "There are $HOSTCOUNT non-loopback entries in /etc/hosts."
+echo "** /etc/nsswitch.conf hosts entry:"
+grep ^hosts /etc/nsswitch.conf
+echo "** /etc/resolv.conf:"
+cat /etc/resolv.conf
 
 echo "****************************************"
 echo "*** Cloudera Software"
