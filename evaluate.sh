@@ -113,6 +113,8 @@ for _NIC in !(lo); do
   # shellcheck disable=SC2086
   echo "$_IP" | awk '/mtu/{print "'${_NIC}' : MTU:",$5}'
   ethtool "$_NIC" 2>/dev/null | grep -E 'Speed:|Duplex:|Port:' | sed "s|^[[:space:]]*|${_NIC} : |g"
+  #cat "/sys/class/net/${_NIC}/speed"
+  #cat "/sys/class/net/${_NIC}/duplex"
 done
 shopt -u extglob
 # shellcheck disable=SC2164
@@ -178,10 +180,10 @@ echo "****************************************"
 echo "*** swap"
 echo "** running config:"
 swapon -s
-echo
+echo "--"
 if grep -q swap /etc/fstab; then
   BDEVICE=""
-  SWAPLINES=$(awk '/swap/{print $1}' /etc/fstab)
+  SWAPLINES=$(awk '$3~/swap/{print $1}' /etc/fstab)
   # what if fstab has more than one swap entry?
   for SWAPLINE in $SWAPLINES; do
     # what if fstab is ^UUID= ?
