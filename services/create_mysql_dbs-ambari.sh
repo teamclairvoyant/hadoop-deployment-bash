@@ -151,11 +151,11 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   else
     $ECHO sudo yum -y -e1 -d1 install mariadb apg || err_msg 4
   fi
-  if rpm -q apg; then export PWCMD='apg ] && [ 1 -M NCL -m 20 -x 20 -n 1'; fi
+  if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   $ECHO sudo apt-get -y -q install mysql-client apg || err_msg 4
-  if dpkg -l apg >/dev/null; then export PWCMD='apg ] && [ 1 -M NCL -m 20 -x 20 -n 1'; fi
+  if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
 METASTOREDB_PASSWORD=$(eval "$PWCMD")
 OOZIEDB_PASSWORD=$(eval "$PWCMD")
