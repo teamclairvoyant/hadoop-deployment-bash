@@ -70,7 +70,6 @@ for HOST in `cat HOSTLIST`; do
   ${GITREPO}/install_jce.sh \
   ${GITREPO}/install_krb5.sh \
   ${GITREPO}/configure_tuned.sh \
-  ${GITREPO}/link_openssl.sh \
   ${GITREPO}/install_entropy.sh \
   ${GITREPO}/install_jdbc.sh \
   ${GITREPO}/install_jdbc_sqoop.sh \
@@ -100,7 +99,6 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./install_jce.sh; \
   sudo bash $BOPT ./install_krb5.sh; \
   sudo bash $BOPT ./configure_tuned.sh; \
-  sudo bash $BOPT ./link_openssl.sh; \
   sudo bash $BOPT ./install_entropy.sh"
 done
 ```
@@ -190,7 +188,6 @@ for HOST in `cat HOSTLIST`; do
   ${GITREPO}/install_jce.sh \
   ${GITREPO}/install_krb5.sh \
   ${GITREPO}/configure_tuned.sh \
-  ${GITREPO}/link_openssl.sh \
   ${GITREPO}/install_entropy.sh \
   ${GITREPO}/install_jdbc.sh \
   ${GITREPO}/install_jdbc_sqoop.sh \
@@ -219,7 +216,6 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./install_jce.sh; \
   sudo bash $BOPT ./install_krb5.sh; \
   sudo bash $BOPT ./configure_tuned.sh; \
-  sudo bash $BOPT ./link_openssl.sh; \
   sudo bash $BOPT ./install_entropy.sh"
 done
 ```
