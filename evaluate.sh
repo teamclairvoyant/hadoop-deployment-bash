@@ -455,19 +455,21 @@ echo "*** DNS"
 IP=$(ip -4 a | awk '/inet/{print $2}' | grep -v 127.0.0.1 | sed -e 's|/[0-9].*||')
 echo "** system IP is: $IP"
 echo "** system hostname is: $(hostname)"
-if command -v host; then
-  DNS=$(host "$(hostname)")
-  echo "** forward:"
-  echo "$DNS"
-  echo "** reverse:"
-  host "$(echo "$DNS" | awk '{print $NF}')"
+if command -v dig >/dev/null 2>&1; then
+#  IP=$(dig "$(hostname)" +short)
+  HOST=$(dig -x "$IP" +short)
+  ADDR=$(dig "$HOST" +short)
 else
-  echo "Not DNS."
-  #DNS=$(python -c 'import socket; print socket.getfqdn(), "has address", socket.gethostbyname(socket.getfqdn())')
-  echo "** forward:"
-  python -c 'import socket; print socket.getfqdn()'
-  echo "** reverse:"
-  python -c 'import socket; print socket.gethostbyname(socket.getfqdn())'
+#  IP=$(python -c "import socket; print socket.gethostbyname('$(hostname)')")
+  HOST=$(python -c 'import socket; print socket.getfqdn()')
+  ADDR=$(python -c 'import socket; print socket.gethostbyname(socket.getfqdn())')
+fi
+echo "** DNS forward is: $HOST"
+echo "** DNS reverse is: $ADDR"
+if [ "$IP" == "$ADDR" ]; then
+  echo "DNS does match."
+else
+  echo "DNS does not match."
 fi
 echo "** /etc/hosts:"
 HOSTCOUNT=$(grep -cvE 'localhost|^127.0.0.1|^::1|^#|^[[:space:]]*#' /etc/hosts)
