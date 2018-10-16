@@ -472,7 +472,7 @@ else
   echo "DNS does not match."
 fi
 echo "** /etc/hosts:"
-HOSTCOUNT=$(grep -cvE 'localhost|^127.0.0.1|^::1|^#|^[[:space:]]*#' /etc/hosts)
+HOSTCOUNT=$(grep -cvE 'localhost|^127.0.0.1|^::1|^#|^[[:space:]]*#|^$' /etc/hosts)
 echo "There are $HOSTCOUNT non-loopback entries in /etc/hosts."
 echo "** /etc/nsswitch.conf hosts entry:"
 grep ^hosts /etc/nsswitch.conf
