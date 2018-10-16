@@ -201,12 +201,12 @@ set -eo pipefail
 echo "** Configuring Database..."
 if [ "$DB_TYPE" == postgresql ]; then
   if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
-    JOPTS="--jdbc-driver=/usr/share/java/postgresql-jdbc.jar"
+    JOPTS=("--jdbc-driver=/usr/share/java/postgresql-jdbc.jar")
     if ! rpm -q postgresql >/dev/null 2>&1; then
       yum -y -e1 -d1 install postgresql
     fi
   elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
-    JOPTS="--jdbc-driver=/usr/share/java/postgresql.jar"
+    JOPTS=("--jdbc-driver=/usr/share/java/postgresql.jar")
     if ! dpkg -l postgresql-client >/dev/null 2>&1; then
       export DEBIAN_FRONTEND=noninteractive
       apt-get -y -q install postgresql-client
@@ -223,12 +223,12 @@ if [ "$DB_TYPE" == postgresql ]; then
   export PGPASSWORD=$DB_PASSWD
   psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER"    -d "$DB_NAME" -c '\i /var/lib/ambari-server/resources/Ambari-DDL-Postgres-CREATE.sql;' 2>/dev/null
 
-  JOPTS="$JOPTS --jdbc-db=postgres"
-  OPTS="$OPTS --databasehost=$DB_HOST --databaseport=$DB_PORT --databaseusername=$DB_USER --databasepassword=$DB_PASSWD"
-  OPTS="$OPTS --databasename=$DB_NAME --database=postgres --postgresschema=$PG_SCHEMA"
+  JOPTS+=("--jdbc-db=postgres")
+  OPTS=("--databasehost=$DB_HOST" "--databaseport=$DB_PORT" "--databaseusername=$DB_USER" "--databasepassword=$DB_PASSWD")
+  OPTS+=("--databasename=$DB_NAME" "--database=postgres" "--postgresschema=$PG_SCHEMA")
 elif [ "$DB_TYPE" == mysql ]; then
   if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
-    JOPTS="--jdbc-driver=/usr/share/java/mysql-connector-java.jar"
+    JOPTS=("--jdbc-driver=/usr/share/java/mysql-connector-java.jar")
     if [ "$OSREL" == 6 ]; then
       if ! rpm -q mysql >/dev/null 2>&1; then
         yum -y -e1 -d1 install mysql
@@ -239,7 +239,7 @@ elif [ "$DB_TYPE" == mysql ]; then
       fi
     fi
   elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
-    JOPTS="--jdbc-driver=/usr/share/java/mysql-connector-java.jar"
+    JOPTS=("--jdbc-driver=/usr/share/java/mysql-connector-java.jar")
     if ! dpkg -l mysql-client >/dev/null 2>&1; then
       export DEBIAN_FRONTEND=noninteractive
       apt-get -y -q install mysql-client
@@ -251,19 +251,19 @@ elif [ "$DB_TYPE" == mysql ]; then
 # mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -D "$DB_NAME" -e 'SOURCE /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql;'
   mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER"    -p"${DB_PASSWD}"    -D "$DB_NAME" -e 'SOURCE /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql;'
 
-  JOPTS="$JOPTS --jdbc-db=mysql"
-  OPTS="$OPTS --databasehost=$DB_HOST --databaseport=$DB_PORT --databaseusername=$DB_USER --databasepassword=$DB_PASSWD"
-  OPTS="$OPTS --databasename=$DB_NAME --database=mysql"
+  JOPTS+=("--jdbc-db=mysql")
+  OPTS=("--databasehost=$DB_HOST" "--databaseport=$DB_PORT" "--databaseusername=$DB_USER" "--databasepassword=$DB_PASSWD")
+  OPTS+=("--databasename=$DB_NAME" "--database=mysql")
 elif [ "$DB_TYPE" == oracle ]; then
   if [ -z "$DB_PORT" ]; then print_help "$(basename "$0")"; fi
   echo "WARNING: Oracle Support is not implemented."
   exit 20
   #/var/lib/ambari-server/resources/Ambari-DDL-Oracle-CREATE.sql
-  JOPTS="--jdbc-driver=/usr/share/java/oracle-connector-java.jar"
+  JOPTS=("--jdbc-driver=/usr/share/java/oracle-connector-java.jar")
 
-  JOPTS="$JOPTS --jdbc-db=oracle"
-  OPTS="$OPTS --databasehost=$DB_HOST --databaseport=$DB_PORT --databaseusername=$DB_USER --databasepassword=$DB_PASSWD"
-  OPTS="$OPTS --databasename=$DB_NAME --database=oracle --sidorsname=sid"
+  JOPTS+=("--jdbc-db=oracle")
+  OPTS=("--databasehost=$DB_HOST" "--databaseport=$DB_PORT" "--databaseusername=$DB_USER" "--databasepassword=$DB_PASSWD")
+  OPTS+=("--databasename=$DB_NAME" "--database=oracle" "--sidorsname=sid")
 else
   echo "WARNING: You should not have gotten here."
 fi
@@ -284,10 +284,7 @@ cat <<EOF >/tmp/$$
 
 
 EOF
-# TODO: Fix $OPTS and $JOPTS
-# shellcheck disable=SC2086
-ambari-server setup --java-home="$JAVA_HOME" $OPTS < /tmp/$$
-# shellcheck disable=SC2086
-ambari-server setup --java-home="$JAVA_HOME" $JOPTS
+ambari-server setup --java-home="$JAVA_HOME" "${OPTS[@]}" < /tmp/$$
+ambari-server setup --java-home="$JAVA_HOME" "${JOPTS[@]}"
 rm -f /tmp/$$
 
