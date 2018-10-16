@@ -14,8 +14,8 @@
 #
 # Copyright Clairvoyant 2018
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
+if [ -n "$DEBUG" ]; then ECHO="echo"; fi
 #
 ##### START CONFIG ###################################################
 
@@ -25,7 +25,7 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 
 # Function to print the help screen.
-print_help () {
+print_help() {
   echo "Usage:  $1 --host <hostname> --user <username> --password <password>"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
@@ -34,7 +34,7 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
+check_root() {
   if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
@@ -42,32 +42,40 @@ check_root () {
 }
 
 # Function to print and error message and exit.
-err_msg () {
+err_msg() {
   local CODE=$1
   echo "ERROR: Could not install required package. Exiting."
-  exit $CODE
+  exit "$CODE"
 }
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
+    # shellcheck disable=SC2034
     OS=$(lsb_release -is)
     # 7.2.1511, 14.04
+    # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
+    # shellcheck disable=SC2034
     OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
+    # shellcheck disable=SC2034
     OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
-      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
@@ -137,7 +145,7 @@ echo "Creating users and databases in MySQL for Director..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
-    $ECHO sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+    $ECHO sudo rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
   fi
   if [ "$OSREL" == 6 ]; then
     $ECHO sudo yum -y -e1 -d1 install mysql apg || err_msg 4
@@ -150,14 +158,14 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   $ECHO sudo apt-get -y -q install mysql-client apg || err_msg 4
   if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
-DIRECTORDB_PASSWORD=$(eval $PWCMD)
+DIRECTORDB_PASSWORD=$(eval "$PWCMD")
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
 echo "*** SAVE THIS PASSWORD"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e 'CREATE DATABASE director DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;'
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON director.* TO 'director'@'localhost' IDENTIFIED BY '$DIRECTORDB_PASSWORD';"
-$ECHO mysql -h $MYSQL_HOST -u $MYSQL_USER -p${MYSQL_PASSWORD} -e "GRANT ALL ON director.* TO 'director'@'%' IDENTIFIED BY '$DIRECTORDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" "-p${MYSQL_PASSWORD}" -e 'CREATE DATABASE director DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" "-p${MYSQL_PASSWORD}" -e "GRANT ALL ON director.* TO 'director'@'localhost' IDENTIFIED BY '$DIRECTORDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" "-p${MYSQL_PASSWORD}" -e "GRANT ALL ON director.* TO 'director'@'%' IDENTIFIED BY '$DIRECTORDB_PASSWORD';"
 echo "director : $DIRECTORDB_PASSWORD"
 echo "****************************************"
 echo "****************************************"

@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2016
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Copying Kafka TLS certs and keys..."
 install -m 0440 -o root -g kafka /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/kafka-keystore.jks

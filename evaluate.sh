@@ -18,30 +18,44 @@
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
-if command -v lsb_release >/dev/null; then
-  # CentOS, Ubuntu
-  OS=`lsb_release -is`
-  # 7.2.1511, 14.04
-  OSVER=`lsb_release -rs`
-  # 7, 14
-  OSREL=`echo $OSVER | awk -F. '{print $1}'`
-else
-  if [ -f /etc/redhat-release ]; then
-    if [ -f /etc/centos-release ]; then
-      OS=CentOS
-    else
-      OS=RedHatEnterpriseServer
+# Function to discover basic OS details.
+discover_os() {
+  if command -v lsb_release >/dev/null; then
+    # CentOS, Ubuntu
+    # shellcheck disable=SC2034
+    OS=$(lsb_release -is)
+    # 7.2.1511, 14.04
+    # shellcheck disable=SC2034
+    OSVER=$(lsb_release -rs)
+    # 7, 14
+    # shellcheck disable=SC2034
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
+    # trusty, wheezy, Final
+    # shellcheck disable=SC2034
+    OSNAME=$(lsb_release -cs)
+  else
+    if [ -f /etc/redhat-release ]; then
+      if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
+        OS=CentOS
+      else
+        # shellcheck disable=SC2034
+        OS=RedHatEnterpriseServer
+      fi
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
-    OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-    OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
-  #elif [ -f /etc/debian_version ]; then
   fi
-fi
+}
+discover_os
 
 echo "****************************************"
 echo "****************************************"
-echo `hostname`
-echo "$Id$"
+hostname
+# shellcheck disable=SC2016
+echo '$Id$'
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
@@ -57,13 +71,15 @@ echo "****************************************"
 echo "*** Hardware details"
 echo "** system:"
 # https://unix.stackexchange.com/questions/75750/how-can-i-find-the-hardware-model-in-linux
+# shellcheck disable=SC2164
 pushd /sys/devices/virtual/dmi/id/ >/dev/null
 for f in *; do
-  if [ $f != power -a $f != subsystem -a $f != modalias -a $f != uevent ]; then
-    printf "$f : "
-    cat $f 2>/dev/null || echo "***_Unavailable_***"
+  if [ "$f" != power ] && [ "$f" != subsystem ] && [ "$f" != modalias ] && [ "$f" != uevent ]; then
+    printf '%s : ' "$f"
+    cat "$f" 2>/dev/null || echo "***_Unavailable_***"
   fi
 done
+# shellcheck disable=SC2164
 popd >/dev/null
 #echo "** manufacturer:"
 #sudo -n dmidecode -s system-manufacturer
@@ -73,7 +89,7 @@ echo "** cpu:"
 grep ^processor /proc/cpuinfo | tail -1
 grep ^"model name" /proc/cpuinfo | tail -1
 echo "** memory:"
-echo "memory          : `free -g | awk '/^Mem:/{print $2}'` GiB"
+echo "memory          : $(free -g | awk '/^Mem:/{print $2}') GiB"
 echo "** Disks:"
 lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
 echo "** Logical Volumes:"
@@ -87,12 +103,20 @@ df -h -t ext2 -t ext3 -t ext4 -t xfs
 echo "** Network interfaces (raw):"
 ip addr
 echo "** Network interfaces:"
-for _NIC in $(ls /sys/class/net/ | grep -v ^lo$); do
-  _IP=$(ip addr show dev $_NIC)
+# shellcheck disable=SC2164
+pushd /sys/class/net/ >/dev/null
+shopt -s extglob
+for _NIC in !(lo); do
+  _IP=$(ip addr show dev "$_NIC")
+  # shellcheck disable=SC2086
   echo "$_IP" | awk '/inet/{print "'${_NIC}' : IP:",$2}'
+  # shellcheck disable=SC2086
   echo "$_IP" | awk '/mtu/{print "'${_NIC}' : MTU:",$5}'
-  ethtool $_NIC 2>/dev/null | grep -E 'Speed:|Duplex:|Port:' | sed "s|^[[:space:]]*|${_NIC} : |g"
+  ethtool "$_NIC" 2>/dev/null | grep -E 'Speed:|Duplex:|Port:' | sed "s|^[[:space:]]*|${_NIC} : |g"
 done
+shopt -u extglob
+# shellcheck disable=SC2164
+popd >/dev/null
 echo "** Network routes:"
 ip route
 echo "** Network Bonding:"
@@ -116,7 +140,7 @@ echo "** installed kernels:"
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   rpm -q kernel
   echo "** running kernel has fix?:"
-  if rpm -q --changelog kernel-$(uname -r) | grep -q 'Ensure get_futex_key_refs() always implies a barrier'; then
+  if rpm -q --changelog "kernel-$(uname -r)" | grep -q 'Ensure get_futex_key_refs() always implies a barrier'; then
     echo "Kernel is OK (futex TSB-63)"
   else
     echo "Kernel is VULNERABLE (futex TSB-63)"
@@ -127,7 +151,7 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   if uname -r | grep -q '^4\.'; then
     echo "Kernel is OK (futex TSB-63)"
   else
-    _VAL=$(apt-get changelog linux-image-$(uname -r))
+    _VAL=$(apt-get changelog "linux-image-$(uname -r)")
     RETVAL=$?
     # We could not retreive the changelog.
     if [ "$RETVAL" -ne 0 ]; then
@@ -168,7 +192,7 @@ if grep -q swap /etc/fstab; then
       BDEVICE="$SWAPLINE $BDEVICE"
     fi
   done
-  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT $BDEVICE
+  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT "$BDEVICE"
 fi
 echo "** startup config:"
 grep swap /etc/fstab || echo "none"
@@ -194,7 +218,7 @@ fi
 echo "** startup config:"
 # There are multiple other ways for the firewall to be started (ie Shorewall).
 # We will not be probing for them.
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if [ "$OSREL" == "7" ]; then
     systemctl --lines 0 status firewalld.service
   fi
@@ -202,7 +226,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     chkconfig --list iptables
     chkconfig --list ip6tables
   fi
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   service ufw status
   if [ "$OSVER" == "14.04" ]; then
     initctl show-config ufw
@@ -220,12 +244,12 @@ grep -r net.ipv6.conf.default.disable_ipv6 /etc/sysctl.*
 
 echo "****************************************"
 echo "*** SElinux"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   echo "** running config:"
   getenforce
   echo "** startup config:"
   grep ^SELINUX= /etc/selinux/config
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   echo "Debian/Ubuntu = None"
 fi
 
@@ -237,7 +261,7 @@ cat /sys/kernel/mm/transparent_hugepage/defrag
 echo "* enabled:"
 cat /sys/kernel/mm/transparent_hugepage/enabled
 echo "** startup config:"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   grep transparent_hugepage /etc/rc.d/rc.local
 else
   grep transparent_hugepage /etc/rc.local
@@ -257,9 +281,9 @@ grep noatime /etc/navencrypt/ztab || echo "none"
 echo "****************************************"
 echo "*** Entropy"
 echo "** running config:"
-if [ "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer ]; then
+if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; then
   service rngd status
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   service rng-tools status || ps -o user,pid,command -C rngd
 fi
 echo "** startup config:"
@@ -270,14 +294,14 @@ cat /proc/sys/kernel/random/entropy_avail
 echo "****************************************"
 echo "*** Java"
 echo "** installed Java(s):"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  rpm -qa | egrep 'jdk|jre|^java-|j2sdk' | sort
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+  rpm -qa | grep -E 'jdk|jre|^java-|j2sdk' | sort
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*jdk\* \*jre\* java-\* \*j2sdk\* oracle-java\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 # Which is our standard?
 echo "** which java:"
-which java
+command -v java
 echo "** default java version:"
 # https://stackoverflow.com/questions/7334754/correct-way-to-check-java-version-from-bash-script
 if type -p java >/dev/null; then
@@ -295,23 +319,23 @@ if [ -n "$_JAVA" ]; then
   _JAVA_VERSION=$("$_JAVA" -version 2>&1 | awk -F '"' '/version/ {print $2}')
   _JAVA_VERSION_MAJ=$(echo "${_JAVA_VERSION}" | awk -F. '{print $1}')
   _JAVA_VERSION_MIN=$(echo "${_JAVA_VERSION}" | awk -F. '{print $2}')
-  _JAVA_VERSION_PATCH=$(echo "${_JAVA_VERSION}" | awk -F. '{print $3}' | sed -e 's|_.*||')
+  #_JAVA_VERSION_PATCH=$(echo "${_JAVA_VERSION}" | awk -F. '{print $3}' | sed -e 's|_.*||')
   _JAVA_VERSION_RELEASE=$(echo "${_JAVA_VERSION}" | awk -F_ '{print $2}')
 else
   _JAVA_VERSION_MAJ=0
   _JAVA_VERSION_MIN=0
-  _JAVA_VERSION_PATCH=0
+  #_JAVA_VERSION_PATCH=0
   _JAVA_VERSION_RELEASE=0
 fi
 
 echo "****************************************"
 echo "*** JAVA_HOME"
-echo JAVA_HOME=$JAVA_HOME
-echo PATH=$PATH
+echo "JAVA_HOME=$JAVA_HOME"
+echo "PATH=$PATH"
 
 echo "****************************************"
 echo "*** JCE"
-if which unzip >/dev/null 2>&1; then
+if command -v unzip; then
   UNZIP=true
 else
   UNZIP=false
@@ -369,9 +393,9 @@ fi
 echo "****************************************"
 echo "*** JDBC"
 echo "** JDBC packages:"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   rpm -q mysql-connector-java postgresql-jdbc
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l libmysql-java libpostgresql-jdbc-java | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "** JDBC files:"
@@ -381,9 +405,9 @@ ls -l /usr/share/java/sqlserver-connector-java.jar /usr/share/java/sqljdbc*.jar
 
 echo "****************************************"
 echo "*** Kerberos"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   rpm -q krb5-workstation kstart k5start
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l krb5-user kstart k5start | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 
@@ -397,22 +421,22 @@ chkconfig --list nscd
 echo "****************************************"
 echo "*** NTP"
 echo "** running config:"
-if [ "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer ]; then
+if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; then
   service ntpd status
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   service ntp status
 fi
 echo "** startup config:"
 RETVAL=0
 chkconfig --list ntpd
-if [ \( "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer \) -a "$OSREL" == 7 ]; then
+if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; } && [ "$OSREL" == 7 ]; then
   systemctl --lines 0 status chronyd.service
   RETVAL=$?
   # Do we want to support chrony? Does CM?
 fi
 echo "** timesync status:"
 ntpq -p
-if [ \( "$OS" == CentOS -o "$OS" == RedHatEnterpriseServer \) -a \( "$OSREL" == 7 -a "$RETVAL" == 0 \) ]; then
+if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; } && { [ "$OSREL" == 7 ] && [ "$RETVAL" == 0 ]; }; then
   chronyc sources
 fi
 
@@ -426,17 +450,15 @@ date +'%Z %z'
 
 echo "****************************************"
 echo "*** DNS"
-IP=`ip -4 a | awk '/inet/{print $2}' | grep -v 127.0.0.1 | sed -e 's|/[0-9].*||'`
-echo -n "** system IP is: "
-echo $IP
-echo -n "** system hostname is: "
-hostname
-if which host >/dev/null 2>&1; then
-  DNS=$(host `hostname`)
+IP=$(ip -4 a | awk '/inet/{print $2}' | grep -v 127.0.0.1 | sed -e 's|/[0-9].*||')
+echo "** system IP is: $IP"
+echo "** system hostname is: $(hostname)"
+if command -v host; then
+  DNS=$(host "$(hostname)")
   echo "** forward:"
-  echo $DNS
+  echo "$DNS"
   echo "** reverse:"
-  host $(echo $DNS | awk '{print $NF}')
+  host "$(echo "$DNS" | awk '{print $NF}')"
 else
   echo "Not DNS."
   #DNS=$(python -c 'import socket; print socket.getfqdn(), "has address", socket.gethostbyname(socket.getfqdn())')
@@ -448,15 +470,15 @@ fi
 
 echo "****************************************"
 echo "*** Cloudera Software"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   rpm -qa ^cloudera\* ^navencrypt\* \*keytrustee\*
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*cloudera\* \*navencrypt\* \*keytrustee\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Cloudera Hadoop Packages"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   rpm -qa ^hadoop\*
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Cloudera Parcels"
@@ -464,15 +486,15 @@ ls -l /opt/cloudera/parcels
 
 echo "****************************************"
 echo "*** Hortonworks Software"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   rpm -qa ^ambari\*
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*ambari\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Hortonworks Hadoop Packages"
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   rpm -qa ^hadoop\*
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l hadoop-?-?-?-?-???? | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 
@@ -483,9 +505,9 @@ hadoop checknative
 echo "****************************************"
 echo "*** Internet Access"
 # https://unix.stackexchange.com/questions/190513/shell-scripting-proper-way-to-check-for-internet-connectivity
-if which curl; then
+if command -v curl; then
   INET=$(curl -s --max-time 10 -I http://archive.cloudera.com/cm5/ | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')
-elif which wget; then
+elif command -v wget; then
   INET=$(wget -q --timeout=10 --server-response http://archive.cloudera.com/cm5/ 2>&1 | sed 's/^  //' | sed 's/^[^ ]*  *\([0-9]\).*/\1/; 1q')
 fi
 case "$INET" in

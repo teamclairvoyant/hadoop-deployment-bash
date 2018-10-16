@@ -14,23 +14,22 @@
 #
 # Copyright Clairvoyant 2015
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
-_ROOTDN="Manager"
+#_ROOTDN="Manager"
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-YUMOPTS="-y -e1 -d1"
-DATE=`date '+%Y%m%d%H%M%S'`
+DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
-print_help () {
-  echo "Usage:  $1 --domain <dns domain or kerberos realm>"
-  echo "        [-r|--rootdn <LDAP superuser>]"
-  echo "        [-p|--passwd <LDAP superuser password>]"
+print_help() {
+  echo "Usage:  $1"
+#  echo "Usage:  $1 --domain <dns domain or kerberos realm>"
+#  echo "        [-r|--rootdn <LDAP superuser>]"
+#  echo "        [-p|--passwd <LDAP superuser password>]"
   echo "        [-h|--help]"
   echo "        [-v|--version]"
   echo "   ex.  $1"
@@ -38,33 +37,41 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+check_root() {
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
   fi
 }
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    # shellcheck disable=SC2034
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    # shellcheck disable=SC2034
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # shellcheck disable=SC2034
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    # shellcheck disable=SC2034
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
@@ -87,69 +94,69 @@ discover_os () {
 # Process arguments.
 while [[ $1 = -* ]]; do
   case $1 in
-    -d|--domain)
-      shift
-      _DOMAIN_LOWER=`echo $1 | tr '[:upper:]' '[:lower:]'`
-      ;;
-    -r|--rootdn)
-      shift
-      _ROOTDN="$1"
-      ;;
-    -p|--passwd)
-      shift
-      _ROOTPW="$1"
-      ;;
+#    -d|--domain)
+#      shift
+#      _DOMAIN_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
+#      ;;
+#    -r|--rootdn)
+#      shift
+#      _ROOTDN="$1"
+#      ;;
+#    -p|--passwd)
+#      shift
+#      _ROOTPW="$1"
+#      ;;
     -h|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       echo "Install PHP LDAP Admin."
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
 done
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
-#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 # Check to see if we have the required parameters.
-#if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename $0)"; fi
+#if [ -z "$_DOMAIN_LOWER" ]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
 
 # main
 echo "Installing phpLDAPadmin..."
-#_SUFFIX=`echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}'`
-#_ROOTDN=`echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||"`
+#_SUFFIX=$(echo ${_DOMAIN_LOWER} | awk -F. '{print "dc="$1",dc="$2}')
+#_ROOTDN=$(echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||")
 #_ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
 
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   setsebool -P httpd_can_connect_ldap=on
 
   yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
-    rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+    rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
   fi
-  yum $YUMOPTS install httpd phpldapadmin
+  yum -y -e1 -d1 install httpd phpldapadmin
 
   if [ ! -f /etc/httpd/conf.d/phpldapadmin.conf-orig ]; then
     cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf-orig
   else
-    cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf.${DATE}
+    cp -p /etc/httpd/conf.d/phpldapadmin.conf /etc/httpd/conf.d/phpldapadmin.conf."${DATE}"
   fi
 #  cat <<EOF >/etc/httpd/conf.d/phpldapadmin.conf
 ##
@@ -173,7 +180,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ ! -f /etc/phpldapadmin/config.php-orig ]; then
     cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php-orig
   else
-    cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php.${DATE}
+    cp -p /etc/phpldapadmin/config.php /etc/phpldapadmin/config.php."${DATE}"
   fi
   sed -e '/# CLAIRVOYANT$/d' \
       -e "/Local LDAP Server/a\
@@ -185,11 +192,11 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
 
   chkconfig httpd on
   service httpd restart
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   :
 fi
 
-echo "Go to http://`hostname -f`/phpldapadmin/"
+echo "Go to http://$(hostname -f)/phpldapadmin/"
 
 exit 0
 

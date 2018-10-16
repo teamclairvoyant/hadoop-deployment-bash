@@ -14,8 +14,7 @@
 #
 # Copyright Clairvoyant 2015
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -24,7 +23,7 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 USEHAVEGED=no
 
 # Function to print the help screen.
-print_help () {
+print_help() {
   echo "Usage:  $1 [-H|--haveged]"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
@@ -33,40 +32,48 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+check_root() {
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
   fi
 }
 
 # Function to print and error message and exit.
-err_msg () {
+err_msg() {
   local CODE=$1
   echo "ERROR: Could not install required package. Exiting."
-  exit $CODE
+  exit "$CODE"
 }
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    # shellcheck disable=SC2034
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    # shellcheck disable=SC2034
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # shellcheck disable=SC2034
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    # shellcheck disable=SC2034
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
@@ -93,25 +100,25 @@ while [[ $1 = -* ]]; do
       USEHAVEGED=yes
       ;;
     -h|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       echo "Installs an entropy gathering daemon: RNGD ot HAVEGED."
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
 done
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -136,11 +143,11 @@ else
   HWRNG=false
 fi
 
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if [ "$USEHAVEGED" == "yes" ]; then
     yum -y -e1 -d1 install epel-release
     if ! rpm -q epel-release; then
-      rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm
+      rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
     fi
     yum -y -e1 -d1 install haveged
     service haveged start
@@ -149,8 +156,8 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     # https://www.cloudera.com/content/www/en-us/downloads/navigator/encrypt/3-8-0.html
     # http://www.certdepot.net/rhel7-get-started-random-number-generator/
     yum -y -d1 -e1 install rng-tools
-    if [ $RDRAND == false -a $HWRNG == false ]; then
-      if [ $OSREL == 6 ]; then
+    if [ "$RDRAND" == false ] && [ "$HWRNG" == false ]; then
+      if [ "$OSREL" == 6 ]; then
         sed -i -e 's|^EXTRAOPTIONS=.*|EXTRAOPTIONS="-r /dev/urandom"|' /etc/sysconfig/rngd
       else
         cp -p /usr/lib/systemd/system/rngd.service /etc/systemd/system/
@@ -161,7 +168,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
     service rngd start
     chkconfig rngd on
   fi
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   if [ "$USEHAVEGED" == "yes" ]; then
     apt-get -y -q install haveged
@@ -170,7 +177,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   else
     # https://www.cloudera.com/content/www/en-us/downloads/navigator/encrypt/3-8-0.html
     apt-get -y -q install rng-tools
-    if [ $RDRAND == false -a $HWRNG == false ]; then
+    if [ "$RDRAND" == false ] && [ "$HWRNG" == false ]; then
       sed -i -e '/^HRNGDEVICE=/d' /etc/default/rng-tools
       echo "HRNGDEVICE=/dev/urandom" >>/etc/default/rng-tools
     fi

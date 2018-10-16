@@ -17,31 +17,39 @@
 DATE=$(date +'%Y%m%d%H%M%S')
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
+    # shellcheck disable=SC2034
     OS=$(lsb_release -is)
     # 7.2.1511, 14.04
+    # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
+    # shellcheck disable=SC2034
     OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
+    # shellcheck disable=SC2034
     OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
-      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
@@ -67,6 +75,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
       sed -i -e '/^net.ipv6.conf.default.disable_ipv6/d' /etc/sysctl.conf
     fi
     echo "# Tuning for Hadoop installation." >/etc/sysctl.d/cloudera-ipv6.conf
+    # shellcheck disable=SC2129
     echo "# CLAIRVOYANT" >>/etc/sysctl.d/cloudera-ipv6.conf
     echo "net.ipv6.conf.all.disable_ipv6 = 1" >>/etc/sysctl.d/cloudera-ipv6.conf
     echo "net.ipv6.conf.default.disable_ipv6 = 1" >>/etc/sysctl.d/cloudera-ipv6.conf
@@ -76,7 +85,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     if [ "$OSREL" == 7 ]; then
       dracut -f
     elif [ "$OSREL" == 6 ]; then
-      cp -p /etc/hosts /etc/hosts.${DATE}
+      cp -p /etc/hosts /etc/hosts."${DATE}"
       sed -i -e 's/^[[:space:]]*::/#::/' /etc/hosts
     fi
   else
@@ -96,7 +105,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
 #  if [ "$OSREL" == 7 ]; then
 #    echo "** kernel module method"
 #    echo "** Disabling IPv6 kernel module..."
-#    cp -p /etc/default/grub /etc/default/grub.${DATE}
+#    cp -p /etc/default/grub /etc/default/grub."${DATE}"
 #    # Alternatively use "ipv6.disable_ipv6=1".
 #    if grep -q ipv6.disable /etc/default/grub; then
 #      sed -i -e '/^GRUB_CMDLINE_LINUX=/s|ipv6.disable=.|ipv6.disable=1|' /etc/default/grub
@@ -142,6 +151,7 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   #  sed -i -e '/^net.ipv6.conf.lo.disable_ipv6/d' /etc/sysctl.conf
   #fi
   echo "# Tuning for Hadoop installation." >/etc/sysctl.d/cloudera-ipv6.conf
+  # shellcheck disable=SC2129
   echo "# CLAIRVOYANT" >>/etc/sysctl.d/cloudera-ipv6.conf
   echo "net.ipv6.conf.all.disable_ipv6 = 1" >>/etc/sysctl.d/cloudera-ipv6.conf
   echo "net.ipv6.conf.default.disable_ipv6 = 1" >>/etc/sysctl.d/cloudera-ipv6.conf
@@ -162,7 +172,7 @@ exit 0
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if rpm -q postfix >/dev/null; then
     echo "** Disabling IPv6 in Postfix..."
-    cp -p /etc/postfix/main.cf /etc/postfix/main.cf.${DATE}
+    cp -p /etc/postfix/main.cf /etc/postfix/main.cf."${DATE}"
 #mja needs work : assumes 127.0.0.1
     postconf inet_interfaces
     postconf -e inet_interfaces=127.0.0.1
@@ -173,7 +183,7 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
 fi
 
 echo "** Disabling IPv6 in /etc/ssh/sshd_config..."
-cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config.${DATE}
+cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config."${DATE}"
 sed -e '/# CLAIRVOYANT$/d' \
     -e '/^AddressFamily /d' \
     -e '/^ListenAddress /d' \
@@ -189,7 +199,7 @@ service ssh restart
 
 if [ -f /etc/netconfig ]; then
   echo "** Disabling IPv6 in netconfig..."
-  cp -p /etc/netconfig /etc/netconfig.${DATE}
+  cp -p /etc/netconfig /etc/netconfig."${DATE}"
   sed -e '/inet6/d' -i /etc/netconfig
 fi
 

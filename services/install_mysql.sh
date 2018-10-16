@@ -15,43 +15,51 @@
 # Copyright Clairvoyant 2016
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    # shellcheck disable=SC2034
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    # shellcheck disable=SC2034
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # shellcheck disable=SC2034
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    # shellcheck disable=SC2034
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
-#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 echo "Installing MySQL server..."
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
-  if [ $OSREL == 6 ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+  if [ "$OSREL" == 6 ]; then
     yum -y -e1 -d1 install mysql-server
     mkdir -m 0755 /etc/my.cnf.d
   else
@@ -114,7 +122,7 @@ EOF
 # CLAIRVOYANT
 [mysqld]
 # replication config START
-#server-id=$(printf "%d\n" 0x`hostid`)
+#server-id=$(printf '%d\n' "0x$(hostid)")
 #log-bin=mysql-bin
 #relay-log=mysql-relay-bin
 #expire_logs_days=10
@@ -130,7 +138,7 @@ EOF
     install -m 0644 -o root -g root /tmp/director.cnf /etc/my.cnf.d/cloudera.cnf
   fi
 
-  if [ $OSREL == 6 ]; then
+  if [ "$OSREL" == 6 ]; then
     service mysql start
     chkconfig mysql on
   else
@@ -138,9 +146,9 @@ EOF
     chkconfig mariadb on
   fi
 
-  _PASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+  _PASS=$(apg -a 1 -M NCL -m 20 -x 20 -n 1)
   if [ -z "$_PASS" ]; then
-    _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+    _PASS=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
   fi
   echo "****************************************"
   echo "****************************************"
@@ -161,7 +169,7 @@ n
 y
 y
 EOF
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   :
 fi
 

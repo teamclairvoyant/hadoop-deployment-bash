@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2015
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Copying Keytrustee TLS certs and keys..."
 if [ ! -d /var/lib/keytrustee/.keytrustee/.ssl/ ]; then

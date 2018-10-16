@@ -14,19 +14,18 @@
 #
 # Copyright Clairvoyant 2017
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
-_KRBSERVER=`hostname -f`
+_KRBSERVER=$(hostname -f)
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-DATE=`date '+%Y%m%d%H%M%S'`
+DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
-print_help () {
+print_help() {
   echo "Usage:  $1 --realm <realm> --cm_principal <princ>"
 #  echo "Usage:  $1 --realm <realm> [--kdc_password <password>] --cm_principal <princ> [--cm_principal_password <password>]"
   echo ""
@@ -43,33 +42,41 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+check_root() {
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
   fi
 }
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    # shellcheck disable=SC2034
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    # shellcheck disable=SC2034
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # shellcheck disable=SC2034
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    # shellcheck disable=SC2034
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
@@ -94,8 +101,8 @@ while [[ $1 = -* ]]; do
   case $1 in
     -r|--realm)
       shift
-      _REALM_UPPER=`echo $1 | tr '[:lower:]' '[:upper:]'`
-      _REALM_LOWER=`echo $1 | tr '[:upper:]' '[:lower:]'`
+      _REALM_UPPER=$(echo "$1" | tr '[:lower:]' '[:upper:]')
+      _REALM_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
       ;;
 #    -k|--kdc_password)
 #      shift
@@ -110,47 +117,47 @@ while [[ $1 = -* ]]; do
 #      _CM_PRINCIPAL_PASSWORD=$1
 #      ;;
     -h|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       echo "Install MIT Kerberos Key Distribution Center."
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
 done
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 # Check to see if we have the required parameters.
-if [ -z "$_REALM_UPPER" -o -z "$_CM_PRINCIPAL" ]; then print_help "$(basename $0)"; fi
-#if [ -z "$_REALM_UPPER" -o -z "$_KDC_PASSWORD" -o -z "$_CM_PRINCIPAL" -o -z "$_CM_PRINCIPAL_PASSWORD" ]; then print_help "$(basename $0)"; fi
+if [ -z "$_REALM_UPPER" ] || [ -z "$_CM_PRINCIPAL" ]; then print_help "$(basename "$0")"; fi
+#if [ -z "$_REALM_UPPER" ] || [ -z "$_KDC_PASSWORD" ] || [ -z "$_CM_PRINCIPAL" ] || [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then print_help "$(basename $0)"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
 
 # main
 echo "Installing MIT KDC..."
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   yum -y -e1 -d1 install krb5-server krb5-workstation
 
   echo "** Writing configs..."
   if [ ! -f /var/kerberos/krb5kdc/kdc.conf-orig ]; then
     cp -p /var/kerberos/krb5kdc/kdc.conf /var/kerberos/krb5kdc/kdc.conf-orig
   else
-    cp -p /var/kerberos/krb5kdc/kdc.conf /var/kerberos/krb5kdc/kdc.conf.${DATE}
+    cp -p /var/kerberos/krb5kdc/kdc.conf /var/kerberos/krb5kdc/kdc.conf."${DATE}"
   fi
   chown root:root /var/kerberos/krb5kdc/kdc.conf
   chmod 0600 /var/kerberos/krb5kdc/kdc.conf
@@ -180,7 +187,7 @@ EOF
   if [ ! -f /var/kerberos/krb5kdc/kadm5.acl-orig ]; then
     cp -p /var/kerberos/krb5kdc/kadm5.acl /var/kerberos/krb5kdc/kadm5.acl-orig
   else
-    cp -p /var/kerberos/krb5kdc/kadm5.acl /var/kerberos/krb5kdc/kadm5.acl.${DATE}
+    cp -p /var/kerberos/krb5kdc/kadm5.acl /var/kerberos/krb5kdc/kadm5.acl."${DATE}"
   fi
   chown root:root /var/kerberos/krb5kdc/kadm5.acl
   chmod 0600 /var/kerberos/krb5kdc/kadm5.acl
@@ -214,8 +221,9 @@ EOF
   if [ ! -f /etc/krb5.conf-orig ]; then
     cp -p /etc/krb5.conf /etc/krb5.conf-orig
   else
-    cp -p /etc/krb5.conf /etc/krb5.conf.${DATE}
+    cp -p /etc/krb5.conf /etc/krb5.conf."${DATE}"
   fi
+  # shellcheck disable=SC2174
   mkdir -p -m 0755 /etc/krb5.conf.d/
   cat <<EOF >/etc/krb5.conf
 # Configuration snippets may be placed in this directory as well
@@ -254,9 +262,9 @@ $_REALM_LOWER = $_REALM_UPPER
 EOF
 
   echo "** Generating initial KDC database ..."
-  _KDC_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null`
+  _KDC_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_KDC_PASSWORD" ]; then
-    _KDC_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+    _KDC_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
   fi
   echo "****************************************"
   echo "****************************************"
@@ -269,9 +277,9 @@ EOF
   kdb5_util -P "$_KDC_PASSWORD" create -s >/dev/null
 
   echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
-  _CM_PRINCIPAL_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null`
+  _CM_PRINCIPAL_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
-    _CM_PRINCIPAL_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+    _CM_PRINCIPAL_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
   fi
   echo "****************************************"
   echo "****************************************"
@@ -291,7 +299,7 @@ EOF
   chkconfig krb5kdc on
   service kadmin start
   chkconfig kadmin on
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get -y -q install krb5-admin-server krb5-kdc wamerican
 
@@ -299,7 +307,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   if [ ! -f /etc/krb5kdc/kdc.conf-orig ]; then
     cp -p /etc/krb5kdc/kdc.conf /etc/krb5kdc/kdc.conf-orig
   else
-    cp -p /etc/krb5kdc/kdc.conf /etc/krb5kdc/kdc.conf.${DATE}
+    cp -p /etc/krb5kdc/kdc.conf /etc/krb5kdc/kdc.conf."${DATE}"
   fi
   chown root:root /etc/krb5kdc/kdc.conf
   chmod 0600 /etc/krb5kdc/kdc.conf
@@ -329,7 +337,7 @@ EOF
   if [ ! -f /etc/krb5kdc/kadm5.acl-orig ]; then
     cp -p /etc/krb5kdc/kadm5.acl /etc/krb5kdc/kadm5.acl-orig
   else
-    cp -p /etc/krb5kdc/kadm5.acl /etc/krb5kdc/kadm5.acl.${DATE}
+    cp -p /etc/krb5kdc/kadm5.acl /etc/krb5kdc/kadm5.acl."${DATE}"
   fi
   chown root:root /etc/krb5kdc/kadm5.acl
   chmod 0600 /etc/krb5kdc/kadm5.acl
@@ -363,8 +371,9 @@ EOF
   if [ ! -f /etc/krb5.conf-orig ]; then
     cp -p /etc/krb5.conf /etc/krb5.conf-orig
   else
-    cp -p /etc/krb5.conf /etc/krb5.conf.${DATE}
+    cp -p /etc/krb5.conf /etc/krb5.conf."${DATE}"
   fi
+  # shellcheck disable=SC2174
   mkdir -p -m 0755 /etc/krb5.conf.d/
   cat <<EOF >/etc/krb5.conf
 # Configuration snippets may be placed in this directory as well
@@ -403,9 +412,9 @@ $_REALM_LOWER = $_REALM_UPPER
 EOF
 
   echo "** Generating initial KDC database ..."
-  _KDC_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null`
+  _KDC_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_KDC_PASSWORD" ]; then
-    _KDC_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+    _KDC_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
   fi
   echo "****************************************"
   echo "****************************************"
@@ -418,9 +427,9 @@ EOF
   kdb5_util -P "$_KDC_PASSWORD" create -s >/dev/null
 
   echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
-  _CM_PRINCIPAL_PASSWORD=`apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null`
+  _CM_PRINCIPAL_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
-    _CM_PRINCIPAL_PASSWORD=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+    _CM_PRINCIPAL_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
   fi
   echo "****************************************"
   echo "****************************************"

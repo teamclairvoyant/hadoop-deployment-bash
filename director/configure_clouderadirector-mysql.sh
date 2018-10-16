@@ -14,7 +14,7 @@
 #
 # Copyright Clairvoyant 2018
 #
-if [ $DEBUG ]; then set -x; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -23,7 +23,7 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 MYSQL_TLS=no
 
 # Function to print the help screen.
-print_help () {
+print_help() {
   echo "Usage:  $1 --host <hostname> --user <username> --password <password> [--tls]"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
@@ -32,7 +32,7 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
+check_root() {
   if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
@@ -40,25 +40,33 @@ check_root () {
 }
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
+    # shellcheck disable=SC2034
     OS=$(lsb_release -is)
     # 7.2.1511, 14.04
+    # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
+    # shellcheck disable=SC2034
     OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
+    # shellcheck disable=SC2034
     OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
-      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
@@ -128,6 +136,7 @@ fi
 
 # main
 if [ "$MYSQL_TLS" == "yes" ]; then
+  # shellcheck disable=SC2016
   STRING='lp.database.url: jdbc:mysql://${lp.database.host}:${lp.database.port}/${lp.database.name}?verifyServerCertificate=true&useSSL=true&requireSSL=true'
 else
   STRING=''

@@ -15,7 +15,7 @@
 # Copyright Clairvoyant 2018
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Copying Kudu TLS certs and keys..."
 install -m 0444 -o kudu -g kudu /opt/cloudera/security/x509/localhost.pem /opt/cloudera/security/x509/kudu.crt

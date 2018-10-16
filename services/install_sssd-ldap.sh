@@ -14,19 +14,17 @@
 #
 # Copyright Clairvoyant 2016
 #
-if [ $DEBUG ]; then set -x; fi
-if [ $DEBUG ]; then ECHO=echo; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-YUMOPTS="-y -e1 -d1"
-DATE=`date '+%Y%m%d%H%M%S'`
+DATE=$(date '+%Y%m%d%H%M%S')
 _TLS=no
 
 # Function to print the help screen.
-print_help () {
+print_help() {
   echo "Authenticate and indentify via LDAP."
   echo ""
   echo "Usage:  $1 --ldapserver <host> --suffix <search base>"
@@ -42,33 +40,41 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+check_root() {
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
   fi
 }
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    # shellcheck disable=SC2034
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    # shellcheck disable=SC2034
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # shellcheck disable=SC2034
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    # shellcheck disable=SC2034
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
@@ -103,42 +109,42 @@ while [[ $1 = -* ]]; do
       _TLS=yes
       ;;
     -h|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
       echo "Intall and configure SSSD to use the LDAP identity and authN providers."
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
 done
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
-#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 # Check to see if we have the required parameters.
-if [ -z "$_LDAPSERVER" -o -z "$_LDAPSUFFIX" ]; then print_help "$(basename $0)"; fi
+if [ -z "$_LDAPSERVER" ] || [ -z "$_LDAPSUFFIX" ]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 check_root
 
 # main
 echo "Installing SSSD for LDAP..."
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   echo "** Installing software."
-  yum $YUMOPTS install sssd-ldap oddjob oddjob-mkhomedir
+  yum -y -e1 -d1 install sssd-ldap oddjob oddjob-mkhomedir
 
   echo "** Writing configs..."
   if [ "$_TLS" == yes ]; then
@@ -146,7 +152,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   else
     _LDAPURI="ldap://${_LDAPSERVER}/"
   fi
-  cp -p /etc/sssd/sssd.conf /etc/sssd/sssd.conf.${DATE}
+  cp -p /etc/sssd/sssd.conf /etc/sssd/sssd.conf."${DATE}"
   cat <<EOF >/etc/sssd/sssd.conf
 [sssd]
 domains = default
@@ -186,7 +192,7 @@ EOF
     if [ ! -f /etc/nscd.conf-orig ]; then
       cp -p /etc/nscd.conf /etc/nscd.conf-orig
     else
-      cp -p /etc/nscd.conf /etc/nscd.conf.${DATE}
+      cp -p /etc/nscd.conf /etc/nscd.conf."${DATE}"
     fi
     sed -e '/enable-cache[[:blank:]]*passwd/s|yes|no|' \
         -e '/enable-cache[[:blank:]]*group/s|yes|no|' \
@@ -197,7 +203,7 @@ EOF
       service sssd restart
     fi
   fi
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   :
 fi
 

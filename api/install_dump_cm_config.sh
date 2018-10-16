@@ -14,7 +14,7 @@
 #
 # Copyright Clairvoyant 2015
 #
-if [ $DEBUG ]; then set -x; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -29,7 +29,7 @@ CMPORT=7180
 API="v5"
 
 # Function to print the help screen.
-print_help () {
+print_help() {
   echo "Usage:     $1 [-u <admin username>] [-p <admin password>] [-H <host>] [-P <port>]"
   echo "           $1 [-h|--help]"
   echo "           $1 [-v|--version]"
@@ -40,7 +40,7 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
+check_root() {
   if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
@@ -48,25 +48,33 @@ check_root () {
 }
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    # shellcheck disable=SC2034
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    # shellcheck disable=SC2034
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # shellcheck disable=SC2034
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    # shellcheck disable=SC2034
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
@@ -126,11 +134,11 @@ if [[ -z "$ADMINUSER" || -z "$ADMINPASS" || -z "$CMHOST" || -z "$CMPORT" ]]; the
 check_root
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -143,12 +151,12 @@ else
 fi
 BASEURL=${CMSCHEME}://${CMHOST}:${CMPORT}
 
-if ! (exec 6<>/dev/tcp/${CMHOST}/${CMPORT}); then
+if ! (exec 6<>"/dev/tcp/${CMHOST}/${CMPORT}"); then
   echo "ERROR: cloudera-scm-server not listening on host: ${CMHOST} port: ${CMPORT}..."
   exit 10
 fi
 
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
   PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
   if ! rpm -q apg >/dev/null; then
@@ -158,7 +166,7 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if rpm -q apg >/dev/null; then
     export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'
   fi
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   # https://discourse.criticalengineering.org/t/howto-password-generation-in-the-gnu-linux-cli/10
   PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
   if ! dpkg -l apg >/dev/null; then
@@ -171,7 +179,7 @@ elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
   fi
 fi
 
-APIPASS=`eval $PWCMD`
+APIPASS=$(eval "$PWCMD")
 
 if curl -s $OPT -X GET -u "${ADMINUSER}:${ADMINPASS}" "${BASEURL}/api/${API}/users/${APIUSER}" | grep -q "does not exist"; then
   curl -s $OPT -X POST -u "${ADMINUSER}:${ADMINPASS}" -H "content-type:application/json" -d \
@@ -197,11 +205,11 @@ if curl -s $OPT -X GET -u "${ADMINUSER}:${ADMINPASS}" "${BASEURL}/api/${API}/use
       -e "/^APIPASS=/s|=.*|=${APIPASS}|" \
       -e "/^CMHOST=/s|=.*|=${CMHOST}|" \
       -e "/^CMPORT=/s|=.*|=${CMPORT}|" \
-      $(dirname $0)/dump_cm_config.sh >/usr/local/sbin/dump_cm_config.sh
+      "$(dirname "$0")/dump_cm_config.sh" >/usr/local/sbin/dump_cm_config.sh
   chown 0:0 /usr/local/sbin/dump_cm_config.sh
   chmod 700 /usr/local/sbin/dump_cm_config.sh
   rm -f /tmp/$$
-  crontab -l | egrep -v 'dump_cm_config.sh' >/tmp/$$
+  crontab -l | grep -Ev 'dump_cm_config.sh' >/tmp/$$
   echo '1 0 * * * /usr/local/sbin/dump_cm_config.sh >/var/log/cm_config.dump'>>/tmp/$$
   crontab /tmp/$$
   rm -f /tmp/$$

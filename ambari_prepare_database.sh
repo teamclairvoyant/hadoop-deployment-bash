@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2034,SC2086,SC1091
+# shellcheck disable=SC1091
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 #
 # Copyright Clairvoyant 2017
 #
-if [ $DEBUG ]; then set -x; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -26,7 +26,7 @@ PG_SCHEMA=ambarischema
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 
 # Function to print the help screen.
-print_help () {
+print_help() {
   echo "Usage:  $1 databaseType [options] databaseName databaseUser databasePassword"
   echo "        $1 [-H|--help]"
   echo "        $1 [-v|--version]"
@@ -43,7 +43,7 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
+check_root() {
   if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     echo "You must have root priviledges to run this program."
     exit 2
@@ -51,32 +51,40 @@ check_root () {
 }
 
 # Function to print and error message and exit.
-err_msg () {
+err_msg() {
   local CODE=$1
   echo "ERROR: Could not install required package. Exiting."
   exit "$CODE"
 }
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
+    # shellcheck disable=SC2034
     OS=$(lsb_release -is)
     # 7.2.1511, 14.04
+    # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
+    # shellcheck disable=SC2034
     OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
+    # shellcheck disable=SC2034
     OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
-      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
@@ -179,7 +187,7 @@ if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$ADMIN_USER" ] || [ -z "$ADMI
 check_root
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
@@ -266,5 +274,6 @@ if [ -f /etc/profile.d/java.sh ]; then
 elif [ -f /etc/profile.d/jdk.sh ]; then
   . /etc/profile.d/jdk.sh
 fi
+# shellcheck disable=SC2086
 ambari-server setup --java-home="$JAVA_HOME" $OPTS
 

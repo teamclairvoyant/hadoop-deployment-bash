@@ -34,5 +34,6 @@ fi
 BASEURL=$CMSCHEME://$CMHOST:$CMPORT
 API=v5
 
+# shellcheck disable=SC2086
 curl -s $OPT -u "${APIUSER}:${APIPASS}" $CURLDEBUG "${BASEURL}/api/${API}/cm/deployment?view=export_redacted"
 

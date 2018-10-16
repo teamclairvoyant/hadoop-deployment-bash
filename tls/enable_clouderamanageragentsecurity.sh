@@ -18,12 +18,13 @@
 # 1 - Whether to enable Level 3 agent authN to server. - optional
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 LEVEL3=$1
 if [ -n "$LEVEL3" ]; then
   echo "Configuring Cloudera Manager Agent for TLS level 3..."
   # https://www.cloudera.com/content/www/en-us/documentation/enterprise/latest/topics/cm_sg_config_tls_agent_auth.html
+  # shellcheck disable=SC1004
   sed -e '/^client_key_file/d' \
       -e '/^client_keypw_file/d' \
       -e '/^client_cert_file/d' \
@@ -39,6 +40,7 @@ else
 fi
 
 # https://www.cloudera.com/content/www/en-us/documentation/enterprise/latest/topics/cm_sg_config_tls_auth.html
+# shellcheck disable=SC1004
 sed -e '/^use_tls/s|=.*|=1|' \
     -e '/^verify_cert_file/d' \
     -e '/^verify_cert_dir/d' \
@@ -46,6 +48,7 @@ sed -e '/^use_tls/s|=.*|=1|' \
 verify_cert_dir=/opt/cloudera/security/CAcerts' \
     -i /etc/cloudera-scm-agent/config.ini
 
+## shellcheck disable=SC1004
 #sed -e '/^use_tls/s|=.*|=1|' \
 #    -e '/^verify_cert_file/d' \
 #    -e '/^verify_cert_dir/d' \

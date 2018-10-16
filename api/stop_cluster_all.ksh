@@ -17,7 +17,7 @@
 #
 # Copyright Clairvoyant 2016
 #
-if [ $DEBUG ]; then set -x; fi
+if [ -n "$DEBUG" ]; then set -x; fi
 #
 ##### START CONFIG ###################################################
 
@@ -31,7 +31,7 @@ CMPORT=7180
 CMSCHEME=http
 
 # Function to print the help screen.
-print_help () {
+print_help() {
   print "Usage:  $1 -u <username> -p <password> -H <host> [-P <port>]"
   print "        $1 [-h|--help]"
   print "        $1 [-v|--version]"
@@ -41,8 +41,8 @@ print_help () {
 }
 
 # Function to check for root priviledges.
-check_root () {
-  if [[ `/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null` -ne 0 ]]; then
+check_root() {
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
     print "You must have root priviledges to run this program."
     exit 2
   fi
@@ -50,15 +50,16 @@ check_root () {
 
 # If the variable DEBUG is set, then turn on tracing.
 # http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
-if [ $DEBUG ]; then
+if [ -n "$DEBUG" ]; then
   # This will turn on the ksh xtrace option for mainline code
   set -x
 
   # This will turn on the ksh xtrace option for all functions
+  # shellcheck disable=SC2034,SC2162
   typeset +f |
   while read F junk
   do
-    typeset -ft $F
+    typeset -ft "$F"
   done
   unset F junk
 fi
@@ -83,23 +84,23 @@ while [[ $1 = -* ]]; do
       CMPORT=$1
       ;;
     -h|--help)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
     -v|--version)
-      print "\tStop Cloudera Manager managed environment via the REST API"
+      print '\tStop Cloudera Manager managed environment via the REST API'
       exit 0
       ;;
     *)
-      print_help "$(basename $0)"
+      print_help "$(basename "$0")"
       ;;
   esac
   shift
 done
 
 # Check to see if we have no parameters.
-if [[ -z "$CMUSERNAME" || -z "$CMPASSWORD" || -z "$CMHOST" ]]; then print_help "$(basename $0)"; fi
+if [[ -z "$CMUSERNAME" || -z "$CMPASSWORD" || -z "$CMHOST" ]]; then print_help "$(basename "$0")"; fi
 
-if ! which jq >/dev/null; then
+if ! command -v jq >/dev/null; then
   echo "ERROR: the jq command is missing.  Please install it."
   exit 3
 fi
@@ -117,38 +118,38 @@ fi
 BASEURL=$CMSCHEME://$CMHOST:$CMPORT
 
 RETVAL=1
-API=`curl -s -u "${CMUSERNAME}:${CMPASSWORD}" $CURLDEBUG "${BASEURL}/api/version"`
+API=$(curl -s -u "${CMUSERNAME}:${CMPASSWORD}" "$CURLDEBUG" "${BASEURL}/api/version")
 RETVAL=$?
 # Loop until we make contact with the SCM server.
 until [ "$RETVAL" -eq 0 ]; do
   echo "** Sleeping 60 seconds..."
   sleep 60
-  API=`curl -s -u "${CMUSERNAME}:${CMPASSWORD}" $CURLDEBUG "${BASEURL}/api/version"`
+  API=$(curl -s -u "${CMUSERNAME}:${CMPASSWORD}" "$CURLDEBUG" "${BASEURL}/api/version")
   RETVAL=$?
 done
 
-start=`date '+%s'`
+start=$(date '+%s')
 
 echo "** Gathering list of clusters..."
-CLUSTERS=`curl -s -X GET -u "${CMUSERNAME}:${CMPASSWORD}" $CURLDEBUG \
-  ${BASEURL}/api/${API}/clusters | jq -r '.items[].name'`
+CLUSTERS=$(curl -s -X GET -u "${CMUSERNAME}:${CMPASSWORD}" "$CURLDEBUG" \
+  "${BASEURL}/api/${API}/clusters" | jq -r '.items[].name')
 
 for NAME in $CLUSTERS; do
   echo "** Entering Maintenence Mode for Cluster ${NAME}..."
-  curl -s -X POST -u "${CMUSERNAME}:${CMPASSWORD}" $CURLDEBUG \
+  curl -s -X POST -u "${CMUSERNAME}:${CMPASSWORD}" "$CURLDEBUG" \
     -H "content-type:application/json" \
-    ${BASEURL}/api/${API}/clusters/${NAME}/commands/enterMaintenanceMode >/dev/null
+    "${BASEURL}/api/${API}/clusters/${NAME}/commands/enterMaintenanceMode" >/dev/null
 
   echo -n "** Stopping Cluster ${NAME} "
-  curl -s -X POST -u "${CMUSERNAME}:${CMPASSWORD}" $CURLDEBUG \
+  curl -s -X POST -u "${CMUSERNAME}:${CMPASSWORD}" "$CURLDEBUG" \
     -H "content-type:application/json" \
-    ${BASEURL}/api/${API}/clusters/${NAME}/commands/stop >/dev/null
+    "${BASEURL}/api/${API}/clusters/${NAME}/commands/stop" >/dev/null
 
-  while ! curl -s -u "${CMUSERNAME}:${CMPASSWORD}" $CURLDEBUG \
-          ${BASEURL}/api/${API}/clusters/${NAME} \
+  while ! curl -s -u "${CMUSERNAME}:${CMPASSWORD}" "$CURLDEBUG" \
+          "${BASEURL}/api/${API}/clusters/${NAME}" \
           | jq -r '.entityStatus' | grep -q STOPPED ; do
-    now=`date '+%s'`
-    if [ $(($now - $start)) -gt $TIMEOUT ] ; then
+    now=$(date '+%s')
+    if [ $((now - start)) -gt $TIMEOUT ] ; then
       echo
       echo "ERROR: timed out after $TIMEOUT seconds"
       exit 1
@@ -160,9 +161,9 @@ for NAME in $CLUSTERS; do
 done
 
 echo "** Stopping Cloudera Management Services..."
-curl -s -X POST -u "${CMUSERNAME}:${CMPASSWORD}" $CURLDEBUG \
+curl -s -X POST -u "${CMUSERNAME}:${CMPASSWORD}" "$CURLDEBUG" \
   -H "content-type:application/json" \
-  ${BASEURL}/api/${API}/cm/service/commands/stop >/dev/null
+  "${BASEURL}/api/${API}/cm/service/commands/stop" >/dev/null
 echo "** Sleeping 60 seconds..."
 sleep 60
 

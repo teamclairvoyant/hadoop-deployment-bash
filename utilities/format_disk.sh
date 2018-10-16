@@ -19,35 +19,43 @@
 # 2 - Mountpoint number (ie 2 for /data/2) - required
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    # shellcheck disable=SC2034
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    # shellcheck disable=SC2034
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # shellcheck disable=SC2034
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    # shellcheck disable=SC2034
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -63,44 +71,44 @@ if [ -z "$NUM" ]; then
   echo "ERROR: Missing mountpoint argument (ie 1)."
   exit 1
 fi
-if [ ! -b /dev/${DISK} ]; then
+if [ ! -b "/dev/${DISK}" ]; then
   echo "ERROR: Disk device /dev/${DISK} does not exist."
   exit 2
 fi
 
-SIZE=`lsblk --all --bytes --list --output NAME,SIZE,TYPE /dev/${DISK} | awk '/disk$/{print $2}'`
+SIZE=$(lsblk --all --bytes --list --output NAME,SIZE,TYPE "/dev/${DISK}" | awk '/disk$/{print $2}')
 if [ "$SIZE" -ge 2199023255552 ]; then
   LABEL=gpt
 else
   LABEL=msdos
 fi
 
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   FS=xfs
   if ! rpm -q parted; then echo "Installing parted. Please wait...";yum -y -d1 -e1 install parted; fi
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   FS=ext4
   export DEBIAN_FRONTEND=noninteractive
   if ! dpkg -l parted >/dev/null; then echo "Installing parted. Please wait...";apt-get -y -q install parted; fi
 fi
 
-if [ ! -b /dev/${DISK}1 ]; then
-  if blkid /dev/${DISK} | grep -q '^.*'; then
+if [ -b /dev/"${DISK}" ] && [ ! -b /dev/"${DISK}"1 ]; then
+  if blkid /dev/"${DISK}" | grep -q '^.*'; then
     echo "WARNING: Data detected on bare disk.  Exiting."
     exit 4
   fi
   echo "Formatting disk /dev/${DISK}1 as ${FS} ..."
-  parted -s /dev/${DISK} mklabel $LABEL mkpart primary $FS 1 100%
+  parted -s /dev/"${DISK}" mklabel "$LABEL" mkpart primary "$FS" 1 100%
   sleep 2
-  mkfs -t $FS /dev/${DISK}1 && \
-  sed -i -e '/^\/dev\/${DISK}1/d' /etc/fstab && \
+  mkfs -t "$FS" /dev/"${DISK}"1 && \
+  sed -i -e "/^\\/dev\\/${DISK}1/d" /etc/fstab && \
   echo "/dev/${DISK}1 /data/${NUM} $FS defaults,noatime 1 2" >>/etc/fstab && \
-  mkdir -p /data/${NUM} && \
-  chattr +i /data/${NUM} && \
-  mount /data/${NUM}
+  mkdir -p /data/"${NUM}" && \
+  chattr +i /data/"${NUM}" && \
+  mount /data/"${NUM}"
   echo "Disk /dev/${DISK}1 mounted at /data/${NUM}"
   if [ "$FS" == ext4 ]; then
-    tune2fs -m 0 /dev/${DISK}1
+    tune2fs -m 0 /dev/"${DISK}"1
   fi
 else
   echo "WARNING: Existing partition detected on disk.  Exiting."

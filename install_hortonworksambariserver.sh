@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2086,SC1090,SC1091
+# shellcheck disable=SC1090,SC1091
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,31 +22,39 @@
 AMBVERSION=2.5.2.0
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
+    # shellcheck disable=SC2034
     OS=$(lsb_release -is)
     # 7.2.1511, 14.04
+    # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
+    # shellcheck disable=SC2034
     OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
+    # shellcheck disable=SC2034
     OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=$(rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n")
-      OSREL=$(rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}')
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
 
 _install_oracle_jdbc() {
-  pushd $(dirname $0)
+  cd "$(dirname "$0")" || exit
   if [ ! -f ojdbc6.jar ] && [ ! -f ojdbc8.jar ]; then
     echo "** NOTICE: ojdbc6.jar or ojdbc8.jar not found.  Please manually download from"
     echo "   http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html"
@@ -71,11 +79,10 @@ _install_oracle_jdbc() {
     ls -l /usr/share/java/ojdbc8.jar
   fi
   ls -l /usr/share/java/oracle-connector-java.jar
-  popd
 }
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
@@ -91,12 +98,12 @@ if [ -z "$INSTALLDB" ]; then
 fi
 AMBVERSION=${2:-$AMBVERSION}
 
-PROXY=$(egrep -h '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
+PROXY=$(grep -Eh '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
 eval "$PROXY"
 export http_proxy
 export https_proxy
 if [ -z "$http_proxy" ]; then
-  PROXY=$(egrep -l 'http_proxy=|https_proxy=' /etc/profile.d/*)
+  PROXY=$(grep -El 'http_proxy=|https_proxy=' /etc/profile.d/*)
   if [ -n "$PROXY" ]; then
     . "$PROXY"
   fi
@@ -115,7 +122,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   fi
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/ambari.repo ]; then
-    wget -q http://public-repo-1.hortonworks.com/ambari/${OS_LOWER}${OSREL}/2.x/updates/${AMBVERSION}/ambari.repo -O /etc/yum.repos.d/ambari.repo
+    wget -q "http://public-repo-1.hortonworks.com/ambari/${OS_LOWER}${OSREL}/2.x/updates/${AMBVERSION}/ambari.repo" -O /etc/yum.repos.d/ambari.repo
     chown root:root /etc/yum.repos.d/ambari.repo
     chmod 0644 /etc/yum.repos.d/ambari.repo
   fi
@@ -159,7 +166,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/apt/sources.list.d/ambari.list ]; then
-    wget -q http://public-repo-1.hortonworks.com/ambari/${OS_LOWER}${OSREL}/2.x/updates/${AMBVERSION}/ambari.list -O /etc/apt/sources.list.d/ambari.list
+    wget -q "http://public-repo-1.hortonworks.com/ambari/${OS_LOWER}${OSREL}/2.x/updates/${AMBVERSION}/ambari.list" -O /etc/apt/sources.list.d/ambari.list
     chown root:root /etc/apt/sources.list.d/ambari.list
     chmod 0644 /etc/apt/sources.list.d/ambari.list
     apt-key adv --recv-keys --keyserver keyserver.ubuntu.com B9733A7A07513CAD

@@ -15,44 +15,52 @@
 # Copyright Clairvoyant 2017
 
 # Function to discover basic OS details.
-discover_os () {
+discover_os() {
   if command -v lsb_release >/dev/null; then
     # CentOS, Ubuntu
-    OS=`lsb_release -is`
+    # shellcheck disable=SC2034
+    OS=$(lsb_release -is)
     # 7.2.1511, 14.04
-    OSVER=`lsb_release -rs`
+    # shellcheck disable=SC2034
+    OSVER=$(lsb_release -rs)
     # 7, 14
-    OSREL=`echo $OSVER | awk -F. '{print $1}'`
+    # shellcheck disable=SC2034
+    OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     # trusty, wheezy, Final
-    OSNAME=`lsb_release -cs`
+    # shellcheck disable=SC2034
+    OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
       if [ -f /etc/centos-release ]; then
+        # shellcheck disable=SC2034
         OS=CentOS
       else
+        # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
       fi
-      OSVER=`rpm -qf /etc/redhat-release --qf="%{VERSION}.%{RELEASE}\n"`
-      OSREL=`rpm -qf /etc/redhat-release --qf="%{VERSION}\n" | awk -F. '{print $1}'`
+      # shellcheck disable=SC2034
+      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      # shellcheck disable=SC2034
+      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
 
 echo "********************************************************************************"
-echo "*** $(basename $0)"
+echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS ]; then
-#if [ "$OS" != RedHatEnterpriseServer -a "$OS" != CentOS -a "$OS" != Debian -a "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 echo "Installing PostgreSQL..."
-DATE=`date '+%Y%m%d%H%M%S'`
+DATE=$(date '+%Y%m%d%H%M%S')
 
-if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   yum -y -e1 -d1 install postgresql-server
 
   postgresql-setup initdb
@@ -60,8 +68,9 @@ if [ "$OS" == RedHatEnterpriseServer -o "$OS" == CentOS ]; then
   if [ ! -f /var/lib/pgsql/data/pg_hba.conf-orig ]; then
     cp -p /var/lib/pgsql/data/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf-orig
   else
-    cp -p /var/lib/pgsql/data/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf.${DATE}
+    cp -p /var/lib/pgsql/data/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf."${DATE}"
   fi
+  # shellcheck disable=SC1004
   sed -e '/# CLAIRVOYANT$/d' \
       -e '/^host\s*all\s*all\s*127.0.0.1\/32\s*\sident$/i\
 host    all             all             0.0.0.0/0               md5 # CLAIRVOYANT' \
@@ -72,7 +81,7 @@ host    all             all             0.0.0.0/0               md5 # CLAIRVOYAN
   if [ ! -f /var/lib/pgsql/data/postgresql.conf-orig ]; then
     cp -p /var/lib/pgsql/data/postgresql.conf /var/lib/pgsql/data/postgresql.conf-orig
   else
-    cp -p /var/lib/pgsql/data/postgresql.conf /var/lib/pgsql/data/postgresql.conf.${DATE}
+    cp -p /var/lib/pgsql/data/postgresql.conf /var/lib/pgsql/data/postgresql.conf."${DATE}"
   fi
   sed -e '/# CLAIRVOYANT$/d' \
       -e '/^max_connections/d' \
@@ -98,9 +107,9 @@ EOF
   service postgresql restart
   chkconfig postgresql on
 
-  _PASS=`apg -a 1 -M NCL -m 20 -x 20 -n 1`
+  _PASS=$(apg -a 1 -M NCL -m 20 -x 20 -n 1)
   if [ -z "$_PASS" ]; then
-    _PASS=`< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo`
+    _PASS=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
   fi
   echo "****************************************"
   echo "****************************************"
@@ -111,13 +120,14 @@ EOF
   echo "****************************************"
   echo "****************************************"
 
+  # shellcheck disable=SC1117
   su - postgres -c 'psql' <<EOF
 \password
 $_PASS
 $_PASS
 \q
 EOF
-elif [ "$OS" == Debian -o "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   :
 fi
 
