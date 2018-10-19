@@ -120,6 +120,11 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
     wget -q "https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
+    RETVAL=$?
+    if [ "$RETVAL" -ne 0 ]; then
+      echo "** ERROR: Could not download https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo"
+      exit 4
+    fi
     chown root:root /etc/yum.repos.d/cloudera-manager.repo
     chmod 0644 /etc/yum.repos.d/cloudera-manager.repo
     if [ -n "$SCMVERSION" ]; then
@@ -173,6 +178,11 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
       OS_LOWER=ubuntu
     fi
     wget -q "https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list" -O /etc/apt/sources.list.d/cloudera-manager.list
+    RETVAL=$?
+    if [ "$RETVAL" -ne 0 ]; then
+      echo "** ERROR: Could not download https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list"
+      exit 5
+    fi
     chown root:root /etc/apt/sources.list.d/cloudera-manager.list
     chmod 0644 /etc/apt/sources.list.d/cloudera-manager.list
     if [ -n "$SCMVERSION" ]; then
