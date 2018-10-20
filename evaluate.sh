@@ -464,6 +464,9 @@ else
   HOST=$(python -c 'import socket; print socket.getfqdn()')
   ADDR=$(python -c 'import socket; print socket.gethostbyname(socket.getfqdn())')
 fi
+# How do you know if the proper DNS tools were used (dig) vs the Python method
+# (which I am told does things a little differently)?
+# DNS tools provide the trailing dot on the forward result...
 echo "** DNS forward is: $HOST"
 echo "** DNS reverse is: $ADDR"
 if [ "$IP" == "$ADDR" ]; then
