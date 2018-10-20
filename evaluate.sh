@@ -113,6 +113,8 @@ for _NIC in !(lo); do
   # shellcheck disable=SC2086
   echo "$_IP" | awk '/mtu/{print "'${_NIC}' : MTU:",$5}'
   ethtool "$_NIC" 2>/dev/null | grep -E 'Speed:|Duplex:|Port:' | sed "s|^[[:space:]]*|${_NIC} : |g"
+  #cat "/sys/class/net/${_NIC}/speed"
+  #cat "/sys/class/net/${_NIC}/duplex"
 done
 shopt -u extglob
 # shellcheck disable=SC2164
@@ -178,10 +180,10 @@ echo "****************************************"
 echo "*** swap"
 echo "** running config:"
 swapon -s
-echo
+echo "--"
 if grep -q swap /etc/fstab; then
   BDEVICE=""
-  SWAPLINES=$(awk '/swap/{print $1}' /etc/fstab)
+  SWAPLINES=$(awk '$3~/swap/{print $1}' /etc/fstab)
   # what if fstab has more than one swap entry?
   for SWAPLINE in $SWAPLINES; do
     # what if fstab is ^UUID= ?
@@ -453,20 +455,32 @@ echo "*** DNS"
 IP=$(ip -4 a | awk '/inet/{print $2}' | grep -v 127.0.0.1 | sed -e 's|/[0-9].*||')
 echo "** system IP is: $IP"
 echo "** system hostname is: $(hostname)"
-if command -v host; then
-  DNS=$(host "$(hostname)")
-  echo "** forward:"
-  echo "$DNS"
-  echo "** reverse:"
-  host "$(echo "$DNS" | awk '{print $NF}')"
+if command -v dig >/dev/null 2>&1; then
+#  IP=$(dig "$(hostname)" +short)
+  HOST=$(dig -x "$IP" +short)
+  ADDR=$(dig "$HOST" +short)
 else
-  echo "Not DNS."
-  #DNS=$(python -c 'import socket; print socket.getfqdn(), "has address", socket.gethostbyname(socket.getfqdn())')
-  echo "** forward:"
-  python -c 'import socket; print socket.getfqdn()'
-  echo "** reverse:"
-  python -c 'import socket; print socket.gethostbyname(socket.getfqdn())'
+#  IP=$(python -c "import socket; print socket.gethostbyname('$(hostname)')")
+  HOST=$(python -c 'import socket; print socket.getfqdn()')
+  ADDR=$(python -c 'import socket; print socket.gethostbyname(socket.getfqdn())')
 fi
+# How do you know if the proper DNS tools were used (dig) vs the Python method
+# (which I am told does things a little differently)?
+# DNS tools provide the trailing dot on the forward result...
+echo "** DNS forward is: $HOST"
+echo "** DNS reverse is: $ADDR"
+if [ "$IP" == "$ADDR" ]; then
+  echo "DNS does match."
+else
+  echo "DNS does not match."
+fi
+echo "** /etc/hosts:"
+HOSTCOUNT=$(grep -cvE 'localhost|^127.0.0.1|^::1|^#|^[[:space:]]*#|^$' /etc/hosts)
+echo "There are $HOSTCOUNT non-loopback entries in /etc/hosts."
+echo "** /etc/nsswitch.conf hosts entry:"
+grep ^hosts /etc/nsswitch.conf
+echo "** /etc/resolv.conf:"
+cat /etc/resolv.conf
 
 echo "****************************************"
 echo "*** Cloudera Software"

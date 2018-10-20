@@ -83,6 +83,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     chmod 0644 /etc/sysctl.d/cloudera-ipv6.conf
     sysctl -p /etc/sysctl.d/cloudera-ipv6.conf
     if [ "$OSREL" == 7 ]; then
+      echo "*** Running dracut..."
       dracut -f
     elif [ "$OSREL" == 6 ]; then
       cp -p /etc/hosts /etc/hosts."${DATE}"

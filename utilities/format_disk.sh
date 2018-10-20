@@ -92,26 +92,34 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   if ! dpkg -l parted >/dev/null; then echo "Installing parted. Please wait...";apt-get -y -q install parted; fi
 fi
 
-if [ -b /dev/"${DISK}" ] && [ ! -b /dev/"${DISK}"1 ]; then
-  if blkid /dev/"${DISK}" | grep -q '^.*'; then
+if [ ! -b "/dev/${DISK}1" ] && [ ! -b "/dev/${DISK}p1" ]; then
+  if blkid "/dev/${DISK}" | grep -q '^.*'; then
     echo "WARNING: Data detected on bare disk.  Exiting."
     exit 4
   fi
-  echo "Formatting disk /dev/${DISK}1 as ${FS} ..."
-  parted -s /dev/"${DISK}" mklabel "$LABEL" mkpart primary "$FS" 1 100%
+  echo "Formatting disk /dev/${DISK} as ${FS} ..."
+  parted -s "/dev/${DISK}" mklabel "$LABEL" mkpart primary "$FS" 1 100%
   sleep 2
-  mkfs -t "$FS" /dev/"${DISK}"1 && \
-  sed -i -e "/^\\/dev\\/${DISK}1/d" /etc/fstab && \
-  echo "/dev/${DISK}1 /data/${NUM} $FS defaults,noatime 1 2" >>/etc/fstab && \
-  mkdir -p /data/"${NUM}" && \
-  chattr +i /data/"${NUM}" && \
-  mount /data/"${NUM}"
-  echo "Disk /dev/${DISK}1 mounted at /data/${NUM}"
+  if [ -b "/dev/${DISK}1" ]; then
+    PART="1"
+  elif [ -b "/dev/${DISK}p1" ]; then
+    PART="p1"
+  else
+    echo "WARNING: Cannot find partition for /dev/${DISK} .  Exiting."
+    exit 5
+  fi
+  mkfs -t "$FS" "/dev/${DISK}${PART}" && \
+  sed -i -e "/^\\/dev\\/${DISK}${PART}/d" /etc/fstab && \
+  echo "/dev/${DISK}${PART} /data/${NUM} $FS defaults,noatime 1 2" >>/etc/fstab && \
+  mkdir -p "/data/${NUM}" && \
+  chattr +i "/data/${NUM}" && \
+  mount "/data/${NUM}"
+  echo "Disk /dev/${DISK}${PART} mounted at /data/${NUM}"
   if [ "$FS" == ext4 ]; then
-    tune2fs -m 0 /dev/"${DISK}"1
+    tune2fs -m 0 "/dev/${DISK}${PART}"
   fi
 else
   echo "WARNING: Existing partition detected on disk.  Exiting."
-  exit 5
+  exit 6
 fi
 

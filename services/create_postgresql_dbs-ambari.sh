@@ -162,20 +162,20 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
 fi
 METASTOREDB_PASSWORD=$(eval "$PWCMD")
 OOZIEDB_PASSWORD=$(eval "$PWCMD")
-HUEDB_PASSWORD=$(eval "$PWCMD")
+#HUEDB_PASSWORD=$(eval "$PWCMD")
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
 echo "*** SAVE THESE PASSWORDS"
 $ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE hive LOGIN ENCRYPTED PASSWORD '$METASTOREDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
-$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE metastore WITH OWNER = hive ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE hive WITH OWNER = hive ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "hive : $METASTOREDB_PASSWORD"
 $ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE oozie LOGIN ENCRYPTED PASSWORD '$OOZIEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
 $ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE oozie WITH OWNER = oozie ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
 echo "oozie : $OOZIEDB_PASSWORD"
-$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE hue LOGIN ENCRYPTED PASSWORD '$HUEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
-$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE hue WITH OWNER = hue ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
-echo "hue : $HUEDB_PASSWORD"
+#$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE ROLE hue LOGIN ENCRYPTED PASSWORD '$HUEDB_PASSWORD' NOSUPERUSER INHERIT CREATEDB NOCREATEROLE;"
+#$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" -c "CREATE DATABASE hue WITH OWNER = hue ENCODING = 'UTF8' TABLESPACE = pg_default LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8' CONNECTION LIMIT = -1;"
+#echo "hue : $HUEDB_PASSWORD"
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"

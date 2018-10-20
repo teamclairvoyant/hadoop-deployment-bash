@@ -123,6 +123,11 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/ambari.repo ]; then
     wget -q "http://public-repo-1.hortonworks.com/ambari/${OS_LOWER}${OSREL}/2.x/updates/${AMBVERSION}/ambari.repo" -O /etc/yum.repos.d/ambari.repo
+    RETVAL=$?
+    if [ "$RETVAL" -ne 0 ]; then
+      echo "** ERROR: Could not download http://public-repo-1.hortonworks.com/ambari/${OS_LOWER}${OSREL}/2.x/updates/${AMBVERSION}/ambari.repo"
+      exit 4
+    fi
     chown root:root /etc/yum.repos.d/ambari.repo
     chmod 0644 /etc/yum.repos.d/ambari.repo
   fi
@@ -158,7 +163,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     echo "${PWD}/ambari_prepare_database.sh"
     echo "** and then:"
     echo "service ambari-server start"
-    echo "chkconfig ambari-server-db on"
+    echo "chkconfig ambari-server on"
     echo "****************************************"
     echo "****************************************"
     echo "****************************************"
@@ -167,6 +172,11 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/apt/sources.list.d/ambari.list ]; then
     wget -q "http://public-repo-1.hortonworks.com/ambari/${OS_LOWER}${OSREL}/2.x/updates/${AMBVERSION}/ambari.list" -O /etc/apt/sources.list.d/ambari.list
+    RETVAL=$?
+    if [ "$RETVAL" -ne 0 ]; then
+      echo "** ERROR: Could not download http://public-repo-1.hortonworks.com/ambari/${OS_LOWER}${OSREL}/2.x/updates/${AMBVERSION}/ambari.list"
+      exit 5
+    fi
     chown root:root /etc/apt/sources.list.d/ambari.list
     chmod 0644 /etc/apt/sources.list.d/ambari.list
     apt-key adv --recv-keys --keyserver keyserver.ubuntu.com B9733A7A07513CAD
@@ -204,7 +214,7 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
     echo "${PWD}/ambari_prepare_database.sh"
     echo "** and then:"
     echo "service ambari-server start"
-    echo "update-rc.d ambari-server-db defaults"
+    echo "update-rc.d ambari-server defaults"
     echo "****************************************"
     echo "****************************************"
     echo "****************************************"

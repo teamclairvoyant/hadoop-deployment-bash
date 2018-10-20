@@ -214,7 +214,7 @@ if curl -s $OPT -X GET -u "${ADMINUSER}:${ADMINPASS}" "${BASEURL}/api/${API}/use
   crontab /tmp/$$
   rm -f /tmp/$$
 else
-  echo "ERROR: APIUSER ${APIUSER} already exists.  Exiting without installing crontab."
+  echo "ERROR: APIUSER ${APIUSER} already exists or ${ADMINUSER} password is incorrect.  Exiting without installing crontab."
   exit 11
 fi
 

@@ -2,7 +2,7 @@
 
 This script can be run on machines that will become a part of a Hadoop cluster before a Hadoop Installation Team arrives onsite (or is provided remote access) in order to help answer some of the questions that the Installation Team may have.  The bash script `evaluate.sh` can be downloaded or copied to each cluster node and executed, it's output saved and then transmitted to the Installation Team.
 
-Note: This script mostly does not require root level privileges and can be run as a non-root user.  Only the logical volume commands use sudo.
+Note: This script mostly does not require root level privileges and can be run as a non-root user.  Only the logical volume, iptables, and RHEL subscription-manager commands use sudo.
 
 First, download the `evaluate.sh` script to a local system and set the execute bits.  This local system could be a Linux workstation, Windows machine with a Cygwin installation, OS X laptop, or one of the Linux machines that will become a part of the cluster.  It does not matter so long as it has SSH access to the cluster nodes.
 ```

@@ -151,28 +151,28 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   else
     $ECHO sudo yum -y -e1 -d1 install mariadb apg || err_msg 4
   fi
-  if rpm -q apg; then export PWCMD='apg ] && [ 1 -M NCL -m 20 -x 20 -n 1'; fi
+  if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   $ECHO sudo apt-get -y -q install mysql-client apg || err_msg 4
-  if dpkg -l apg >/dev/null; then export PWCMD='apg ] && [ 1 -M NCL -m 20 -x 20 -n 1'; fi
+  if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
 METASTOREDB_PASSWORD=$(eval "$PWCMD")
 OOZIEDB_PASSWORD=$(eval "$PWCMD")
-HUEDB_PASSWORD=$(eval "$PWCMD")
+#HUEDB_PASSWORD=$(eval "$PWCMD")
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
 echo "*** SAVE THESE PASSWORDS"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE metastore DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY '$METASTOREDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE hive DEFAULT CHARACTER SET utf8;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON hive.* TO 'hive'@'%' IDENTIFIED BY '$METASTOREDB_PASSWORD';"
 echo "hive : $METASTOREDB_PASSWORD"
 $ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE oozie DEFAULT CHARACTER SET utf8;'
 $ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY '$OOZIEDB_PASSWORD';"
 echo "oozie : $OOZIEDB_PASSWORD"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '$HUEDB_PASSWORD';"
-echo "hue : $HUEDB_PASSWORD"
+#$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE hue DEFAULT CHARACTER SET utf8;'
+#$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '$HUEDB_PASSWORD';"
+#echo "hue : $HUEDB_PASSWORD"
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
