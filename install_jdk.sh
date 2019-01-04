@@ -109,10 +109,10 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     rpm -Uv jdk-7u80-linux-x64.rpm
   elif [ "$USECLOUDERA" = 8 ]; then
     cd /tmp || exit
-    echo "*** Downloading Oracle JDK 8u181..."
+    echo "*** Downloading Oracle JDK 8u192..."
     wget -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-      http://download.oracle.com/otn-pub/java/jdk/8u181-b13/96a7b8442fe848ef90c96a2fad6ed6d1/jdk-8u181-linux-x64.rpm -O jdk-8u181-linux-x64.rpm
-    rpm -Uv jdk-8u181-linux-x64.rpm
+      https://download.oracle.com/otn-pub/java/jdk/8u192-b12/750e1c8617c5452694857ad95c3ee230/jdk-8u192-linux-x64.rpm -O jdk-8u192-linux-x64.rpm
+    rpm -Uv jdk-8u192-linux-x64.rpm
   else
     echo "ERROR: Unknown Java version.  Please choose 7 or 8."
     exit 10
