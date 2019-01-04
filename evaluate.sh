@@ -99,7 +99,7 @@ sudo -n vgs
 echo
 sudo -n lvs
 echo "** Filesystems:"
-df -h -t ext2 -t ext3 -t ext4 -t xfs
+df -hP -t ext2 -t ext3 -t ext4 -t xfs
 echo "** Network interfaces (raw):"
 ip addr
 echo "** Network interfaces:"
@@ -480,7 +480,7 @@ echo "There are $HOSTCOUNT non-loopback entries in /etc/hosts."
 echo "** /etc/nsswitch.conf hosts entry:"
 grep ^hosts /etc/nsswitch.conf
 echo "** /etc/resolv.conf:"
-cat /etc/resolv.conf
+awk 1 /etc/resolv.conf
 
 echo "****************************************"
 echo "*** Cloudera Software"
