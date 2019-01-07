@@ -452,7 +452,7 @@ date +'%Z %z'
 
 echo "****************************************"
 echo "*** DNS"
-IP=$(ip -4 a | awk '/inet/{print $2}' | grep -v 127.0.0.1 | sed -e 's|/[0-9].*||')
+IP=$(ip -4 a | awk '/inet/{print $2}' | grep -Ev '127.0.0.1|169.254.' | sed -e 's|/[0-9].*||')
 echo "** system IP is: $IP"
 echo "** system hostname is: $(hostname)"
 if command -v dig >/dev/null 2>&1; then
