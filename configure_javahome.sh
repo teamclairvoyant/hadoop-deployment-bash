@@ -58,7 +58,11 @@ fi
 
 echo "Configuring \$JAVA_HOME..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
-  JAVA_HOME=/usr/java/default
+  if [ -L /usr/java/default ]; then
+    JAVA_HOME=/usr/java/default
+  elif [ -f /usr/lib/jvm ]; then
+    JAVA_HOME=/usr/lib/jvm
+  fi
 
   cat <<EOF >/etc/profile.d/java.sh
 export JAVA_HOME=$JAVA_HOME
@@ -68,7 +72,10 @@ EOF
   chmod 0644 /etc/profile.d/java.sh
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   if ! grep -q JAVA_HOME /etc/profile.d/*; then
-    JAVA_HOME=$(dpkg -L oracle-j2sdk1.7 | grep /usr/lib/jvm/java | head -1)
+    JAVA_HOME=$(dpkg -L oracle-j2sdk1.7 2>/dev/null | grep /usr/lib/jvm/java | head -1)
+    if [ -z "$JAVA_HOME" ]; then
+      JAVA_HOME=$(dpkg -L openjdk-8-jdk 2>/dev/null | grep /usr/lib/jvm/java | head -1)
+    fi
 
     cat <<EOF >/etc/profile.d/java.sh
 export JAVA_HOME=$JAVA_HOME
