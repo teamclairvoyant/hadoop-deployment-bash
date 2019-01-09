@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2016
+# Copyright Clairvoyant 2019
 
 # Function to discover basic OS details.
 discover_os() {
@@ -56,32 +56,20 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
   exit 3
 fi
 
-echo "Removing OpenJDK..."
+echo "Removing Oracle JDK..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
-  rpm -e java-1.6.0-openjdk-devel
-  rpm -e java-1.6.0-openjdk
-  rpm -e java-1.6.0-openjdk-headless
-  rpm -e java-1.7.0-openjdk-devel
-  rpm -e java-1.7.0-openjdk
-  rpm -e java-1.7.0-openjdk-headless
-  rpm -e java-1.8.0-openjdk-devel
-  rpm -e java-1.8.0-openjdk
-  rpm -e java-1.8.0-openjdk-headless
-  rpm -e java-11-openjdk-devel
-  rpm -e java-11-openjdk
-  rpm -e java-11-openjdk-headless
-  rpm -e java-1.5.0-gcj
+  rpm -e jdk
+  rpm -e oracle-j2sdk1.7
+  rpm -e oracle-j2sdk1.8
+  rpm -e jdk1.8
+  for JDK in $(rpm -qa | grep 'jdk1.[6789].0_[0-9]*'); do
+    rpm -e "${JDK}"
+  done
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
-  #apt-get -y -q remove openjdk-6-jre
-  #apt-get -y -q remove openjdk-6-jre-headless
-  #apt-get -y -q remove openjdk-6-jdk
-  #apt-get -y -q remove openjdk-7-jre
-  #apt-get -y -q remove openjdk-7-jre-headless
-  #apt-get -y -q remove openjdk-7-jdk
-  #apt-get -y -q remove openjdk-8-jre
-  #apt-get -y -q remove openjdk-8-jre-headless
-  #apt-get -y -q remove openjdk-8-jdk
-  apt-get -y -q remove openjdk\*
+  apt-get -y -q remove oracle-j2sdk1.7
+  apt-get -y -q remove oracle-j2sdk1.8
+  apt-get -y -q remove oracle-java7-installer
+  apt-get -y -q remove oracle-java8-installer
 fi
 
