@@ -97,7 +97,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename "$0")"
       ;;
     -v|--version)
-      echo "Installs an entropy gathering daemon: RNGD ot HAVEGED."
+      echo "Configures SElinux for permissive or disabled mode."
       exit 0
       ;;
     *)
