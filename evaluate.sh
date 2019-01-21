@@ -21,16 +21,16 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
-    # CentOS, Ubuntu
+    # CentOS, Ubuntu, RedHatEnterpriseServer, Debian
     # shellcheck disable=SC2034
     OS=$(lsb_release -is)
-    # 7.2.1511, 14.04
+    # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5
     # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
     # shellcheck disable=SC2034
     OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
-    # trusty, wheezy, Final
+    # Ubuntu= trusty, wheezy, CentOS= Final, RHEL= Santiago, Maipo
     # shellcheck disable=SC2034
     OSNAME=$(lsb_release -cs)
   else
@@ -38,14 +38,29 @@ discover_os() {
       if [ -f /etc/centos-release ]; then
         # shellcheck disable=SC2034
         OS=CentOS
+        # 7.5.1804.4.el7.centos, 6.10.el6.centos.12.3
+        # shellcheck disable=SC2034
+        OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        # shellcheck disable=SC2034
+        OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
       else
         # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
+        # 7.5, 6Server
+        # shellcheck disable=SC2034
+        OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n')
+        if [ "$OSVER" == "6Server" ]; then
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/redhat-release --qf='%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+          # shellcheck disable=SC2034
+          OSNAME=Santiago
+        else
+          # shellcheck disable=SC2034
+          OSNAME=Maipo
+        fi
+        # shellcheck disable=SC2034
+        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
       fi
-      # shellcheck disable=SC2034
-      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
-      # shellcheck disable=SC2034
-      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
     fi
   fi
 }
