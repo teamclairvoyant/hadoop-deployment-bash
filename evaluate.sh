@@ -21,16 +21,16 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
-    # CentOS, Ubuntu
+    # CentOS, Ubuntu, RedHatEnterpriseServer, Debian, SUSE LINUX
     # shellcheck disable=SC2034
     OS=$(lsb_release -is)
-    # 7.2.1511, 14.04
+    # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5, SLES= 11
     # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
     # shellcheck disable=SC2034
     OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
-    # trusty, wheezy, Final
+    # Ubuntu= trusty, wheezy, CentOS= Final, RHEL= Santiago, Maipo, SLES= n/a
     # shellcheck disable=SC2034
     OSNAME=$(lsb_release -cs)
   else
@@ -38,14 +38,39 @@ discover_os() {
       if [ -f /etc/centos-release ]; then
         # shellcheck disable=SC2034
         OS=CentOS
+        # 7.5.1804.4.el7.centos, 6.10.el6.centos.12.3
+        # shellcheck disable=SC2034
+        OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        # shellcheck disable=SC2034
+        OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
       else
         # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
+        # 7.5, 6Server
+        # shellcheck disable=SC2034
+        OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n')
+        if [ "$OSVER" == "6Server" ]; then
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/redhat-release --qf='%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+          # shellcheck disable=SC2034
+          OSNAME=Santiago
+        else
+          # shellcheck disable=SC2034
+          OSNAME=Maipo
+        fi
+        # shellcheck disable=SC2034
+        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
+      fi
+    elif [ -f /etc/SuSE-release ]; then
+      if grep -q "^SUSE Linux Enterprise Server" /etc/SuSE-release; then
+        OS="SUSE LINUX"
       fi
       # shellcheck disable=SC2034
-      OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}.%{RELEASE}\n')
+      OSVER=$(rpm -qf /etc/SuSE-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
       # shellcheck disable=SC2034
-      OSREL=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+      OSREL=$(rpm -qf /etc/SuSE-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+      # shellcheck disable=SC2034
+      OSNAME="n/a"
     fi
   fi
 }
@@ -64,6 +89,10 @@ if [ -f /etc/redhat-release ]; then
   else
     cat /etc/redhat-release
   fi
+elif [ -f /etc/SuSE-release ]; then
+  cat /etc/SuSE-release
+elif [ -f /etc/os-release ]; then
+  cat /etc/os-release
 fi
 if [ -f /etc/lsb-release ]; then /usr/bin/lsb_release -ds; fi
 
@@ -91,7 +120,11 @@ grep ^"model name" /proc/cpuinfo | tail -1
 echo "** memory:"
 echo "memory          : $(free -g | awk '/^Mem:/{print $2}') GiB"
 echo "** Disks:"
-lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
+if [ "$OS" == "SUSE LINUX" ] && [ "$OSREL" == 11 ]; then
+  lsblk -lo NAME,SIZE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^\//'
+else
+  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
+fi
 echo "** Logical Volumes:"
 sudo -n pvs
 echo
@@ -99,7 +132,7 @@ sudo -n vgs
 echo
 sudo -n lvs
 echo "** Filesystems:"
-df -h -t ext2 -t ext3 -t ext4 -t xfs
+df -hP -t ext2 -t ext3 -t ext4 -t xfs
 echo "** Network interfaces (raw):"
 ip addr
 echo "** Network interfaces:"
@@ -165,6 +198,14 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
         echo "Kernel is VULNERABLE (futex TSB-63)"
       fi
     fi
+  fi
+elif [ "$OS" == "SUSE LINUX" ]; then
+  rpm -q kernel-default-base
+  echo "** running kernel has fix?:"
+  if rpm -q --changelog kernel-default-base | grep -q 'Ensure get_futex_key_refs() always implies a barrier'; then
+    echo "Kernel is OK (futex TSB-63)"
+  else
+    echo "Kernel is VULNERABLE (futex TSB-63)"
   fi
 fi
 # TODO: TSB-189
@@ -233,6 +274,9 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   if [ "$OSVER" == "14.04" ]; then
     initctl show-config ufw
   fi
+elif [ "$OS" == "SUSE LINUX" ]; then
+  chkconfig --list SuSEfirewall2_init
+  chkconfig --list SuSEfirewall2_setup
 fi
 
 echo "****************************************"
@@ -253,6 +297,8 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   grep ^SELINUX= /etc/selinux/config
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   echo "Debian/Ubuntu = None"
+elif [ "$OS" == "SUSE LINUX" ]; then
+  echo "SLES = None"
 fi
 
 echo "****************************************"
@@ -265,6 +311,8 @@ cat /sys/kernel/mm/transparent_hugepage/enabled
 echo "** startup config:"
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   grep transparent_hugepage /etc/rc.d/rc.local
+elif [ "$OS" == "SUSE LINUX" ]; then
+  grep transparent_hugepage /etc/init.d/after.local
 else
   grep transparent_hugepage /etc/rc.local
 fi
@@ -287,16 +335,22 @@ if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; then
   service rngd status
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   service rng-tools status || ps -o user,pid,command -C rngd
+elif [ "$OS" == "SUSE LINUX" ]; then
+  service rng-tools status
 fi
 echo "** startup config:"
-chkconfig --list rngd
+if [ "$OS" == "SUSE LINUX" ]; then
+  chkconfig --list rng-tools
+else
+  chkconfig --list rngd
+fi
 echo "** available entropy:"
 cat /proc/sys/kernel/random/entropy_avail
 
 echo "****************************************"
 echo "*** Java"
 echo "** installed Java(s):"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa | grep -E 'jdk|jre|^java-|j2sdk' | sort
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*jdk\* \*jre\* java-\* \*j2sdk\* oracle-java\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -395,7 +449,7 @@ fi
 echo "****************************************"
 echo "*** JDBC"
 echo "** JDBC packages:"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -q mysql-connector-java postgresql-jdbc
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l libmysql-java libpostgresql-jdbc-java | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -411,6 +465,8 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   rpm -q krb5-workstation kstart k5start
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l krb5-user kstart k5start | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
+elif [ "$OS" == "SUSE LINUX" ]; then
+  rpm -q krb5-client kstart k5start
 fi
 
 echo "****************************************"
@@ -425,12 +481,16 @@ echo "*** NTP"
 echo "** running config:"
 if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; then
   service ntpd status
-elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
+elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ] || [ "$OS" == "SUSE LINUX" ]; then
   service ntp status
 fi
 echo "** startup config:"
 RETVAL=0
-chkconfig --list ntpd
+if [ "$OS" == Debian ] || [ "$OS" == Ubuntu ] || [ "$OS" == "SUSE LINUX" ]; then
+  chkconfig --list ntp
+else
+  chkconfig --list ntpd
+fi
 if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; } && [ "$OSREL" == 7 ]; then
   systemctl --lines 0 status chronyd.service
   RETVAL=$?
@@ -452,7 +512,7 @@ date +'%Z %z'
 
 echo "****************************************"
 echo "*** DNS"
-IP=$(ip -4 a | awk '/inet/{print $2}' | grep -v 127.0.0.1 | sed -e 's|/[0-9].*||')
+IP=$(ip -4 a | awk '/inet/{print $2}' | grep -Ev '127.0.0.1|169.254.' | sed -e 's|/[0-9].*||')
 echo "** system IP is: $IP"
 echo "** system hostname is: $(hostname)"
 if command -v dig >/dev/null 2>&1; then
@@ -480,17 +540,17 @@ echo "There are $HOSTCOUNT non-loopback entries in /etc/hosts."
 echo "** /etc/nsswitch.conf hosts entry:"
 grep ^hosts /etc/nsswitch.conf
 echo "** /etc/resolv.conf:"
-cat /etc/resolv.conf
+awk 1 /etc/resolv.conf
 
 echo "****************************************"
 echo "*** Cloudera Software"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^cloudera\* ^navencrypt\* \*keytrustee\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*cloudera\* \*navencrypt\* \*keytrustee\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Cloudera Hadoop Packages"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^hadoop\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -500,13 +560,13 @@ ls -l /opt/cloudera/parcels
 
 echo "****************************************"
 echo "*** Hortonworks Software"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^ambari\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*ambari\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Hortonworks Hadoop Packages"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^hadoop\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l hadoop-?-?-?-?-???? | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'

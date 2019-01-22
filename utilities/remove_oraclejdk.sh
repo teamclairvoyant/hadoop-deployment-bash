@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2019
 
 # Function to discover basic OS details.
 discover_os() {
@@ -56,31 +56,20 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
   exit 3
 fi
 
-echo "Configuring \$JAVA_HOME..."
+echo "Removing Oracle JDK..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
-  if [ -L /usr/java/default ]; then
-    JAVA_HOME=/usr/java/default
-  elif [ -f /usr/lib/jvm ]; then
-    JAVA_HOME=/usr/lib/jvm
-  fi
-
-  cat <<EOF >/etc/profile.d/java.sh
-export JAVA_HOME=$JAVA_HOME
-export PATH=\$JAVA_HOME/bin:\$PATH
-EOF
-  chown root:root /etc/profile.d/java.sh
-  chmod 0644 /etc/profile.d/java.sh
+  rpm -e jdk
+  rpm -e oracle-j2sdk1.7
+  rpm -e oracle-j2sdk1.8
+  rpm -e jdk1.8
+  for JDK in $(rpm -qa | grep 'jdk1.[6789].0_[0-9]*'); do
+    rpm -e "${JDK}"
+  done
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
-  if ! grep -q JAVA_HOME /etc/profile.d/*; then
-    JAVA_HOME=$(dpkg -L oracle-j2sdk1.7 2>/dev/null | grep /usr/lib/jvm/java | head -1)
-    if [ -z "$JAVA_HOME" ]; then
-      JAVA_HOME=$(dpkg -L openjdk-8-jdk 2>/dev/null | grep /usr/lib/jvm/java | head -1)
-    fi
-
-    cat <<EOF >/etc/profile.d/java.sh
-export JAVA_HOME=$JAVA_HOME
-export PATH=\$JAVA_HOME/bin:\$PATH
-EOF
-  fi
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get -y -q remove oracle-j2sdk1.7
+  apt-get -y -q remove oracle-j2sdk1.8
+  apt-get -y -q remove oracle-java7-installer
+  apt-get -y -q remove oracle-java8-installer
 fi
 

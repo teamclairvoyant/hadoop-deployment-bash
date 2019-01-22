@@ -31,10 +31,10 @@ print_help() {
   exit 1
 }
 
-# Function to check for root priviledges.
+# Function to check for root privileges.
 check_root() {
   if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
-    echo "You must have root priviledges to run this program."
+    echo "You must have root privileges to run this program."
     exit 2
   fi
 }
@@ -103,7 +103,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename "$0")"
       ;;
     -v|--version)
-      echo "Installs an entropy gathering daemon: RNGD ot HAVEGED."
+      echo "Installs an entropy gathering daemon: RNGD or HAVEGED."
       exit 0
       ;;
     *)

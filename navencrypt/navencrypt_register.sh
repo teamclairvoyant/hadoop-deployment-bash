@@ -48,10 +48,10 @@ print_help() {
   exit 1
 }
 
-# Function to check for root priviledges.
+# Function to check for root privileges.
 check_root() {
   if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
-    printf 'You must have root priviledges to run this program.\n'
+    printf 'You must have root privileges to run this program.\n'
     exit 2
   fi
 }

@@ -58,10 +58,18 @@ fi
 
 echo "Removing OpenJDK..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+  rpm -e java-1.6.0-openjdk-devel
   rpm -e java-1.6.0-openjdk
+  rpm -e java-1.6.0-openjdk-headless
+  rpm -e java-1.7.0-openjdk-devel
   rpm -e java-1.7.0-openjdk
+  rpm -e java-1.7.0-openjdk-headless
+  rpm -e java-1.8.0-openjdk-devel
   rpm -e java-1.8.0-openjdk
   rpm -e java-1.8.0-openjdk-headless
+  rpm -e java-11-openjdk-devel
+  rpm -e java-11-openjdk
+  rpm -e java-11-openjdk-headless
   rpm -e java-1.5.0-gcj
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
