@@ -63,6 +63,7 @@ discover_os() {
       fi
     elif [ -f /etc/SuSE-release ]; then
       if grep -q "^SUSE Linux Enterprise Server" /etc/SuSE-release; then
+        # shellcheck disable=SC2034
         OS="SUSE LINUX"
       fi
       # shellcheck disable=SC2034
