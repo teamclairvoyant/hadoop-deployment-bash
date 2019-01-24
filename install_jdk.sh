@@ -267,10 +267,10 @@ elif [ "$JDK_TYPE" == "oracle" ]; then
       ;;
     8)
       cd /tmp || exit
-      echo "*** Downloading Oracle JDK 8u192..."
+      echo "*** Downloading Oracle JDK 8u202..."
       wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-        https://download.oracle.com/otn-pub/java/jdk/8u192-b12/750e1c8617c5452694857ad95c3ee230/jdk-8u192-linux-x64.rpm -O jdk-8u192-linux-x64.rpm
-      rpm -Uv jdk-8u192-linux-x64.rpm
+        https://download.oracle.com/otn-pub/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.rpm -O jdk-8u202-linux-x64.rpm
+      rpm -Uv jdk-8u202-linux-x64.rpm
       ;;
     *)
       echo "ERROR: Unknown Java version.  Please choose 7 or 8."
