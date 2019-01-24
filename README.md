@@ -19,7 +19,7 @@ These are shell scripts to deploy Cloudera Manager and related Cloudera encrypti
 
 * Works with RHEL/CentOS 6 or 7 x86_64.
 * Works with Ubuntu Trusty 14.04 x86_64.
-* Allows for installation of Oracle JDK 7 from Cloudera or Oracle JDK 7 or 8 from Oracle.
+* Allows for installation of Oracle JDK 7 from Cloudera, Oracle JDK 8 from Oracle, or OpenJDK 7 or 8.
 
 This is an example of some of the functionality.  Not everything is documented.  Some scripts have arguments that can be passed to them to change their internal operation.  Read the source to learn more.
 
@@ -94,7 +94,7 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./disable_thp.sh; \
   sudo bash $BOPT ./install_ntp.sh; \
   sudo bash $BOPT ./install_nscd.sh; \
-  sudo bash $BOPT ./install_jdk.sh 8 $CMVER; \
+  sudo bash $BOPT ./install_jdk.sh --jdktype oracle --jdkversion 8; \
   sudo bash $BOPT ./configure_javahome.sh; \
   sudo bash $BOPT ./install_jce.sh; \
   sudo bash $BOPT ./install_krb5.sh; \
@@ -137,7 +137,7 @@ These are shell scripts to deploy Hortonworks Ambari to a cluster.  The goal of 
 
 * Works with RHEL/CentOS 6 or 7 x86_64.
 * Works with Ubuntu Trusty 14.04 x86_64.
-* Allows for installation of Oracle JDK 7 or 8 from Oracle.
+* Allows for installation of Oracle JDK 8 from Oracle or OpenJDK 7 or 8.
 
 This is an example of some of the functionality.  Not everything is documented.  Some scripts have arguments that can be passed to them to change their internal operation.  Read the source to learn more.
 
@@ -196,7 +196,7 @@ for HOST in `cat HOSTLIST`; do
 done
 ```
 
-Run the scripts to prep the system for Hortonworks Ambari installation.  Pin the version of Hortonworks Ambari to the value in $HAVER.  Also deploy Oracle JDK 8.
+Run the scripts to prep the system for Hortonworks Ambari installation.  Pin the version of Hortonworks Ambari to the value in $HAVER.  Also deploy OpenJDK 8.
 ```
 #BOPT="-x"    # Turn on bash debugging.
 HAVER=2.5.2.0 # Set specific Hortonworks Ambari version
@@ -211,7 +211,7 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./disable_thp.sh; \
   sudo bash $BOPT ./install_ntp.sh; \
   sudo bash $BOPT ./install_nscd.sh; \
-  sudo bash $BOPT ./install_jdk.sh 8 $HAVER; \
+  sudo bash $BOPT ./install_jdk.sh --jdktype openjdk --jdkversion 8; \
   sudo bash $BOPT ./configure_javahome.sh; \
   sudo bash $BOPT ./install_jce.sh; \
   sudo bash $BOPT ./install_krb5.sh; \
