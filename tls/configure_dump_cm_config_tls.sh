@@ -34,6 +34,7 @@ fi
 
 sed -e "/^CMHOST=/s|=.*|=${CMHOST}|" \
     -e "/^CMPORT=/s|=.*|=${CMPORTTLS}|" \
+    -e "s|http_proxy=|https_proxy=|" \
     -i /usr/local/sbin/dump_cm_config.sh
 
 /usr/local/sbin/dump_cm_config.sh >/var/log/cm_config.dump
