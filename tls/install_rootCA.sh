@@ -117,6 +117,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     update-ca-trust extract
   fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
+  c_rehash /opt/cloudera/security/CAcerts/
   cd /opt/cloudera/security/CAcerts/ || exit
   for SRC in *.pem; do
     # shellcheck disable=SC2001
