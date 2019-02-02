@@ -283,6 +283,9 @@ elif [ "$JDK_TYPE" == "oracle" ]; then
     7)
       #mkdir -p /var/cache/oracle-jdk7-installer
       #mv jdk-7u*-linux-x64.tar.gz /var/cache/oracle-jdk7-installer/
+      if ! command -v add-apt-repository >/dev/null; then
+        apt-get -y -q install software-properties-common
+      fi
       add-apt-repository -y ppa:webupd8team/java
       apt-get -y -qq update
       echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
@@ -292,6 +295,9 @@ elif [ "$JDK_TYPE" == "oracle" ]; then
     8)
       #mkdir -p /var/cache/oracle-jdk8-installer
       #mv jdk-8u*-linux-x64.tar.gz /var/cache/oracle-jdk8-installer/
+      if ! command -v add-apt-repository >/dev/null; then
+        apt-get -y -q install software-properties-common
+      fi
       add-apt-repository -y ppa:webupd8team/java
       apt-get -y -qq update
       echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
