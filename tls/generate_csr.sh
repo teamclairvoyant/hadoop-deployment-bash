@@ -77,6 +77,7 @@ keytool -certreq -alias localhost \
  -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
  -file /opt/cloudera/security/x509/localhost.csr -storepass "$SP" \
  -keypass "$KP" -ext EKU=serverAuth,clientAuth -ext KU=digitalSignature,keyEncipherment $EXT
+chmod 0444 /opt/cloudera/security/x509/localhost.csr
 
 rm -f /tmp/localhost-keystore.p12.$$
 keytool -importkeystore -srckeystore /opt/cloudera/security/jks/localhost-keystore.jks \
