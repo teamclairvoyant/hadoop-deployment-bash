@@ -86,8 +86,8 @@ echo "Configuring \$JAVA_HOME..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if [ -L /usr/java/default ]; then
     JAVA_HOME=/usr/java/default
-  elif [ -f /usr/lib/jvm ]; then
-    JAVA_HOME=/usr/lib/jvm
+  elif [ -L /usr/lib/jvm/java ]; then
+    JAVA_HOME=/usr/lib/jvm/java
   fi
 
   cat <<EOF >/etc/profile.d/java.sh
