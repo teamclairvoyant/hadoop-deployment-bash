@@ -19,7 +19,7 @@
 # 1 - JDBC driver type : mysql, postgresql, oracle, or sqlserver - optional
 #                        installs mysql and postgresql JDBC drivers by default
 
-MYSQL_VERSION=5.1.31
+MYSQL_VERSION=5.1.46
 
 # Function to discover basic OS details.
 discover_os() {
