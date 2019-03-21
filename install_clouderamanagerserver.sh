@@ -18,6 +18,7 @@
 # ARGV:
 # 1 - SCM server database type : embedded, postgresql, mysql, or oracle - optional
 # 2 - SCM server version - optional
+SCMVERSION=6.1.1
 
 # Function to discover basic OS details.
 discover_os() {
@@ -120,7 +121,8 @@ INSTALLDB=$1
 if [ -z "$INSTALLDB" ]; then
   INSTALLDB=embedded
 fi
-SCMVERSION=$2
+SCMVERSION=${2:-$SCMVERSION}
+SCMVERSION_MAJ=$(echo "${SCMVERSION}" | awk -F. '{print $1}')
 
 PROXY=$(grep -Eh '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
 eval "$PROXY"
@@ -143,19 +145,36 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   else
     HAS_JDK=no
   fi
-  # Because it may have been put there by some other process.
-  if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
-    wget -q "https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
+  if [ "$SCMVERSION_MAJ" -eq 6 ]; then
+    wget -q "https://archive.cloudera.com/cm6/${SCMVERSION}/redhat${OSREL}/yum/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
     RETVAL=$?
     if [ "$RETVAL" -ne 0 ]; then
-      echo "** ERROR: Could not download https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo"
-      exit 4
+      echo "** ERROR: Could not download https://archive.cloudera.com/cm6/${SCMVERSION}/redhat${OSREL}/yum/cloudera-manager.repo"
+      exit 6
     fi
     chown root:root /etc/yum.repos.d/cloudera-manager.repo
     chmod 0644 /etc/yum.repos.d/cloudera-manager.repo
-    if [ -n "$SCMVERSION" ]; then
-      sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
+#    if [ -n "$SCMVERSION" ]; then
+#      sed -e "s|6.0.0|${SCMVERSION}|g" -i /etc/yum.repos.d/cloudera-manager.repo
+#    fi
+  elif [ "$SCMVERSION_MAJ" -eq 5 ]; then
+   # Because it may have been put there by some other process.
+    if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
+      wget -q "https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
+      RETVAL=$?
+      if [ "$RETVAL" -ne 0 ]; then
+        echo "** ERROR: Could not download https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo"
+        exit 4
+      fi
+      chown root:root /etc/yum.repos.d/cloudera-manager.repo
+      chmod 0644 /etc/yum.repos.d/cloudera-manager.repo
+      if [ -n "$SCMVERSION" ]; then
+        sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
+      fi
     fi
+  else
+    echo "ERROR: $SCMVERSION_MAJ is not supported."
+    exit 10
   fi
   if [ "$INSTALLDB" == embedded ]; then
     yum -y -e1 -d1 install cloudera-manager-server-db-2
@@ -196,25 +215,44 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     echo "****************************************"
   fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
-  # Because it may have been put there by some other process.
-  if [ ! -f /etc/apt/sources.list.d/cloudera-manager.list ]; then
-    if [ "$OS" == Debian ]; then
-      OS_LOWER=debian
-    elif [ "$OS" == Ubuntu ]; then
-      OS_LOWER=ubuntu
-    fi
-    wget -q "https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list" -O /etc/apt/sources.list.d/cloudera-manager.list
+  if [ "$OS" == Debian ]; then
+    OS_LOWER=debian
+  elif [ "$OS" == Ubuntu ]; then
+    OS_LOWER=ubuntu
+  fi
+  if [ "$SCMVERSION_MAJ" -eq 6 ]; then
+    OSVER_NUMERIC=${OSVER//./}
+    wget -q "https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/cloudera-manager.list" -O /etc/apt/sources.list.d/cloudera-manager.list
     RETVAL=$?
     if [ "$RETVAL" -ne 0 ]; then
-      echo "** ERROR: Could not download https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list"
-      exit 5
+      echo "** ERROR: Could not download https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/cloudera-manager.list"
+      exit 7
     fi
     chown root:root /etc/apt/sources.list.d/cloudera-manager.list
     chmod 0644 /etc/apt/sources.list.d/cloudera-manager.list
-    if [ -n "$SCMVERSION" ]; then
-      sed -e "s|-cm5 |-cm${SCMVERSION} |" -i /etc/apt/sources.list.d/cloudera-manager.list
+#    if [ -n "$SCMVERSION" ]; then
+#      sed -e "s|6.0.0|${SCMVERSION}|g" -i /etc/apt/sources.list.d/cloudera-manager.list
+#    fi
+    curl -s "https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/archive.key" | apt-key add -
+  elif [ "$SCMVERSION_MAJ" -eq 5 ]; then
+    # Because it may have been put there by some other process.
+    if [ ! -f /etc/apt/sources.list.d/cloudera-manager.list ]; then
+      wget -q "https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list" -O /etc/apt/sources.list.d/cloudera-manager.list
+      RETVAL=$?
+      if [ "$RETVAL" -ne 0 ]; then
+        echo "** ERROR: Could not download https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list"
+        exit 5
+      fi
+      chown root:root /etc/apt/sources.list.d/cloudera-manager.list
+      chmod 0644 /etc/apt/sources.list.d/cloudera-manager.list
+      if [ -n "$SCMVERSION" ]; then
+        sed -e "s|-cm5 |-cm${SCMVERSION} |" -i /etc/apt/sources.list.d/cloudera-manager.list
+      fi
+      curl -s "http://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/archive.key" | apt-key add -
     fi
-    curl -s "http://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/archive.key" | apt-key add -
+  else
+    echo "ERROR: $SCMVERSION_MAJ is not supported."
+    exit 11
   fi
   export DEBIAN_FRONTEND=noninteractive
   apt-get -y -qq update
