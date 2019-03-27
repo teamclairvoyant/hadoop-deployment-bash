@@ -33,27 +33,35 @@ if [ ! -f /opt/cloudera/security/x509/localhost_renew.key ]; then
   exit 3
 fi
 
+if [ ! -f /opt/cloudera/security/x509/localhost_renew.pem ]; then
+  echo "ERROR: New certificate does not exist.  Exiting..."
+  exit 4
+fi
+
 if [ ! -f /opt/cloudera/security/jks/localhost_renew-keystore.jks ]; then
   echo "ERROR: New keystore does not exist.  Exiting..."
-  exit 4
+  exit 5
 fi
 
 if [ ! -f /etc/cloudera-scm-agent/agentkey_renew.pw ]; then
   echo "ERROR: New agent password does not exist.  Exiting..."
-  exit 5
+  exit 6
 fi
 
 mv /opt/cloudera/security/x509/localhost_renew.csr /opt/cloudera/security/x509/localhost.csr
 mv /opt/cloudera/security/x509/localhost_renew.e.key /opt/cloudera/security/x509/localhost.e.key
 mv /opt/cloudera/security/x509/localhost_renew.key /opt/cloudera/security/x509/localhost.key
+mv /opt/cloudera/security/x509/localhost_renew.pem /opt/cloudera/security/x509/localhost.pem
 mv /opt/cloudera/security/jks/localhost_renew-keystore.jks /opt/cloudera/security/jks/localhost-keystore.jks
 mv /etc/cloudera-scm-agent/agentkey_renew.pw /etc/cloudera-scm-agent/agentkey.pw
 
 if [ -f /opt/cloudera/security/jks/cmtruststore.jks ]; then
   if [ ! -f /opt/cloudera/security/jks/cmtruststore_renew.jks ]; then
     echo "ERROR: New CM truststore does not exist.  Exiting..."
-    exit 6
+    exit 7
   fi
   mv /opt/cloudera/security/jks/cmtruststore_renew.jks /opt/cloudera/security/jks/cmtruststore.jks
 fi
+
+echo "SUCCESS"
 
