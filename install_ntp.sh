@@ -106,6 +106,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     # https://www.centos.org/forums/viewtopic.php?f=47&t=47626
     systemctl disable chronyd.service
   fi
+  yum -y -e1 -d1 remove chrony
   yum -y -e1 -d1 install ntp
   if is_virtual; then
     tinker_ntp.conf
@@ -114,6 +115,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   chkconfig ntpd on
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
+  apt-get -y -q remove chrony
   apt-get -y -q install ntp
   if is_virtual; then
     tinker_ntp.conf
