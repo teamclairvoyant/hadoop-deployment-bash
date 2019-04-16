@@ -150,6 +150,7 @@ defaults
 
 # Setup for beeswax (impala-shell) or original ODBC driver.
 # For JDBC or ODBC version 2.x driver, use port 21050 instead of 21000.
+# Set Hue "server_conn_timeout = 1 hour" to match the HAproxy timeout.
 listen impala-shell
     bind 0.0.0.0:21000
     timeout client 1h
