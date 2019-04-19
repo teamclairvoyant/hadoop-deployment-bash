@@ -242,17 +242,15 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   fi
 
   echo "** Installing Airflow."
-  pip "$PIPOPTS" install airflow"${VERSION}"
-  # Fix a bug in celery 4
-  pip "$PIPOPTS" install 'celery<4'
-  pip "$PIPOPTS" install 'airflow[celery]'
+  pip "$PIPOPTS" install apache-airflow"${VERSION}"
+  pip "$PIPOPTS" install 'apache-airflow[celery]'
 
   if [ "$DB_TYPE" == "mysql" ]; then
     if [ -z "$DB_PORT" ]; then DB_PORT=$MYSQL_PORT; fi
     #####
     echo "** Installing Airflow[mysql]."
     yum -y -e1 -d1 install mysql-devel
-    pip "$PIPOPTS" install 'airflow[mysql]'
+    pip "$PIPOPTS" install 'apache-airflow[mysql]'
     DBCONNSTRING="mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/airflow"
 
   elif [ "$DB_TYPE" == "postgresql" ]; then
@@ -260,25 +258,25 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     #####
     echo "** Installing Airflow[postgres]."
     yum -y -e1 -d1 install postgresql-devel
-    pip "$PIPOPTS" install 'airflow[postgres]'
+    pip "$PIPOPTS" install 'apache-airflow[postgres]'
     DBCONNSTRING="postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/airflow"
   fi
 
   #####
   echo "** Installing Airflow[kerberos]."
-  pip "$PIPOPTS" install 'airflow[kerberos]'
+  pip "$PIPOPTS" install 'apache-airflow[kerberos]'
   yum -y -e1 -d1 install libffi-devel
   echo "** Installing Airflow[crypto]."
-  pip "$PIPOPTS" install 'airflow[crypto]'
-  #pip "$PIPOPTS" install 'airflow[jdbc]'
+  pip "$PIPOPTS" install 'apache-airflow[crypto]'
+  #pip "$PIPOPTS" install 'apache-airflow[jdbc]'
   echo "** Installing Airflow[hive]."
-  pip "$PIPOPTS" install 'airflow[hive]'
-  #pip "$PIPOPTS" install 'airflow[hdfs]'
-  #pip "$PIPOPTS" install 'airflow[ldap]'
-  pip "$PIPOPTS" install 'airflow[password]'
+  pip "$PIPOPTS" install 'apache-airflow[hive]'
+  #pip "$PIPOPTS" install 'apache-airflow[hdfs]'
+  #pip "$PIPOPTS" install 'apache-airflow[ldap]'
+  pip "$PIPOPTS" install 'apache-airflow[password]'
   echo "** Installing Airflow[rabbitmq]."
-  pip "$PIPOPTS" install 'airflow[rabbitmq]'
-  #pip "$PIPOPTS" install 'airflow[s3]'
+  pip "$PIPOPTS" install 'apache-airflow[rabbitmq]'
+  #pip "$PIPOPTS" install 'apache-airflow[s3]'
 
   echo "** Installing Airflow configs."
   install -o root -g airflow -m0750 -d /var/lib/airflow
