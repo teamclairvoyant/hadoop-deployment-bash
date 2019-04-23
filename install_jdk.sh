@@ -269,7 +269,7 @@ elif [ "$JDK_TYPE" == "oracle" ]; then
       cd /tmp || exit
       echo "*** Downloading Oracle JDK 8u202..."
       wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-        https://download.oracle.com/otn-pub/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.rpm -O jdk-8u202-linux-x64.rpm
+        http://archive.clairvoyantsoft.com/oracle_java/8/rpm/x86_64/jdk-8u202-linux-x64.rpm -O jdk-8u202-linux-x64.rpm
       rpm -Uv jdk-8u202-linux-x64.rpm
       ;;
     *)
@@ -293,16 +293,21 @@ elif [ "$JDK_TYPE" == "oracle" ]; then
       apt-get -y -q install oracle-java7-set-default
       ;;
     8)
-      #mkdir -p /var/cache/oracle-jdk8-installer
-      #mv jdk-8u*-linux-x64.tar.gz /var/cache/oracle-jdk8-installer/
-      if ! command -v add-apt-repository >/dev/null; then
-        apt-get -y -q install software-properties-common
-      fi
-      add-apt-repository -y ppa:webupd8team/java
-      apt-get -y -qq update
       echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
-      apt-get -y -q install oracle-java8-installer
-      apt-get -y -q install oracle-java8-set-default
+      wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate \
+        http://archive.clairvoyantsoft.com/oracle_java/8/deb/oracle-java8-installer_8u201-2~clairvoyant~1_all.deb \
+        -O oracle-java8-installer_8u201-2~clairvoyant~1_all.deb
+      wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate \
+        http://archive.clairvoyantsoft.com/oracle_java/8/deb/oracle-java8-set-default_8u201-2~clairvoyant~1_all.deb \
+        -O oracle-java8-set-default_8u201-2~clairvoyant~1_all.deb
+      if [ "$OSNAME" == "trusty" ]; then
+        apt-get -y -q install gsfonts gsfonts-x11 java-common libfontenc1 libxfont1 x11-common xfonts-encodings xfonts-utils
+        dpkg -i ./oracle-java8-installer_8u201-2~clairvoyant~1_all.deb
+        dpkg -i ./oracle-java8-set-default_8u201-2~clairvoyant~1_all.deb
+      else
+        apt -y -q -o Dpkg::Progress-Fancy="0" install ./oracle-java8-installer_8u201-2~clairvoyant~1_all.deb
+        apt -y -q -o Dpkg::Progress-Fancy="0" install ./oracle-java8-set-default_8u201-2~clairvoyant~1_all.deb
+      fi
       ;;
     *)
       echo "ERROR: Unknown Java version.  Please choose 7 or 8."
