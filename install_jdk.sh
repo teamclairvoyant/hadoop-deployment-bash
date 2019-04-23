@@ -257,43 +257,28 @@ elif [ "$JDK_TYPE" == "oracle" ]; then
   echo "Installing Oracle JDK ${JDK_VERSION} ..."
   if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     case "$JDK_VERSION" in
-    7)
-      # TODO: No longer works.  Oracle now requires login.
-      cd /tmp || exit
-      echo "*** Downloading Oracle JDK 7u80..."
-      wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-        http://download.oracle.com/otn/java/jdk/7u80-b15/jdk-7u80-linux-x64.rpm -O jdk-7u80-linux-x64.rpm
-      rpm -Uv jdk-7u80-linux-x64.rpm
-      ;;
     8)
       cd /tmp || exit
       echo "*** Downloading Oracle JDK 8u202..."
-      wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-        http://archive.clairvoyantsoft.com/oracle_java/8/rpm/x86_64/jdk-8u202-linux-x64.rpm -O jdk-8u202-linux-x64.rpm
+      wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate \
+        http://archive.clairvoyantsoft.com/oracle_java/8/rpm/x86_64/jdk-8u202-linux-x64.rpm \
+        -O jdk-8u202-linux-x64.rpm
       rpm -Uv jdk-8u202-linux-x64.rpm
       ;;
     *)
-      echo "ERROR: Unknown Java version.  Please choose 7 or 8."
+      echo "ERROR: Unknown Java version.  Please choose 8."
       exit 11
       ;;
     esac
   elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
     export DEBIAN_FRONTEND=noninteractive
     case "$JDK_VERSION" in
-    7)
-      #mkdir -p /var/cache/oracle-jdk7-installer
-      #mv jdk-7u*-linux-x64.tar.gz /var/cache/oracle-jdk7-installer/
-      if ! command -v add-apt-repository >/dev/null; then
-        apt-get -y -q install software-properties-common
-      fi
-      add-apt-repository -y ppa:webupd8team/java
-      apt-get -y -qq update
-      echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
-      apt-get -y -q install oracle-java7-installer
-      apt-get -y -q install oracle-java7-set-default
-      ;;
     8)
       echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
+      #mkdir -p /var/cache/oracle-jdk8-installer
+      #wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate \
+      #  http://archive.clairvoyantsoft.com/oracle_java/8/tar/jdk-8u201-linux-x64.tar.gz \
+      #  -O /var/cache/oracle-jdk8-installer/jdk-8u201-linux-x64.tar.gz
       wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate \
         http://archive.clairvoyantsoft.com/oracle_java/8/deb/oracle-java8-installer_8u201-2~clairvoyant~1_all.deb \
         -O oracle-java8-installer_8u201-2~clairvoyant~1_all.deb
@@ -310,7 +295,7 @@ elif [ "$JDK_TYPE" == "oracle" ]; then
       fi
       ;;
     *)
-      echo "ERROR: Unknown Java version.  Please choose 7 or 8."
+      echo "ERROR: Unknown Java version.  Please choose 8."
       exit 11
       ;;
     esac
