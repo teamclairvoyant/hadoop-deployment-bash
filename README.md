@@ -94,7 +94,7 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./disable_thp.sh; \
   sudo bash $BOPT ./install_ntp.sh; \
   sudo bash $BOPT ./install_nscd.sh; \
-  sudo bash $BOPT ./install_jdk.sh --jdktype oracle --jdkversion 8; \
+  sudo bash $BOPT ./install_jdk.sh --jdktype openjdk --jdkversion 8; \
   sudo bash $BOPT ./configure_javahome.sh; \
   sudo bash $BOPT ./install_jce.sh; \
   sudo bash $BOPT ./install_krb5.sh; \
