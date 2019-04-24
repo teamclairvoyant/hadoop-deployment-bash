@@ -15,10 +15,6 @@
 #
 # Copyright Clairvoyant 2015
 
-# ARGV:
-# 1 - Which major JDK version to install. If empty, install JDK 7 from Cloudera. - optional
-# 2 - SCM version - optional
-
 # Note:
 # If you do not want to download the JDK multiple times or access to
 # download.oracle.com is blocked, you can place the manually downloaded JDK RPM
@@ -31,8 +27,7 @@ if [ -n "$DEBUG" ]; then set -x; fi
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-JDK_TYPE=cloudera
-JDK_VERSION=7
+JDK_VERSION=null
 SCMVERSION=6.2.0
 
 # Function to print the help screen.
@@ -41,7 +36,6 @@ print_help() {
   echo ""
   echo "        $1 -t|--jdktype       <cloudera|oracle|openjdk>"
   echo "        $1 [-j|--jdkversion]  <version>"
-  echo "        $1 [-c|--cmversion]   <version>"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
   echo ""
@@ -142,10 +136,6 @@ while [[ $1 = -* ]]; do
       shift
       JDK_VERSION=$1
       ;;
-    -c|--cmversion)
-      shift
-      SCMVERSION=$1
-      ;;
     -h|--help)
       print_help "$(basename "$0")"
       ;;
@@ -171,7 +161,6 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
 fi
 
 # Check to see if we have the required parameters.
-#if [ -z "$JDK_TYPE" ] || [ -z "$JDK_VERSION" ]; then print_help "$(basename "$0")"; fi
 if [ "$JDK_TYPE" != "cloudera" ] && [ "$JDK_TYPE" != "oracle" ] && [ "$JDK_TYPE" != "openjdk" ]; then
   echo "** ERROR: --jdktype must be one of cloudera, oracle, or openjdk."
   echo ""
@@ -182,14 +171,6 @@ fi
 check_root
 
 # main
-# Backwards support of the old script.  See ARGV above.
-USECLOUDERA=$1
-if [ -n "$USECLOUDERA" ]; then
-  JDK_TYPE=oracle
-  JDK_VERSION=$USECLOUDERA
-fi
-SCMVERSION=$2
-
 PROXY=$(grep -Eh '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
 eval "$PROXY"
 export http_proxy
