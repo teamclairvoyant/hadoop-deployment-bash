@@ -238,6 +238,7 @@ if [ "$JDK_TYPE" == "cloudera" ]; then
         RETVAL=$?
         if [ "$RETVAL" -ne 0 ]; then
           echo "** ERROR: Could not download https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list"
+          rm -f /etc/apt/sources.list.d/cloudera-jdk.list
           exit 5
         fi
         chown root:root /etc/apt/sources.list.d/cloudera-jdk.list
@@ -256,6 +257,7 @@ if [ "$JDK_TYPE" == "cloudera" ]; then
         RETVAL=$?
         if [ "$RETVAL" -ne 0 ]; then
           echo "** ERROR: Could not download https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/cloudera-manager.list"
+          rm -f /etc/apt/sources.list.d/cloudera-jdk.list
           exit 7
         fi
         chown root:root /etc/apt/sources.list.d/cloudera-jdk.list
