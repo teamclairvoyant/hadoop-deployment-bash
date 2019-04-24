@@ -33,6 +33,7 @@ if [ -n "$DEBUG" ]; then set -x; fi
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 JDK_TYPE=cloudera
 JDK_VERSION=7
+SCMVERSION=6.2.0
 
 # Function to print the help screen.
 print_help() {
@@ -201,54 +202,91 @@ if [ -z "$http_proxy" ]; then
 fi
 
 if [ "$JDK_TYPE" == "cloudera" ]; then
-  # TODO: Deal with CM 6.
   echo "Installing Cloudera's Oracle JDK ${JDK_VERSION} ..."
   if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     case "$JDK_VERSION" in
     7)
       # Because it may have been put there by some other process.
-      if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
-        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
-        chown root:root /etc/yum.repos.d/cloudera-manager.repo
-        chmod 0644 /etc/yum.repos.d/cloudera-manager.repo
-        if [ -n "$SCMVERSION" ]; then
-          sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
-        fi
+      if [ ! -f /etc/yum.repos.d/cloudera-jdk.repo ]; then
+        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-jdk.repo
+        chown root:root /etc/yum.repos.d/cloudera-jdk.repo
+        chmod 0644 /etc/yum.repos.d/cloudera-jdk.repo
+        echo "includepkgs=oracle-j2sdk1.7" >>/etc/yum.repos.d/cloudera-jdk.repo
+        sed -e 's|cloudera-manager|cloudera-jdk|' -e '/^name=/s|Cloudera Manager|Cloudera JDK|' -i /etc/yum.repos.d/cloudera-jdk.repo
       fi
       yum -y -e1 -d1 install oracle-j2sdk1.7
       DIRNAME=$(rpm -ql oracle-j2sdk1.7|head -1)
       TARGET=$(basename "$DIRNAME")
       ln -s "$TARGET" /usr/java/default
       ;;
+    8)
+      # Because it may have been put there by some other process.
+      if [ ! -f /etc/yum.repos.d/cloudera-jdk.repo ]; then
+        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm6/${SCMVERSION}/redhat${OSREL}/yum/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-jdk.repo
+        chown root:root /etc/yum.repos.d/cloudera-jdk.repo
+        chmod 0644 /etc/yum.repos.d/cloudera-jdk.repo
+        echo "" >>/etc/yum.repos.d/cloudera-jdk.repo
+        echo "includepkgs=oracle-j2sdk1.8" >>/etc/yum.repos.d/cloudera-jdk.repo
+        sed -e 's|cloudera-manager|cloudera-jdk|' -e '/^name=/s|Cloudera Manager|Cloudera JDK|' -i /etc/yum.repos.d/cloudera-jdk.repo
+      fi
+      yum -y -e1 -d1 install oracle-j2sdk1.8
+      DIRNAME=$(rpm -ql oracle-j2sdk1.8|head -1)
+      TARGET=$(basename "$DIRNAME")
+      ln -s "$TARGET" /usr/java/default
+      ;;
     *)
-      echo "ERROR: Unknown Java version.  Please choose 7."
+      echo "ERROR: Unknown Java version.  Please choose 7 or 8."
       exit 10
       ;;
     esac
   elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
     export DEBIAN_FRONTEND=noninteractive
+    if [ "$OS" == Debian ]; then
+      OS_LOWER=debian
+    elif [ "$OS" == Ubuntu ]; then
+      OS_LOWER=ubuntu
+    fi
+    OSVER_NUMERIC=${OSVER//./}
+    HAS_SOURCESLIST=yes
     case "$JDK_VERSION" in
     7)
       # Because it may have been put there by some other process.
-      if [ ! -f /etc/apt/sources.list.d/cloudera-manager.list ]; then
-        if [ "$OS" == Debian ]; then
-          OS_LOWER=debian
-        elif [ "$OS" == Ubuntu ]; then
-          OS_LOWER=ubuntu
+      if [ ! -f /etc/apt/sources.list.d/cloudera-jdk.list ]; then
+        HAS_SOURCESLIST=no
+        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list" -O /etc/apt/sources.list.d/cloudera-jdk.list
+        RETVAL=$?
+        if [ "$RETVAL" -ne 0 ]; then
+          echo "** ERROR: Could not download https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list"
+          exit 5
         fi
-        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list" -O /etc/apt/sources.list.d/cloudera-manager.list
-        chown root:root /etc/apt/sources.list.d/cloudera-manager.list
-        chmod 0644 /etc/apt/sources.list.d/cloudera-manager.list
-        if [ -n "$SCMVERSION" ]; then
-          sed -e "s|-cm5 |-cm${SCMVERSION} |" -i /etc/apt/sources.list.d/cloudera-manager.list
-        fi
+        chown root:root /etc/apt/sources.list.d/cloudera-jdk.list
+        chmod 0644 /etc/apt/sources.list.d/cloudera-jdk.list
         curl -s "http://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/archive.key" | apt-key add -
       fi
       apt-get -y -qq update
       apt-get -y -q install oracle-j2sdk1.7
+      if [ "$HAS_SOURCESLIST" = no ]; then rm -f /etc/apt/sources.list.d/cloudera-jdk.list; fi
+      ;;
+    8)
+      # Because it may have been put there by some other process.
+      if [ ! -f /etc/apt/sources.list.d/cloudera-jdk.list ]; then
+        HAS_SOURCESLIST=no
+        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/cloudera-manager.list" -O /etc/apt/sources.list.d/cloudera-jdk.list
+        RETVAL=$?
+        if [ "$RETVAL" -ne 0 ]; then
+          echo "** ERROR: Could not download https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/cloudera-manager.list"
+          exit 7
+        fi
+        chown root:root /etc/apt/sources.list.d/cloudera-jdk.list
+        chmod 0644 /etc/apt/sources.list.d/cloudera-jdk.list
+        curl -s "https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/archive.key" | apt-key add -
+      fi
+      apt-get -y -qq update
+      apt-get -y -q install oracle-j2sdk1.8
+      if [ "$HAS_SOURCESLIST" = no ]; then rm -f /etc/apt/sources.list.d/cloudera-jdk.list; fi
       ;;
     *)
-      echo "ERROR: Unknown Java version.  Please choose 7."
+      echo "ERROR: Unknown Java version.  Please choose 7 or 8."
       exit 10
       ;;
     esac
