@@ -97,6 +97,8 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     echo 'echo never >/sys/kernel/mm/transparent_hugepage/enabled' >>/etc/rc.d/rc.local
     chmod +x /etc/rc.d/rc.local
     systemctl start rc-local
+    sleep 2
+    systemctl restart rc-local
   fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   echo never >/sys/kernel/mm/transparent_hugepage/defrag
