@@ -181,9 +181,9 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   else
     echo "Kernel is VULNERABLE (futex TSB-63)"
   fi
-  if rpm -q --changelog kernel-$(uname -r) | grep -Eq 'allow JVM to implement its own stack guard pages|fix new crash in unmapped_area_topdown()'; then
+  if rpm -q --changelog "kernel-$(uname -r)" | grep -Eq 'allow JVM to implement its own stack guard pages|fix new crash in unmapped_area_topdown()'; then
     echo "Kernel is OK (JVM crash TSB-2017-242)"
-  elif rpm -q --changelog kernel-$(uname -r) | grep -q '^- \[mm\] enlarge stack guard gap (Larry Woodman) .*{CVE-2017-1000364}'; then
+  elif rpm -q --changelog "kernel-$(uname -r)" | grep -q '^- \[mm\] enlarge stack guard gap (Larry Woodman) .*{CVE-2017-1000364}'; then
     echo "Kernel is VULNERABLE (JVM crash TSB-2017-242)"
   else
     echo "Kernel is OK (JVM crash TSB-2017-242)"
