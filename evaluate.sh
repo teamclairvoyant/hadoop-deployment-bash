@@ -191,28 +191,30 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l linux-image-[0-9]\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
   echo "** running kernel has fix?:"
-  if uname -r | grep -q '^4\.'; then
-    echo "Kernel is OK (futex TSB-63)"
+  _VAL=$(apt-get changelog "linux-image-$(uname -r)")
+  RETVAL=$?
+  # We could not retreive the changelog.
+  if [ "$RETVAL" -ne 0 ]; then
+    echo "Kernel is UNKNOWN (futex TSB-63)"
+    echo "Kernel is UNKNOWN (JVM crash TSB-2017-242)"
   else
-    _VAL=$(apt-get changelog "linux-image-$(uname -r)")
-    RETVAL=$?
-    # We could not retreive the changelog.
-    if [ "$RETVAL" -ne 0 ]; then
-      echo "Kernel is UNKNOWN (futex TSB-63)"
-      echo "Kernel is UNKNOWN (JVM crash TSB-2017-242)"
-    else
+    if uname -r | grep -q '^2\.'; then
       # TODO: The following is unreliable
-      echo "The following is unreliable:"
+      echo "The following line is unreliable:"
       if echo "${_VAL}" | grep -q 'futex: Ensure get_futex_key_refs() always implies a barrier'; then
         echo "Kernel is OK (futex TSB-63)"
       else
         echo "Kernel is VULNERABLE (futex TSB-63)"
       fi
-      if echo "${_VAL}" | grep -q 'fix new crash in unmapped_area_topdown()'; then
-        echo "Kernel is OK (JVM crash TSB-2017-242)"
-      else
-        echo "Kernel is VULNERABLE (JVM crash TSB-2017-242)"
-      fi
+    else
+      echo "Kernel is OK (futex TSB-63)"
+    fi
+    if echo "${_VAL}" | grep -q 'fix new crash in unmapped_area_topdown()'; then
+      echo "Kernel is OK (JVM crash TSB-2017-242)"
+    elif echo "${_VAL}" | grep -q 'CVE-2017-1000364'; then
+      echo "Kernel is VULNERABLE (JVM crash TSB-2017-242)"
+    else
+      echo "Kernel is OK (JVM crash TSB-2017-242)"
     fi
   fi
 elif [ "$OS" == "SUSE LINUX" ]; then
