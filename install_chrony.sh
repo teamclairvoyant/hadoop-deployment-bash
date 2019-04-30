@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2018
 
 # Function to discover basic OS details.
 discover_os() {
@@ -59,7 +59,6 @@ discover_os() {
       fi
     elif [ -f /etc/SuSE-release ]; then
       if grep -q "^SUSE Linux Enterprise Server" /etc/SuSE-release; then
-        # shellcheck disable=SC2034
         OS="SUSE LINUX"
       fi
       # shellcheck disable=SC2034
@@ -72,6 +71,11 @@ discover_os() {
   fi
 }
 
+is_virtual() {
+  grep -Eqi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine' /sys/devices/virtual/dmi/id/*
+  return $?
+}
+
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
@@ -82,32 +86,17 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
   exit 3
 fi
 
-echo "Disabling Transparent Huge Pages..."
+echo "Installing Chrony NTP..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
-  if [ "$OSREL" == 6 ]; then
-    echo never >/sys/kernel/mm/transparent_hugepage/defrag
-    echo never >/sys/kernel/mm/transparent_hugepage/enabled
-    sed -i '/transparent_hugepage/d' /etc/rc.d/rc.local
-    echo 'echo never >/sys/kernel/mm/transparent_hugepage/defrag' >>/etc/rc.d/rc.local
-    echo 'echo never >/sys/kernel/mm/transparent_hugepage/enabled' >>/etc/rc.d/rc.local
-  else
-    # http://www.certdepot.net/rhel7-rc-local-service/
-    sed -i '/transparent_hugepage/d' /etc/rc.d/rc.local
-    echo 'echo never >/sys/kernel/mm/transparent_hugepage/defrag' >>/etc/rc.d/rc.local
-    echo 'echo never >/sys/kernel/mm/transparent_hugepage/enabled' >>/etc/rc.d/rc.local
-    chmod +x /etc/rc.d/rc.local
-    systemctl start rc-local
-    sleep 2
-    systemctl restart rc-local
-  fi
+  yum -y -e1 -d1 remove ntp*
+  yum -y -e1 -d1 install chrony
+  service chronyd start
+  chkconfig chronyd on
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
-  echo never >/sys/kernel/mm/transparent_hugepage/defrag
-  echo never >/sys/kernel/mm/transparent_hugepage/enabled
-  # shellcheck disable=SC1004
-  sed -e '/transparent_hugepage/d' \
-      -e '/^exit 0/i \
-echo never >/sys/kernel/mm/transparent_hugepage/defrag\
-echo never >/sys/kernel/mm/transparent_hugepage/enabled' \
-      -i /etc/rc.local
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get -y -q remove ntp
+  apt-get -y -q install chrony
+  service chrony start
+  update-rc.d chrony defaults
 fi
 

@@ -15,10 +15,6 @@
 #
 # Copyright Clairvoyant 2015
 
-# ARGV:
-# 1 - Which major JDK version to install. If empty, install JDK 7 from Cloudera. - optional
-# 2 - SCM version - optional
-
 # Note:
 # If you do not want to download the JDK multiple times or access to
 # download.oracle.com is blocked, you can place the manually downloaded JDK RPM
@@ -31,8 +27,8 @@ if [ -n "$DEBUG" ]; then set -x; fi
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-JDK_TYPE=cloudera
-JDK_VERSION=7
+JDK_VERSION=null
+SCMVERSION=6.2.0
 
 # Function to print the help screen.
 print_help() {
@@ -40,7 +36,6 @@ print_help() {
   echo ""
   echo "        $1 -t|--jdktype       <cloudera|oracle|openjdk>"
   echo "        $1 [-j|--jdkversion]  <version>"
-  echo "        $1 [-c|--cmversion]   <version>"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
   echo ""
@@ -141,10 +136,6 @@ while [[ $1 = -* ]]; do
       shift
       JDK_VERSION=$1
       ;;
-    -c|--cmversion)
-      shift
-      SCMVERSION=$1
-      ;;
     -h|--help)
       print_help "$(basename "$0")"
       ;;
@@ -170,7 +161,6 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
 fi
 
 # Check to see if we have the required parameters.
-#if [ -z "$JDK_TYPE" ] || [ -z "$JDK_VERSION" ]; then print_help "$(basename "$0")"; fi
 if [ "$JDK_TYPE" != "cloudera" ] && [ "$JDK_TYPE" != "oracle" ] && [ "$JDK_TYPE" != "openjdk" ]; then
   echo "** ERROR: --jdktype must be one of cloudera, oracle, or openjdk."
   echo ""
@@ -181,14 +171,6 @@ fi
 check_root
 
 # main
-# Backwards support of the old script.  See ARGV above.
-USECLOUDERA=$1
-if [ -n "$USECLOUDERA" ]; then
-  JDK_TYPE=oracle
-  JDK_VERSION=$USECLOUDERA
-fi
-SCMVERSION=$2
-
 PROXY=$(grep -Eh '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
 eval "$PROXY"
 export http_proxy
@@ -201,54 +183,93 @@ if [ -z "$http_proxy" ]; then
 fi
 
 if [ "$JDK_TYPE" == "cloudera" ]; then
-  # TODO: Deal with CM 6.
   echo "Installing Cloudera's Oracle JDK ${JDK_VERSION} ..."
   if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     case "$JDK_VERSION" in
     7)
       # Because it may have been put there by some other process.
-      if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
-        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
-        chown root:root /etc/yum.repos.d/cloudera-manager.repo
-        chmod 0644 /etc/yum.repos.d/cloudera-manager.repo
-        if [ -n "$SCMVERSION" ]; then
-          sed -e "s|/cm/5/|/cm/${SCMVERSION}/|" -i /etc/yum.repos.d/cloudera-manager.repo
-        fi
+      if [ ! -f /etc/yum.repos.d/cloudera-jdk.repo ]; then
+        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-jdk.repo
+        chown root:root /etc/yum.repos.d/cloudera-jdk.repo
+        chmod 0644 /etc/yum.repos.d/cloudera-jdk.repo
+        echo "includepkgs=oracle-j2sdk1.7" >>/etc/yum.repos.d/cloudera-jdk.repo
+        sed -e 's|cloudera-manager|cloudera-jdk|' -e '/^name=/s|Cloudera Manager|Cloudera JDK|' -i /etc/yum.repos.d/cloudera-jdk.repo
       fi
       yum -y -e1 -d1 install oracle-j2sdk1.7
       DIRNAME=$(rpm -ql oracle-j2sdk1.7|head -1)
       TARGET=$(basename "$DIRNAME")
       ln -s "$TARGET" /usr/java/default
       ;;
+    8)
+      # Because it may have been put there by some other process.
+      if [ ! -f /etc/yum.repos.d/cloudera-jdk.repo ]; then
+        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm6/${SCMVERSION}/redhat${OSREL}/yum/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-jdk.repo
+        chown root:root /etc/yum.repos.d/cloudera-jdk.repo
+        chmod 0644 /etc/yum.repos.d/cloudera-jdk.repo
+        echo "" >>/etc/yum.repos.d/cloudera-jdk.repo
+        echo "includepkgs=oracle-j2sdk1.8" >>/etc/yum.repos.d/cloudera-jdk.repo
+        sed -e 's|cloudera-manager|cloudera-jdk|' -e '/^name=/s|Cloudera Manager|Cloudera JDK|' -i /etc/yum.repos.d/cloudera-jdk.repo
+      fi
+      yum -y -e1 -d1 install oracle-j2sdk1.8
+      DIRNAME=$(rpm -ql oracle-j2sdk1.8|head -1)
+      TARGET=$(basename "$DIRNAME")
+      ln -s "$TARGET" /usr/java/default
+      ;;
     *)
-      echo "ERROR: Unknown Java version.  Please choose 7."
+      echo "ERROR: Unknown Java version.  Please choose 7 or 8."
       exit 10
       ;;
     esac
   elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
     export DEBIAN_FRONTEND=noninteractive
+    if [ "$OS" == Debian ]; then
+      OS_LOWER=debian
+    elif [ "$OS" == Ubuntu ]; then
+      OS_LOWER=ubuntu
+    fi
+    OSVER_NUMERIC=${OSVER//./}
+    HAS_SOURCESLIST=yes
     case "$JDK_VERSION" in
     7)
       # Because it may have been put there by some other process.
-      if [ ! -f /etc/apt/sources.list.d/cloudera-manager.list ]; then
-        if [ "$OS" == Debian ]; then
-          OS_LOWER=debian
-        elif [ "$OS" == Ubuntu ]; then
-          OS_LOWER=ubuntu
+      if [ ! -f /etc/apt/sources.list.d/cloudera-jdk.list ]; then
+        HAS_SOURCESLIST=no
+        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list" -O /etc/apt/sources.list.d/cloudera-jdk.list
+        RETVAL=$?
+        if [ "$RETVAL" -ne 0 ]; then
+          echo "** ERROR: Could not download https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list"
+          rm -f /etc/apt/sources.list.d/cloudera-jdk.list
+          exit 5
         fi
-        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list" -O /etc/apt/sources.list.d/cloudera-manager.list
-        chown root:root /etc/apt/sources.list.d/cloudera-manager.list
-        chmod 0644 /etc/apt/sources.list.d/cloudera-manager.list
-        if [ -n "$SCMVERSION" ]; then
-          sed -e "s|-cm5 |-cm${SCMVERSION} |" -i /etc/apt/sources.list.d/cloudera-manager.list
-        fi
+        chown root:root /etc/apt/sources.list.d/cloudera-jdk.list
+        chmod 0644 /etc/apt/sources.list.d/cloudera-jdk.list
         curl -s "http://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/archive.key" | apt-key add -
       fi
       apt-get -y -qq update
       apt-get -y -q install oracle-j2sdk1.7
+      if [ "$HAS_SOURCESLIST" = no ]; then rm -f /etc/apt/sources.list.d/cloudera-jdk.list; fi
+      ;;
+    8)
+      # Because it may have been put there by some other process.
+      if [ ! -f /etc/apt/sources.list.d/cloudera-jdk.list ]; then
+        HAS_SOURCESLIST=no
+        wget --connect-timeout=5 --tries=5 -q "https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/cloudera-manager.list" -O /etc/apt/sources.list.d/cloudera-jdk.list
+        RETVAL=$?
+        if [ "$RETVAL" -ne 0 ]; then
+          echo "** ERROR: Could not download https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/cloudera-manager.list"
+          rm -f /etc/apt/sources.list.d/cloudera-jdk.list
+          exit 7
+        fi
+        chown root:root /etc/apt/sources.list.d/cloudera-jdk.list
+        chmod 0644 /etc/apt/sources.list.d/cloudera-jdk.list
+        curl -s "https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/archive.key" | apt-key add -
+      fi
+      apt-get -y -qq update
+      apt-get -y -q install oracle-j2sdk1.8
+      if [ "$HAS_SOURCESLIST" = no ]; then rm -f /etc/apt/sources.list.d/cloudera-jdk.list; fi
       ;;
     *)
-      echo "ERROR: Unknown Java version.  Please choose 7."
+      echo "ERROR: Unknown Java version.  Please choose 7 or 8."
       exit 10
       ;;
     esac
@@ -257,55 +278,45 @@ elif [ "$JDK_TYPE" == "oracle" ]; then
   echo "Installing Oracle JDK ${JDK_VERSION} ..."
   if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     case "$JDK_VERSION" in
-    7)
-      # TODO: No longer works.  Oracle now requires login.
-      cd /tmp || exit
-      echo "*** Downloading Oracle JDK 7u80..."
-      wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-        http://download.oracle.com/otn/java/jdk/7u80-b15/jdk-7u80-linux-x64.rpm -O jdk-7u80-linux-x64.rpm
-      rpm -Uv jdk-7u80-linux-x64.rpm
-      ;;
     8)
       cd /tmp || exit
       echo "*** Downloading Oracle JDK 8u202..."
-      wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-        https://download.oracle.com/otn-pub/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.rpm -O jdk-8u202-linux-x64.rpm
+      wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate \
+        http://archive.clairvoyantsoft.com/oracle_java/8/rpm/x86_64/jdk-8u202-linux-x64.rpm \
+        -O jdk-8u202-linux-x64.rpm
       rpm -Uv jdk-8u202-linux-x64.rpm
       ;;
     *)
-      echo "ERROR: Unknown Java version.  Please choose 7 or 8."
+      echo "ERROR: Unknown Java version.  Please choose 8."
       exit 11
       ;;
     esac
   elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
     export DEBIAN_FRONTEND=noninteractive
     case "$JDK_VERSION" in
-    7)
-      #mkdir -p /var/cache/oracle-jdk7-installer
-      #mv jdk-7u*-linux-x64.tar.gz /var/cache/oracle-jdk7-installer/
-      if ! command -v add-apt-repository >/dev/null; then
-        apt-get -y -q install software-properties-common
-      fi
-      add-apt-repository -y ppa:webupd8team/java
-      apt-get -y -qq update
-      echo oracle-java7-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
-      apt-get -y -q install oracle-java7-installer
-      apt-get -y -q install oracle-java7-set-default
-      ;;
     8)
-      #mkdir -p /var/cache/oracle-jdk8-installer
-      #mv jdk-8u*-linux-x64.tar.gz /var/cache/oracle-jdk8-installer/
-      if ! command -v add-apt-repository >/dev/null; then
-        apt-get -y -q install software-properties-common
-      fi
-      add-apt-repository -y ppa:webupd8team/java
-      apt-get -y -qq update
       echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
-      apt-get -y -q install oracle-java8-installer
-      apt-get -y -q install oracle-java8-set-default
+      #mkdir -p /var/cache/oracle-jdk8-installer
+      #wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate \
+      #  http://archive.clairvoyantsoft.com/oracle_java/8/tar/jdk-8u201-linux-x64.tar.gz \
+      #  -O /var/cache/oracle-jdk8-installer/jdk-8u201-linux-x64.tar.gz
+      wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate \
+        http://archive.clairvoyantsoft.com/oracle_java/8/deb/oracle-java8-installer_8u201-2~clairvoyant~1_all.deb \
+        -O oracle-java8-installer_8u201-2~clairvoyant~1_all.deb
+      wget --connect-timeout=5 --tries=5 -nv -c --no-cookies --no-check-certificate \
+        http://archive.clairvoyantsoft.com/oracle_java/8/deb/oracle-java8-set-default_8u201-2~clairvoyant~1_all.deb \
+        -O oracle-java8-set-default_8u201-2~clairvoyant~1_all.deb
+      if [ "$OSNAME" == "trusty" ]; then
+        apt-get -y -q install gsfonts gsfonts-x11 java-common libfontenc1 libxfont1 x11-common xfonts-encodings xfonts-utils
+        dpkg -i ./oracle-java8-installer_8u201-2~clairvoyant~1_all.deb
+        dpkg -i ./oracle-java8-set-default_8u201-2~clairvoyant~1_all.deb
+      else
+        apt -y -q -o Dpkg::Progress-Fancy="0" install ./oracle-java8-installer_8u201-2~clairvoyant~1_all.deb
+        apt -y -q -o Dpkg::Progress-Fancy="0" install ./oracle-java8-set-default_8u201-2~clairvoyant~1_all.deb
+      fi
       ;;
     *)
-      echo "ERROR: Unknown Java version.  Please choose 7 or 8."
+      echo "ERROR: Unknown Java version.  Please choose 8."
       exit 11
       ;;
     esac
