@@ -112,10 +112,10 @@ if [ "$OS" == CentOS ]; then
   echo "** End of possible errors."
 
   yum -y -e1 -d1 install epel-release
-  wget -q "http://${YUMHOST}/navigator-encrypt/latest/cloudera-navencrypt.repo" -O /etc/yum.repos.d/cloudera-navencrypt.repo
+  wget -q "http://${YUMHOST}/navigator-encrypt/latest/el${OSREL}/cloudera-navencrypt.repo" -O /etc/yum.repos.d/cloudera-navencrypt.repo
   RETVAL=$?
   if [ "$RETVAL" -ne 0 ]; then
-    echo "** ERROR: Could not download http://${YUMHOST}/navigator-encrypt/latest/cloudera-navencrypt.repo"
+    echo "** ERROR: Could not download http://${YUMHOST}/navigator-encrypt/latest/el${OSREL}/cloudera-navencrypt.repo"
     exit 4
   fi
   chown root:root /etc/yum.repos.d/cloudera-navencrypt.repo
@@ -137,10 +137,10 @@ elif [ "$OS" == RedHatEnterpriseServer ]; then
   if ! rpm -q epel-release; then
     rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
   fi
-  wget -q "http://${YUMHOST}/navigator-encrypt/latest/cloudera-navencrypt.repo" -O /etc/yum.repos.d/cloudera-navencrypt.repo
+  wget -q "http://${YUMHOST}/navigator-encrypt/latest/el${OSREL}/cloudera-navencrypt.repo" -O /etc/yum.repos.d/cloudera-navencrypt.repo
   RETVAL=$?
   if [ "$RETVAL" -ne 0 ]; then
-    echo "** ERROR: Could not download http://${YUMHOST}/navigator-encrypt/latest/cloudera-navencrypt.repo"
+    echo "** ERROR: Could not download http://${YUMHOST}/navigator-encrypt/latest/el${OSREL}/cloudera-navencrypt.repo"
     exit 4
   fi
   chown root:root /etc/yum.repos.d/cloudera-navencrypt.repo
