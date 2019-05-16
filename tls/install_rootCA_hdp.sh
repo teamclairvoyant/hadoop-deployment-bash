@@ -72,6 +72,10 @@ if [ ! -f "${JAVA_HOME}"/jre/lib/security/jssecacerts ]; then
   #TODO: On el7: /usr/java/default/jre/lib/security/cacerts -> /etc/pki/java/cacerts
   /bin/cp -p "${JAVA_HOME}"/jre/lib/security/cacerts "${JAVA_HOME}"/jre/lib/security/jssecacerts
 fi
-keytool -importcert -file /opt/hortonworks/security/CAcerts/ca.cert.pem -alias CAcert -keystore "${JAVA_HOME}"/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
-keytool -importcert -file /opt/hortonworks/security/CAcerts/intermediate.cert.pem -alias CAcertint -keystore "${JAVA_HOME}"/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
+
+# Import ROOT CA certificate (ca.cert.pem) in server's Truststore file (jssecacerts)
+keytool -importcert -file /etc/hortonworks/security/CAcerts/ca.cert.pem -alias CAcert -keystore "${JAVA_HOME}"/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
+
+# Import Intermediate CA certificate (ca.cert.pem) in server's Truststore file (jssecacerts)
+keytool -importcert -file /etc/hortonworks/security/CAcerts/intermediate.cert.pem -alias CAcertint -keystore "${JAVA_HOME}"/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
 

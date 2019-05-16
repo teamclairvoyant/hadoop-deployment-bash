@@ -19,9 +19,9 @@ echo "**************************************************************************
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
 echo "Making TLS security directories..."
-mkdir -p -m 0755 /opt/hortonworks/security
-mkdir -p -m 0755 /opt/hortonworks/security/x509
-mkdir -p -m 0755 /opt/hortonworks/security/jks
-mkdir -p -m 0755 /opt/hortonworks/security/CAcerts
-mkdir -p -m 0755 /opt/hortonworks/security/keytabs
-mkdir -p -m 0755 /opt/hortonworks/security/jaas
+mkdir -p -m 0755 /etc/hortonworks/security
+mkdir -p -m 0755 /etc/hortonworks/security/x509
+mkdir -p -m 0755 /etc/hortonworks/security/jks
+mkdir -p -m 0755 /etc/hortonworks/security/CAcerts
+mkdir -p -m 0755 /etc/hortonworks/security/keytabs
+mkdir -p -m 0755 /etc/hortonworks/security/jaas

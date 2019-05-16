@@ -34,14 +34,17 @@ elif [ -f /etc/profile.d/java.sh ]; then
   . /etc/profile.d/java.sh
 fi
 
+# Import ROOT CA certificate (ca.cert.pem) in server's JKS (localhost-keystore.jks)
 keytool -importcert -trustcacerts -noprompt -alias RootCA \
--keystore /opt/hortonworks/security/jks/localhost-keystore.jks \
--file /opt/hortonworks/security/CAcerts/ca.cert.pem -storepass "$SP"
+-keystore /etc/hortonworks/security/jks/localhost-keystore.jks \
+-file /etc/hortonworks/security/CAcerts/ca.cert.pem -storepass "$SP"
 
+# Import Intermediate CA certificate (intermediate.cert.pem) in server's JKS (localhost-keystore.jks)
 keytool -importcert -trustcacerts -noprompt -alias SubordinateCA \
--keystore /opt/hortonworks/security/jks/localhost-keystore.jks \
--file /opt/hortonworks/security/CAcerts/intermediate.cert.pem -storepass "$SP"
+-keystore /etc/hortonworks/security/jks/localhost-keystore.jks \
+-file /etc/hortonworks/security/CAcerts/intermediate.cert.pem -storepass "$SP"
 
+# Import server's signed certificate(localhost.pem)signed by CA in server's JKS (localhost-keystore.jks)
 keytool -importcert -trustcacerts -noprompt -alias localhost \
--keystore /opt/hortonworks/security/jks/localhost-keystore.jks \
--file /opt/hortonworks/security/x509/localhost.pem -storepass "$SP"
+-keystore /etc/hortonworks/security/jks/localhost-keystore.jks \
+-file /etc/hortonworks/security/x509/localhost.pem -storepass "$SP"
