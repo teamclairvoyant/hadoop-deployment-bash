@@ -15,6 +15,16 @@
 # limitations under the License.
 #
 # Copyright Clairvoyant 2016
+#
+# No elevated privileges are required to run this script.  However, there are
+# several invocations of sudo in order to gather certain pieces of information
+# that are not available to unprivileged users.  Only the logical volume,
+# iptables, and RHEL subscription-manager commands use sudo.
+#
+# Sudo is invoked in non-interactive mode and will not prompt for a password.
+# This will allow for graceful failure of that command if passwordless sudo is
+# not enabled for the user.  Environments that use privilege escalation tools
+# different from sudo (like Centrify's dzdo) are not presently supported.
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
@@ -90,6 +100,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
+echo 'Version: 20190510'
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
@@ -134,7 +145,7 @@ echo "** Disks:"
 if [ "$OS" == "SUSE LINUX" ] && [ "$OSREL" == 11 ]; then
   lsblk -lo NAME,SIZE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^\//'
 else
-  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
+  lsblk -lo NAME,SIZE,TYPE,ROTA,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
 fi
 echo "** Logical Volumes:"
 sudo -n pvs
