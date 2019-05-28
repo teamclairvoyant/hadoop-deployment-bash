@@ -603,6 +603,8 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
 fi
 echo "*** Cloudera Parcels"
 ls -l /opt/cloudera/parcels
+echo "*** Cloudera CSDs"
+ls -l /opt/cloudera/csd
 
 echo "****************************************"
 echo "*** Hortonworks Software"
