@@ -201,6 +201,10 @@ chown root:root /var/log/haproxy.log
 chmod 0600 /var/log/haproxy.log
 service rsyslog condrestart
 
+if selinuxenabled 2>/dev/null; then
+  setsebool -P haproxy_connect_any on
+fi
+
 service haproxy start
 chkconfig haproxy on
 
