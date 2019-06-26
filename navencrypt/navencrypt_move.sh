@@ -32,7 +32,8 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin
 print_help() {
   printf 'Usage:  %s --navpass <password> --mountpoint <mountpoint> --emountpoint <emountpoint> --category <category>\n' "$1"
   printf '\n'
-  printf '         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n'
+  printf '         -n|--navpass          First password used to encrypt the local Navigator Encrypt configuration.\n'
+  printf '         -2|--navpass2         Second password used to encrypt the local Navigator Encrypt configuration.  This parameter is not needed for the single-passphrase key type.\n'
   printf '         -m|--mountpoint       Mountpoint of the source filesystem.\n'
   printf '         -e|--emountpoint      Mountpoint of the encrypted filesystem.\n'
   printf '         -c|--category         Category to be used for the encryption zone.\n'
@@ -72,6 +73,10 @@ while [[ $1 = -* ]]; do
     -n|--navpass)
       shift
       NAVPASS=$1
+      ;;
+    -2|--navpass2)
+      shift
+      NAVPASS2=$1
       ;;
     -m|--mountpoint)
       shift
@@ -119,7 +124,8 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   if [ -d "$MOUNTPOINT" ]; then
     if [ -d "$EMOUNTPOINT" ]; then
       echo "Moving data from ${MOUNTPOINT} to ${EMOUNTPOINT} for encryption..."
-      printf '%s' "$NAVPASS" |
+      printf -v NAVPASS_ANSWERS "$NAVPASS\n$NAVPASS2"
+      echo "$NAVPASS_ANSWERS" |
       navencrypt-move encrypt "@${CATEGORY}" "$MOUNTPOINT" "$EMOUNTPOINT"
     else
       printf '** ERROR: Destination mountpoint %s is not a directory. Exiting...\n' "$EMOUNTPOINT"

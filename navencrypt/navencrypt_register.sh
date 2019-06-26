@@ -34,12 +34,13 @@ KTSERVERHOST2=""
 print_help() {
   printf 'Usage:  %s --navpass <password> --server <servername> [--passive-server <servername>] --org <myOrg> --auth <KTpass> --key-type <type> [--skip-ssl-check]\n' "$1"
   printf '\n'
-  printf '         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n'
+  printf '         -n|--navpass          First password used to encrypt the local Navigator Encrypt configuration.\n'
+  printf '         -2|--navpass2         Second password used to encrypt the local Navigator Encrypt configuration.  This parameter is not needed for the single-passphrase key type.\n'
   printf '         -s|--server           Active Key Trustee Server hostname. NOT A URI.\n'
   printf '        [-p|--passive-server]  Passive Key Trustee Server hostname. NOT A URI.\n'
   printf '         -o|--org              Organization name configured by the Key Trustee Server administrator.\n'
   printf '         -a|--auth             Organization authorization token, a pre-shared secret by the Key Trustee Server administrator.\n'
-  printf '         -k|--key-type         single-passphrase, dual-passphrase, or ???\n'
+  printf '         -k|--key-type         single-passphrase or dual-passphrase\n'
   printf '        [-c|--skip-ssl-check]  Skip SSL certificate verification of the Key Trustee Server.\n'
   printf '        [-h|--help]\n'
   printf '        [-v|--version]\n'
@@ -77,6 +78,10 @@ while [[ $1 = -* ]]; do
     -n|--navpass)
       shift
       NAVPASS=$1
+      ;;
+    -2|--navpass2)
+      shift
+      NAVPASS2=$1
       ;;
     -s|--server)
       shift
@@ -125,10 +130,14 @@ if [[ -z "$KTORG" ]]; then print_help "$(basename "$0")"; fi
 if [[ -z "$KTPASS" ]]; then print_help "$(basename "$0")"; fi
 if [[ -z "$KTTYPE" ]]; then print_help "$(basename "$0")"; fi
 case $KTTYPE in
-  single-passphrase|dual-passphrase|rsa)
+  single-passphrase)
+    printf -v NAVPASS_ANSWERS "$NAVPASS\n$NAVPASS" 
+    ;;
+  dual-passphrase)
+    printf -v NAVPASS_ANSWERS "$NAVPASS\n$NAVPASS\n$NAVPASS2\n$NAVPASS2"
     ;;
   *)
-    echo "ERROR: key-type must be one of single-passphrase, dual-passphrase, or rsa."
+    echo "ERROR: key-type must be one of single-passphrase or dual-passphrase"
     exit 3
     ;;
 esac
@@ -139,7 +148,7 @@ check_root
 # main
 umask 022
 if [ ! -f /etc/navencrypt/keytrustee/clientname ]; then
-  printf '%s\n%s' "$NAVPASS" "$NAVPASS" |
+  echo "$NAVPASS_ANSWERS" |
   navencrypt register --server="https://${KTSERVERHOST1}:11371" ${KTSERVERHOST2:+"--passive-server=https://${KTSERVERHOST2}:11371"} --org="${KTORG}" --auth="${KTPASS}" --key-type="${KTTYPE}" ${SKIPSSL:+"--skip-ssl-check"}
 else
   echo "** WARNING: This host is already registered.  Skipping..."
