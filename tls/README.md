@@ -2,6 +2,20 @@
 
 All of these instructions are specific to a Cloudera Hadoop environment.  All the details can be found in [Configuring Cloudera Manager Clusters for TLS/SSL](https://www.cloudera.com/documentation/enterprise/latest/topics/cm_sg_config_tls_security.html)
 
+## Create Security Directories
+
+This script will create the directory structure needed by the scripts that follow.  The script takes one arguement: `--type cloudera` or `--type hortonworks`.
+
+### Installation
+
+```
+GITREPO=~/git/teamclairvoyant/bash
+MACHINE=somehost
+
+scp -p ${GITREPO}/tls/create_security.sh ${MACHINE}:
+ssh -t $MACHINE 'sudo bash ./create_security.sh --type cloudera'
+```
+
 ## Generate a TLS Certificate Signing Request
 
 This script will generate a private key and a certificate signing request (CSR) with the correct attributes and in the correct formats for configuration of the Cloudera Hadoop infrastructure.  It will deal with creating the Java KeyStores and the PEM-formatted x.509 files as well as preparing for the use of TLS by the Cloudera Manager Agent.
@@ -206,4 +220,3 @@ CMPASS=$CMPASS
 scp -p ${GITREPO}/tls/configure_clouderadirector_tls.sh ${MACHINE}:
 ssh -t $MACHINE "sudo bash ./configure_clouderadirector_tls.sh $CMPASS"
 ```
-
