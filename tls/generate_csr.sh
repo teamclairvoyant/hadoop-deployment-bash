@@ -55,57 +55,80 @@ elif [ -f /etc/profile.d/java.sh ]; then
   . /etc/profile.d/java.sh
 fi
 
-if [ -f /opt/cloudera/security/jks/localhost-keystore.jks ]; then
+if [ -d /etc/hortonworks ]; then
+  _TYPE=hortonworks
+  _DIR=/etc/hortonworks
+elif [ -d /opt/cloudera ]; then
+  _TYPE=cloudera
+  _DIR=/opt/cloudera
+else
+  echo "ERROR: Cannot determine if this is Cloudera or Hortonworks."
+  exit 11
+fi
+
+if [ -f "${_DIR}/security/jks/localhost-keystore.jks" ]; then
   echo "ERROR: Keystore already exists.  Exiting..."
   exit 1
 fi
+# Generate a private RSA key and store it in JKS (localhost-keystore.jks) with the distinguished name "$DN".
 keytool -genkeypair -alias localhost -keyalg RSA -sigalg SHA256withRSA \
- -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
+ -keystore "${_DIR}/security/jks/localhost-keystore.jks" \
  -keysize 2048 -dname "$DN" -storepass "$SP" -keypass "$KP"
-chmod 0440 /opt/cloudera/security/jks/localhost-keystore.jks
-chown root:cloudera-scm /opt/cloudera/security/jks/localhost-keystore.jks
+chmod 0440 "${_DIR}/security/jks/localhost-keystore.jks"
+if [ "$_TYPE" == cloudera ]; then
+  chown root:cloudera-scm "${_DIR}/security/jks/localhost-keystore.jks"
+else
+  chown root:root "${_DIR}/security/jks/localhost-keystore.jks"
+fi
 
-if [ -f /opt/cloudera/security/x509/localhost.csr ]; then
+if [ -f "${_DIR}/security/x509/localhost.csr" ]; then
   echo "ERROR: CSR already exists.  Exiting..."
   exit 2
 fi
 # https://www.cloudera.com/documentation/enterprise/5-9-x/topics/cm_sg_create_deploy_certs.html#concept_frd_1px_nw
 # X509v3 Extended Key Usage:
 #   TLS Web Server Authentication, TLS Web Client Authentication
+# Generate a CSR (localhost.csr) from the JKS (localhost-keystore.jks).
 # shellcheck disable=SC2086
 keytool -certreq -alias localhost \
- -keystore /opt/cloudera/security/jks/localhost-keystore.jks \
- -file /opt/cloudera/security/x509/localhost.csr -storepass "$SP" \
+ -keystore "${_DIR}/security/jks/localhost-keystore.jks" \
+ -file "${_DIR}/security/x509/localhost.csr" -storepass "$SP" \
  -keypass "$KP" -ext EKU=serverAuth,clientAuth -ext KU=digitalSignature,keyEncipherment $EXT
-chmod 0444 /opt/cloudera/security/x509/localhost.csr
+chmod 0444 "${_DIR}/security/x509/localhost.csr"
 
 rm -f /tmp/localhost-keystore.p12.$$
-keytool -importkeystore -srckeystore /opt/cloudera/security/jks/localhost-keystore.jks \
+# Convert the proprietary JKS (localhost-keystore.jks) to PKCS12 (localhost-keystore.p12) format.
+keytool -importkeystore -srckeystore "${_DIR}/security/jks/localhost-keystore.jks" \
  -srcstorepass "$SP" -srckeypass "$KP" -destkeystore /tmp/localhost-keystore.p12.$$ \
  -deststoretype PKCS12 -srcalias localhost -deststorepass "$SP" -destkeypass "$KP"
-if [ -f /opt/cloudera/security/x509/localhost.e.key ]; then
+if [ -f "${_DIR}/security/x509/localhost.e.key" ]; then
   echo "ERROR: Encrypted Key already exists.  Exiting..."
   rm -f /tmp/localhost-keystore.p12.$$
   exit 3
 fi
+# Extract the PEM encoded private key (localhost.e.key) from the PKCS12 (localhost-keystore.p12) file.
+# The private key (localhost.e.key) will still be in encrypted form.
 openssl pkcs12 -in /tmp/localhost-keystore.p12.$$ -passin "pass:$KP" -nocerts \
- -out /opt/cloudera/security/x509/localhost.e.key -passout "pass:$KP"
-chmod 0400 /opt/cloudera/security/x509/localhost.e.key
+ -out "${_DIR}/security/x509/localhost.e.key" -passout "pass:$KP"
+chmod 0400 "${_DIR}/security/x509/localhost.e.key"
 rm -f /tmp/localhost-keystore.p12.$$
 
-if [ -f /opt/cloudera/security/x509/localhost.key ]; then
+if [ -f "${_DIR}/security/x509/localhost.key" ]; then
   echo "ERROR: Key already exists.  Exiting..."
   exit 4
 fi
-openssl rsa -in /opt/cloudera/security/x509/localhost.e.key \
- -passin "pass:$KP" -out /opt/cloudera/security/x509/localhost.key
-chmod 0400 /opt/cloudera/security/x509/localhost.key
+# Extract the unencrypted PEM encoded private key (localhost.key) from encrypted private key (localhost.e.key).
+openssl rsa -in "${_DIR}/security/x509/localhost.e.key" \
+ -passin "pass:$KP" -out "${_DIR}/security/x509/localhost.key"
+chmod 0400 "${_DIR}/security/x509/localhost.key"
 
-if [ -f /etc/cloudera-scm-agent/agentkey.pw ]; then
-  echo "ERROR: Agent PW already exists.  Exiting..."
-  exit 5
+if [ "$_TYPE" == cloudera ]; then
+  if [ -f /etc/cloudera-scm-agent/agentkey.pw ]; then
+    echo "ERROR: Agent PW already exists.  Exiting..."
+    exit 5
+  fi
+  install -o root -g root -m 0755 -d /etc/cloudera-scm-agent
+  install -o root -g root -m 0600 /dev/null /etc/cloudera-scm-agent/agentkey.pw
+  echo "$SP" >/etc/cloudera-scm-agent/agentkey.pw
 fi
-install -o root -g root -m 0755 -d /etc/cloudera-scm-agent
-install -o root -g root -m 0600 /dev/null /etc/cloudera-scm-agent/agentkey.pw
-echo "$SP" >/etc/cloudera-scm-agent/agentkey.pw
 

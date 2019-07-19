@@ -34,15 +34,27 @@ elif [ -f /etc/profile.d/java.sh ]; then
   . /etc/profile.d/java.sh
 fi
 
+if [ -d /etc/hortonworks ]; then
+  _DIR=/etc/hortonworks
+elif [ -d /opt/cloudera ]; then
+  _DIR=/opt/cloudera
+else
+  echo "ERROR: Cannot determine if this is Cloudera or Hortonworks."
+  exit 11
+fi
+
+# Import ROOT CA certificate (ca.cert.pem) in server's JKS (localhost-keystore.jks)
 keytool -importcert -trustcacerts -noprompt -alias RootCA \
--keystore /opt/cloudera/security/jks/localhost-keystore.jks \
--file /opt/cloudera/security/CAcerts/ca.cert.pem -storepass "$SP"
+ -keystore "${_DIR}/security/jks/localhost-keystore.jks" \
+ -file "${_DIR}/security/CAcerts/ca.cert.pem" -storepass "$SP"
 
+# Import Intermediate CA certificate (intermediate.cert.pem) in server's JKS (localhost-keystore.jks)
 keytool -importcert -trustcacerts -noprompt -alias SubordinateCA \
--keystore /opt/cloudera/security/jks/localhost-keystore.jks \
--file /opt/cloudera/security/CAcerts/intermediate.cert.pem -storepass "$SP"
+ -keystore "${_DIR}/security/jks/localhost-keystore.jks" \
+ -file "${_DIR}/security/CAcerts/intermediate.cert.pem" -storepass "$SP"
 
+# Import server's signed certificate(localhost.pem)signed by CA in server's JKS (localhost-keystore.jks)
 keytool -importcert -trustcacerts -noprompt -alias localhost \
--keystore /opt/cloudera/security/jks/localhost-keystore.jks \
--file /opt/cloudera/security/x509/localhost.pem -storepass "$SP"
+ -keystore "${_DIR}/security/jks/localhost-keystore.jks" \
+ -file "${_DIR}/security/x509/localhost.pem" -storepass "$SP"
 
