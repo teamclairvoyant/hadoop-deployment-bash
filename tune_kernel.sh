@@ -33,10 +33,30 @@ net.ipv4.tcp_timestamps = 0
 net.ipv4.tcp_rmem = 4096 87380 4194304
 net.ipv4.tcp_wmem = 4096 65536 4194304"
 
+# Disable TCP timestamps to improve CPU utilization (this is an optional parameter and will depend on your NIC vendor):
+#   net.ipv4.tcp_timestamps=0
+# Enable TCP sacks to improve throughput:
+#   net.ipv4.tcp_sack=1
+# Increase the maximum length of processor input queues:
+#   net.core.netdev_max_backlog=250000
+# Increase the TCP max and default buffer sizes using setsockopt():
+#   net.core.rmem_max=4194304
+#   net.core.wmem_max=4194304
+#   net.core.rmem_default=4194304
+#   net.core_wmem_default=4194304
+#   net.core.optmem_max=4194304
+# Increase memory thresholds to prevent packet dropping:
+#   net.ipv4.tcp_rmem="4096 87380 4194304"
+#   net.ipv4.tcp_wmem="4096 65536 4194304"
+# Enable low latency mode for TCP:
+#   net.ipv4.tcp_low_latency=1
+# Set the socket buffer to be divided evenly between TCP window size and application buffer:
+#   net.ipv4.tcp_adv_win_scale=1
+
 # Page allocation errors are likely happening due to higher network load where
 # kernel cannot allocate a contiguous chunk of memory for a network interrupt.
 # This happens on 10GbE interfaces of various manufacturers.
-#vm.min_free_kbytes = 1048576
+#   vm.min_free_kbytes = 1048576
 
 # Function to discover basic OS details.
 discover_os() {
