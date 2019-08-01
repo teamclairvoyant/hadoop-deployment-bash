@@ -34,6 +34,6 @@ if [ ! -f ${JAVA_HOME}/jre/lib/security/java.security-orig ]; then
 fi
 
 if ! grep ^jdk.tls.disabledAlgorithms= ${JAVA_HOME}/jre/lib/security/java.security | grep -q "TLSv1.1, TLSv1,"; then
-  sed -ie '/^jdk.tls.disabledAlgorithms=/s|SSLv3|TLSv1.1, TLSv1, SSLv3|' ${JAVA_HOME}/jre/lib/security/java.security
+  sed -e '/^jdk.tls.disabledAlgorithms=/s|SSLv3|TLSv1.1, TLSv1, SSLv3|' -i ${JAVA_HOME}/jre/lib/security/java.security
 fi
 

@@ -23,6 +23,8 @@
 # We assume that the CM server and CM database have been previously shut down.
 # If CM server or CM database are found, they will be re-started.
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
@@ -121,7 +123,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
 
     service cloudera-scm-agent stop
     # This should update the -daemons and -server packages as well if they are present.
-    yum -y -e1 -d1 update cloudera-manager-agent
+    yum -y -e1 -d1 update cloudera-manager-agent || yum -y clean metadata && yum -y -e1 -d1 update cloudera-manager-agent
     if rpm -q cloudera-manager-server-db-2 >/dev/null; then
       service cloudera-scm-server-db start
     fi

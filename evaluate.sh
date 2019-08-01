@@ -15,16 +15,26 @@
 # limitations under the License.
 #
 # Copyright Clairvoyant 2016
+#
+# No elevated privileges are required to run this script.  However, there are
+# several invocations of sudo in order to gather certain pieces of information
+# that are not available to unprivileged users.  Only the logical volume,
+# iptables, and RHEL subscription-manager commands use sudo.
+#
+# Sudo is invoked in non-interactive mode and will not prompt for a password.
+# This will allow for graceful failure of that command if passwordless sudo is
+# not enabled for the user.  Environments that use privilege escalation tools
+# different from sudo (like Centrify's dzdo) are not presently supported.
 
 PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
-    # CentOS, Ubuntu, RedHatEnterpriseServer, Debian, SUSE LINUX
+    # CentOS, Ubuntu, RedHatEnterpriseServer, Debian, SUSE LINUX, OracleServer
     # shellcheck disable=SC2034
     OS=$(lsb_release -is)
-    # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5, SLES= 11
+    # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5, SLES= 11, OEL= 7.6
     # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
@@ -43,6 +53,14 @@ discover_os() {
         OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
         # shellcheck disable=SC2034
         OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
+      elif [ -f /etc/oracle-release ]; then
+        # shellcheck disable=SC2034
+        OS=OracleServer
+        # 7.6
+        # shellcheck disable=SC2034
+        OSVER=$(rpm -qf /etc/oracle-release --qf='%{VERSION}\n')
+        # shellcheck disable=SC2034
+        OSREL=$(rpm -qf /etc/oracle-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
       else
         # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
@@ -82,11 +100,14 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
+echo 'Version: 20190510'
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
   if [ -f /etc/centos-release ]; then
     cat /etc/centos-release
+  elif [ -f /etc/oracle-release ]; then
+    cat /etc/oracle-release
   else
     cat /etc/redhat-release
   fi
@@ -124,7 +145,7 @@ echo "** Disks:"
 if [ "$OS" == "SUSE LINUX" ] && [ "$OSREL" == 11 ]; then
   lsblk -lo NAME,SIZE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^\//'
 else
-  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
+  lsblk -lo NAME,SIZE,TYPE,ROTA,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
 fi
 echo "** Logical Volumes:"
 sudo -n pvs
@@ -173,17 +194,24 @@ echo "*** kernel bugs"
 echo "** running config:"
 uname -r
 echo "** installed kernels:"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
-  rpm -q kernel
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
+  if [ "$OS" == OracleServer ]; then
+    rpm -q kernel kernel-uek
+    if uname -r | grep -q uek; then K="uek-"; fi
+  else
+    rpm -q kernel
+  fi
   echo "** running kernel has fix?:"
-  if rpm -q --changelog "kernel-$(uname -r)" | grep -q 'Ensure get_futex_key_refs() always implies a barrier'; then
+  if uname -r | grep -Eq '^4\.[0-9].*uek'; then
+    echo "Kernel is OK (futex TSB-63)"
+  elif rpm -q --changelog "kernel-${K}$(uname -r)" | grep -q 'Ensure get_futex_key_refs() always implies a barrier'; then
     echo "Kernel is OK (futex TSB-63)"
   else
     echo "Kernel is VULNERABLE (futex TSB-63)"
   fi
-  if rpm -q --changelog "kernel-$(uname -r)" | grep -Eq 'allow JVM to implement its own stack guard pages|fix new crash in unmapped_area_topdown()'; then
+  if rpm -q --changelog "kernel-${K}$(uname -r)" | grep -Eq 'allow JVM to implement its own stack guard pages|fix new crash in unmapped_area_topdown()'; then
     echo "Kernel is OK (JVM crash TSB-2017-242)"
-  elif rpm -q --changelog "kernel-$(uname -r)" | grep -q '^- \[mm\] enlarge stack guard gap (Larry Woodman) .*{CVE-2017-1000364}'; then
+  elif rpm -q --changelog "kernel-${K}$(uname -r)" | grep -q '^- \[mm\] enlarge stack guard gap (Larry Woodman) .*{CVE-2017-1000364}'; then
     echo "Kernel is VULNERABLE (JVM crash TSB-2017-242)"
   else
     echo "Kernel is OK (JVM crash TSB-2017-242)"
@@ -279,7 +307,7 @@ fi
 echo "** startup config:"
 # There are multiple other ways for the firewall to be started (ie Shorewall).
 # We will not be probing for them.
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   if [ "$OSREL" == "7" ]; then
     systemctl --lines 0 status firewalld.service
   fi
@@ -308,7 +336,7 @@ grep -r net.ipv6.conf.default.disable_ipv6 /etc/sysctl.*
 
 echo "****************************************"
 echo "*** SElinux"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   echo "** running config:"
   getenforce
   echo "** startup config:"
@@ -327,7 +355,7 @@ cat /sys/kernel/mm/transparent_hugepage/defrag
 echo "* enabled:"
 cat /sys/kernel/mm/transparent_hugepage/enabled
 echo "** startup config:"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   grep transparent_hugepage /etc/rc.d/rc.local
 elif [ "$OS" == "SUSE LINUX" ]; then
   grep transparent_hugepage /etc/init.d/after.local
@@ -349,7 +377,7 @@ grep noatime /etc/navencrypt/ztab || echo "none"
 echo "****************************************"
 echo "*** Entropy"
 echo "** running config:"
-if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; then
+if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; then
   service rngd status
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   service rng-tools status || ps -o user,pid,command -C rngd
@@ -368,7 +396,7 @@ cat /proc/sys/kernel/random/entropy_avail
 echo "****************************************"
 echo "*** Java"
 echo "** installed Java(s):"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa | grep -E 'jdk|jre|^java-|j2sdk' | sort
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*jdk\* \*jre\* java-\* \*j2sdk\* oracle-java\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -467,7 +495,7 @@ fi
 echo "****************************************"
 echo "*** JDBC"
 echo "** JDBC packages:"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -q mysql-connector-java postgresql-jdbc
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l libmysql-java libpostgresql-jdbc-java | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -479,7 +507,7 @@ ls -l /usr/share/java/sqlserver-connector-java.jar /usr/share/java/sqljdbc*.jar
 
 echo "****************************************"
 echo "*** Kerberos"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   rpm -q krb5-workstation kstart k5start
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l krb5-user kstart k5start | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -497,7 +525,7 @@ chkconfig --list nscd
 echo "****************************************"
 echo "*** NTP"
 echo "** running config:"
-if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; then
+if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; then
   service ntpd status
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ] || [ "$OS" == "SUSE LINUX" ]; then
   service ntp status
@@ -509,14 +537,14 @@ if [ "$OS" == Debian ] || [ "$OS" == Ubuntu ] || [ "$OS" == "SUSE LINUX" ]; then
 else
   chkconfig --list ntpd
 fi
-if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; } && [ "$OSREL" == 7 ]; then
+if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" == 7 ]; then
   systemctl --lines 0 status chronyd.service
   RETVAL=$?
   # Do we want to support chrony? Does CM?
 fi
 echo "** timesync status:"
 ntpq -p
-if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ]; } && { [ "$OSREL" == 7 ] && [ "$RETVAL" == 0 ]; }; then
+if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && { [ "$OSREL" == 7 ] && [ "$RETVAL" == 0 ]; }; then
   chronyc sources
 fi
 
@@ -562,29 +590,31 @@ awk 1 /etc/resolv.conf
 
 echo "****************************************"
 echo "*** Cloudera Software"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^cloudera\* ^navencrypt\* \*keytrustee\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*cloudera\* \*navencrypt\* \*keytrustee\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Cloudera Hadoop Packages"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^hadoop\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Cloudera Parcels"
 ls -l /opt/cloudera/parcels
+echo "*** Cloudera CSDs"
+ls -l /opt/cloudera/csd
 
 echo "****************************************"
 echo "*** Hortonworks Software"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^ambari\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*ambari\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Hortonworks Hadoop Packages"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^hadoop\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l hadoop-?-?-?-?-???? | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
