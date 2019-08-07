@@ -447,6 +447,8 @@ for _DIR in /usr/java/default/jre/lib/security \
             /usr/java/jdk1.6.0_31/jre/lib/security \
             /usr/java/jdk1.7.0_67-cloudera/jre/lib/security \
             /usr/java/jdk1.8.0_*/jre/lib/security \
+            /usr/lib/jvm/java-1.8.0-openjdk/jre/lib/security \
+            /usr/lib/jvm/adoptopenjdk-8-*/jre/lib/security \
             /usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security \
             /usr/lib/jvm/java-8-openjdk-amd64/jre/lib/security \
             /usr/lib/jvm/default-java/jre/lib/security \
