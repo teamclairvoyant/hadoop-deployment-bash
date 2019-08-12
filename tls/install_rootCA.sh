@@ -92,37 +92,52 @@ elif [ -d /usr/java/default ]; then
   JAVA_HOME=/usr/java/default
 fi
 
+if [ -d /etc/hortonworks ]; then
+  _DIR=/etc/hortonworks
+elif [ -d /opt/cloudera ]; then
+  _DIR=/opt/cloudera
+else
+  echo "ERROR: Cannot determine if this is Cloudera or Hortonworks."
+  exit 11
+fi
+
 if [ -z "${JAVA_HOME}" ]; then echo "ERROR: \$JAVA_HOME is not set."; exit 10; fi
 
 if [ ! -f "${JAVA_HOME}"/jre/lib/security/jssecacerts ]; then
   #TODO: On el7: /usr/java/default/jre/lib/security/cacerts -> /etc/pki/java/cacerts
-  /bin/cp -p "${JAVA_HOME}"/jre/lib/security/cacerts "${JAVA_HOME}"/jre/lib/security/jssecacerts
+  /bin/cp -p "${JAVA_HOME}/jre/lib/security/cacerts" "${JAVA_HOME}/jre/lib/security/jssecacerts"
 fi
-keytool -importcert -file /opt/cloudera/security/CAcerts/ca.cert.pem -alias CAcert -keystore "${JAVA_HOME}"/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
-keytool -importcert -file /opt/cloudera/security/CAcerts/intermediate.cert.pem -alias CAcertint -keystore "${JAVA_HOME}"/jre/lib/security/jssecacerts -storepass changeit -noprompt -trustcacerts
+# Import ROOT CA certificate (ca.cert.pem) in system truststore file (jssecacerts)
+keytool -importcert -file "${_DIR}/security/CAcerts/ca.cert.pem" \
+ -alias CAcert -keystore "${JAVA_HOME}/jre/lib/security/jssecacerts" \
+ -storepass changeit -noprompt -trustcacerts
+# Import Intermediate CA certificate (intermediate.cert.pem) in system truststore file (jssecacerts)
+keytool -importcert -file "${_DIR}/security/CAcerts/intermediate.cert.pem" \
+ -alias CAcertint -keystore "${JAVA_HOME}/jre/lib/security/jssecacerts" \
+ -storepass changeit -noprompt -trustcacerts
 
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if [ "$OS" == RedHatEnterpriseServer ]; then
     subscription-manager repos --enable="rhel-${OSREL}-server-optional-rpms"
   fi
   if ! rpm -q openssl-perl; then yum -y -e1 -d1 install openssl-perl; fi
-  c_rehash /opt/cloudera/security/CAcerts/
+  c_rehash "${_DIR}/security/CAcerts/"
 
   if [ -d /etc/pki/ca-trust/source/anchors/ ]; then
     # Lets not enable dynamic certs if the customer has not done it themselves.
     #if [ "$OSREL" == 6 ]; then
     #  update-ca-trust check | grep -q DISABLED && update-ca-trust enable
     #fi
-    cp -p /opt/cloudera/security/CAcerts/*.pem /etc/pki/ca-trust/source/anchors/
+    cp -p "${_DIR}/security/CAcerts/"*.pem /etc/pki/ca-trust/source/anchors/
     update-ca-trust extract
   fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
-  c_rehash /opt/cloudera/security/CAcerts/
-  cd /opt/cloudera/security/CAcerts/ || exit
+  c_rehash "${_DIR}/security/CAcerts/"
+  cd "${_DIR}/security/CAcerts/" || exit
   for SRC in *.pem; do
     # shellcheck disable=SC2001
     DST=$(echo "$SRC" | sed 's|pem$|crt|')
-    cp -p "/opt/cloudera/security/CAcerts/${SRC}" "/usr/local/share/ca-certificates/${DST}"
+    cp -p "${_DIR}/security/CAcerts/${SRC}" "/usr/local/share/ca-certificates/${DST}"
   done
   update-ca-certificates
 fi
