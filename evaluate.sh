@@ -100,7 +100,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20190510'
+echo 'Version: 20190828'
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
