@@ -100,7 +100,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20190828'
+echo 'Version: 20190912'
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
@@ -684,10 +684,21 @@ if [ "$OS" == RedHatEnterpriseServer ]; then
   sudo -n /sbin/subscription-manager version
 fi
 
+echo "****************************************"
+echo "*** PCI Devices"
+echo "PCI: RAID"
+lspci -mm -d ::0104
+echo "PCI: SATA"
+lspci -mm -d ::0106
+echo "PCI: Ethernet"
+lspci -mm -d ::0200
+
 #echo "****************************************"
 #echo "*** "
 #echo "** running config:"
 #echo "** startup config:"
+
+echo "****************************************"
 
 exit 0
 
