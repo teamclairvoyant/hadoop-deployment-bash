@@ -687,10 +687,14 @@ fi
 
 echo "****************************************"
 echo "*** PCI Devices"
+echo "PCI: SCSI"
+lspci -mm -d ::0100
 echo "PCI: RAID"
 lspci -mm -d ::0104
 echo "PCI: SATA"
 lspci -mm -d ::0106
+echo "PCI: SAS"
+lspci -mm -d ::0107
 echo "PCI: Ethernet"
 lspci -mm -d ::0200
 
