@@ -298,6 +298,7 @@ else
   echo "There are $IPTCOUNT active iptables rules."
 fi
 IP6T=$(sudo -n ip6tables -nL)
+RETVAL=$?
 IP6TCOUNT=$(echo "$IP6T" | grep -cvE '^Chain|^target|^$')
 if [ "$RETVAL" -ne 0 ]; then
   echo "There are UNKOWN active ip6tables rules."
