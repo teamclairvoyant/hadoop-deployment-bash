@@ -169,41 +169,32 @@ defaults
 #    server hiveserver20 HIVESERVER2HOST1:10000 check
 #    server hiveserver21 HIVESERVER2HOST2:10000 check
 
-### Setup for Hive Metastore Server.
-##listen hivemetastore
-##    bind 0.0.0.0:9083
-##    timeout client 1h
-##    timeout server 1h
-##    balance leastconn
-##    server hivemetastore0 HIVEMETASTOREHOST1:9083 check
-##    server hivemetastore1 HIVEMETASTOREHOST2:9083 check
+## Setup for beeswax (impala-shell) or original ODBC driver.
+## For JDBC or ODBC version 2.x driver, use port 21050 instead of 21000.
+## Set Hue "server_conn_timeout = 1 hour" to match the HAproxy timeout.
+#listen impala-shell
+#    bind 0.0.0.0:21000
+#    timeout client 1h
+#    timeout server 1h
+#    balance leastconn
+#    server impala0 IMPALAHOST1:21000 check
+#    server impala1 IMPALAHOST2:21000 check
+#    server impala2 IMPALAHOST3:21000 check
+#    server impala3 IMPALAHOST4:21000 check
+#    server impala4 IMPALAHOST5:21000 check
 
-# Setup for beeswax (impala-shell) or original ODBC driver.
-# For JDBC or ODBC version 2.x driver, use port 21050 instead of 21000.
-# Set Hue "server_conn_timeout = 1 hour" to match the HAproxy timeout.
-listen impala-shell
-    bind 0.0.0.0:21000
-    timeout client 1h
-    timeout server 1h
-    balance leastconn
-    server impala0 IMPALAHOST1:21000 check
-    server impala1 IMPALAHOST2:21000 check
-    server impala2 IMPALAHOST3:21000 check
-    server impala3 IMPALAHOST4:21000 check
-    server impala4 IMPALAHOST5:21000 check
-
-# Setup for Hue or other JDBC-enabled applications.
-# In particular, Hue requires sticky sessions.
-listen impala-jdbc
-    bind 0.0.0.0:21050
-    timeout client 1h
-    timeout server 1h
-    balance source
-    server impala5 IMPALAHOST1:21050 check
-    server impala6 IMPALAHOST2:21050 check
-    server impala7 IMPALAHOST3:21050 check
-    server impala8 IMPALAHOST4:21050 check
-    server impala9 IMPALAHOST5:21050 check
+## Setup for Hue or other JDBC-enabled applications.
+## In particular, Hue requires sticky sessions.
+#listen impala-jdbc
+#    bind 0.0.0.0:21050
+#    timeout client 1h
+#    timeout server 1h
+#    balance source
+#    server impala5 IMPALAHOST1:21050 check
+#    server impala6 IMPALAHOST2:21050 check
+#    server impala7 IMPALAHOST3:21050 check
+#    server impala8 IMPALAHOST4:21050 check
+#    server impala9 IMPALAHOST5:21050 check
 
 # This sets up the admin page for HA Proxy at port 1936.
 listen stats :1936
