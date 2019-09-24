@@ -100,7 +100,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20190912'
+echo 'Version: 20190924'
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
@@ -687,33 +687,41 @@ fi
 
 echo "****************************************"
 echo "*** PCI Devices"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
-  if [ "$OSREL" == "6" ]; then
-    lspci -mm
-  fi
-elif [ "$OS" == Debian ]; then
-  if [ "$OSVER" == "7" ] || [ "$OSVER" == "8" ]; then
-    lspci -mm
-  fi
-elif [ "$OS" == Ubuntu ]; then
-  if [ "$OSVER" == "14.04" ]; then
-    lspci -mm
-  fi
-elif [ "$OS" == "SUSE LINUX" ]; then
-  if [ "$OSVER" == "11" ] || [ "$OSVER" == "12" ]; then
-    lspci -mm
-  fi
+if { [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" == 6 ]; then
+  _LSPCI_OLD=true
+elif [ "$OS" == Debian ] && { [ "$OSVER" == 7 ] || [ "$OSVER" == 8 ]; }; then
+  _LSPCI_OLD=true
+elif [ "$OS" == Ubuntu ] && [ "$OSVER" == 14.04 ]; then
+  _LSPCI_OLD=true
+elif [ "$OS" == "SUSE LINUX" ] && { [ "$OSVER" == 11 ] || [ "$OSVER" == 12 ]; }; then
+  _LSPCI_OLD=true
+else
+  _LSPCI_OLD=false
 fi
-echo "PCI: SCSI"
-lspci -mm -d ::0100
-echo "PCI: RAID"
-lspci -mm -d ::0104
-echo "PCI: SATA"
-lspci -mm -d ::0106
-echo "PCI: SAS"
-lspci -mm -d ::0107
-echo "PCI: Ethernet"
-lspci -mm -d ::0200
+if [ "$_LSPCI_OLD" == true ]; then
+  _LSPCI=$(lspci -mm)
+  echo "PCI: SCSI"
+  echo "$_LSPCI" | grep 'SCSI storage controller'
+  echo "PCI: RAID"
+  echo "$_LSPCI" | grep 'RAID bus controller'
+  echo "PCI: SATA"
+  echo "$_LSPCI" | grep 'SATA controller'
+  echo "PCI: SAS"
+  echo "$_LSPCI" | grep 'Serial Attached SCSI controller'
+  echo "PCI: Ethernet"
+  echo "$_LSPCI" | grep 'Ethernet controller'
+else
+  echo "PCI: SCSI"
+  lspci -mm -d ::0100
+  echo "PCI: RAID"
+  lspci -mm -d ::0104
+  echo "PCI: SATA"
+  lspci -mm -d ::0106
+  echo "PCI: SAS"
+  lspci -mm -d ::0107
+  echo "PCI: Ethernet"
+  lspci -mm -d ::0200
+fi
 
 #echo "****************************************"
 #echo "*** "
