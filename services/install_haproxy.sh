@@ -19,10 +19,15 @@ exit 1
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
+DATE=$(date '+%Y%m%d%H%M%S')
 echo "Installing HAproxy..."
 yum -y -d1 -e1 install haproxy
 
-cp -p /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg-orig
+if [ ! -f /etc/haproxy/haproxy.cfg-orig ]; then
+  cp -p /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg-orig
+else
+  cp -p /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg."${DATE}"
+fi
 chown root:root /etc/haproxy/haproxy.cfg
 chmod 0644 /etc/haproxy/haproxy.cfg
 cat <<EOF >/etc/haproxy/haproxy.cfg
@@ -62,8 +67,8 @@ defaults
 #    mode http
 #    option httplog
 #    balance roundrobin
-#    server oozie1 OOZIEHOST1:11000 check
-#    server oozie2 OOZIEHOST2:11000 check
+#    server oozie-OOZIEHOST1 OOZIEHOST1.DOMAIN:11000 check
+#    server oozie-OOZIEHOST2 OOZIEHOST2.DOMAIN:11000 check
 
 ## Setup for Oozie TLS.
 #listen oozie
@@ -71,8 +76,8 @@ defaults
 #    timeout client 120s
 #    timeout server 120s
 #    balance roundrobin
-#    server oozie1 OOZIEHOST1:11000 check
-#    server oozie2 OOZIEHOST2:11000 check
+#    server oozie-OOZIEHOST1 OOZIEHOST1.DOMAIN:11443 check
+#    server oozie-OOZIEHOST2 OOZIEHOST2.DOMAIN:11443 check
 
 ## Setup for HttpFS.
 #frontend httpfs
@@ -85,8 +90,8 @@ defaults
 #    mode http
 #    option httplog
 #    balance roundrobin
-#    server httpfs0 HTTPFSHOST1:14000 check
-#    server httpfs1 HTTPFSHOST2:14000 check
+#    server httpfs-HTTPFSHOST1 HTTPFSHOST1.DOMAIN:14000 check
+#    server httpfs-HTTPFSHOST2 HTTPFSHOST2.DOMAIN:14000 check
 
 ## Setup for HttpFS TLS.
 #listen httpfs
@@ -94,8 +99,8 @@ defaults
 #    timeout client 120s
 #    timeout server 120s
 #    balance roundrobin
-#    server httpfs0 HTTPFSHOST1:14000 check
-#    server httpfs1 HTTPFSHOST2:14000 check
+#    server httpfs-HTTPFSHOST1 HTTPFSHOST1.DOMAIN:14000 check
+#    server httpfs-HTTPFSHOST2 HTTPFSHOST2.DOMAIN:14000 check
 
 ## Setup for Hue.
 #frontend hue
@@ -117,8 +122,8 @@ defaults
 #    option httpchk HEAD /desktop/debug/is_alive
 #    http-check expect status 200
 #    balance source
-#    server hue1 HUEHOST1:8889 cookie ServerA check inter 2s fall 3
-#    server hue2 HUEHOST2:8889 cookie ServerB check inter 2s fall 3
+#    server hue-HUEHOST1 HUEHOST1.DOMAIN:8889 cookie ServerA check inter 2s fall 3
+#    server hue-HUEHOST2 HUEHOST2.DOMAIN:8889 cookie ServerB check inter 2s fall 3
 
 ## Setup for Hue TLS.
 #listen hue
@@ -126,8 +131,8 @@ defaults
 #    timeout client 120s
 #    timeout server 120s
 #    balance source
-#    server hue1 HUEHOST1:8889 check inter 2s fall 3
-#    server hue2 HUEHOST2:8889 check inter 2s fall 3
+#    server hue-HUEHOST1 HUEHOST1.DOMAIN:8889 check inter 2s fall 3
+#    server hue-HUEHOST2 HUEHOST2.DOMAIN:8889 check inter 2s fall 3
 
 ## Setup for Solr.
 #frontend solr
@@ -142,11 +147,11 @@ defaults
 ##    option httpchk GET /solr/<core-name>/admin/ping\ HTTP/1.0
 ##    http-check expect status 200
 #    balance roundrobin
-#    server solr0 SOLRHOST1:8983 check inter 2s fall 3
-#    server solr1 SOLRHOST2:8983 check inter 2s fall 3
-#    server solr2 SOLRHOST2:8983 check inter 2s fall 3
-#    server solr3 SOLRHOST2:8983 check inter 2s fall 3
-#    server solr4 SOLRHOST2:8983 check inter 2s fall 3
+#    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8983 check inter 2s fall 3
+#    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8983 check inter 2s fall 3
+#    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8983 check inter 2s fall 3
+#    server solr-SOLRHOST4 SOLRHOST4.DOMAIN:8983 check inter 2s fall 3
+#    server solr-SOLRHOST5 SOLRHOST5.DOMAIN:8983 check inter 2s fall 3
 
 ## Setup for Solr TLS.
 #listen solr
@@ -154,11 +159,11 @@ defaults
 #    timeout client 120s
 #    timeout server 120s
 #    balance leastconn
-#    server solr0 SOLRHOST1:8983 check
-#    server solr1 SOLRHOST2:8983 check
-#    server solr2 SOLRHOST3:8983 check
-#    server solr3 SOLRHOST4:8983 check
-#    server solr4 SOLRHOST5:8983 check
+#    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8985 check inter 2s fall 3
+#    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8985 check inter 2s fall 3
+#    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8985 check inter 2s fall 3
+#    server solr-SOLRHOST4 SOLRHOST4.DOMAIN:8985 check inter 2s fall 3
+#    server solr-SOLRHOST5 SOLRHOST5.DOMAIN:8985 check inter 2s fall 3
 
 ## Setup for HiveServer2 JDBC connection.
 #listen hiveserver2-jdbc
@@ -166,8 +171,8 @@ defaults
 #    timeout client 1h
 #    timeout server 1h
 #    balance leastconn
-#    server hiveserver20 HIVESERVER2HOST1:10000 check
-#    server hiveserver21 HIVESERVER2HOST2:10000 check
+#    server hs2-HIVESERVER2HOST1 HIVESERVER2HOST1:10000 check
+#    server hs2-HIVESERVER2HOST2 HIVESERVER2HOST2:10000 check
 
 ## Setup for beeswax (impala-shell) or original ODBC driver.
 ## For JDBC or ODBC version 2.x driver, use port 21050 instead of 21000.
@@ -177,11 +182,11 @@ defaults
 #    timeout client 1h
 #    timeout server 1h
 #    balance leastconn
-#    server impala0 IMPALAHOST1:21000 check
-#    server impala1 IMPALAHOST2:21000 check
-#    server impala2 IMPALAHOST3:21000 check
-#    server impala3 IMPALAHOST4:21000 check
-#    server impala4 IMPALAHOST5:21000 check
+#    server impalaS-IMPALAHOST1 IMPALAHOST1.DOMAIN:21000 check
+#    server impalaS-IMPALAHOST2 IMPALAHOST2.DOMAIN:21000 check
+#    server impalaS-IMPALAHOST3 IMPALAHOST3.DOMAIN:21000 check
+#    server impalaS-IMPALAHOST4 IMPALAHOST4.DOMAIN:21000 check
+#    server impalaS-IMPALAHOST5 IMPALAHOST5.DOMAIN:21000 check
 
 ## Setup for Hue or other JDBC-enabled applications.
 ## In particular, Hue requires sticky sessions.
@@ -190,11 +195,11 @@ defaults
 #    timeout client 1h
 #    timeout server 1h
 #    balance source
-#    server impala5 IMPALAHOST1:21050 check
-#    server impala6 IMPALAHOST2:21050 check
-#    server impala7 IMPALAHOST3:21050 check
-#    server impala8 IMPALAHOST4:21050 check
-#    server impala9 IMPALAHOST5:21050 check
+#    server impalaJ-IMPALAHOST1 IMPALAHOST1.DOMAIN:21050 check
+#    server impalaJ-IMPALAHOST2 IMPALAHOST2.DOMAIN:21050 check
+#    server impalaJ-IMPALAHOST3 IMPALAHOST3.DOMAIN:21050 check
+#    server impalaJ-IMPALAHOST4 IMPALAHOST4.DOMAIN:21050 check
+#    server impalaJ-IMPALAHOST5 IMPALAHOST5.DOMAIN:21050 check
 
 # This sets up the admin page for HA Proxy at port 1936.
 listen stats :1936
