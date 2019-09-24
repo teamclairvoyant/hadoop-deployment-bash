@@ -687,6 +687,23 @@ fi
 
 echo "****************************************"
 echo "*** PCI Devices"
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
+  if [ "$OSREL" == "6" ]; then
+    lspci -mm
+  fi
+elif [ "$OS" == Debian ]; then
+  if [ "$OSVER" == "7" ] || [ "$OSVER" == "8" ]; then
+    lspci -mm
+  fi
+elif [ "$OS" == Ubuntu ]; then
+  if [ "$OSVER" == "14.04" ]; then
+    lspci -mm
+  fi
+elif [ "$OS" == "SUSE LINUX" ]; then
+  if [ "$OSVER" == "11" ] || [ "$OSVER" == "12" ]; then
+    lspci -mm
+  fi
+fi
 echo "PCI: SCSI"
 lspci -mm -d ::0100
 echo "PCI: RAID"
