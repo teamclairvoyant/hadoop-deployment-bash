@@ -22,6 +22,7 @@ echo "**************************************************************************
 echo "Installing HAproxy..."
 yum -y -d1 -e1 install haproxy
 
+cp -p /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg-orig
 chown root:root /etc/haproxy/haproxy.cfg
 chmod 0644 /etc/haproxy/haproxy.cfg
 cat <<EOF >/etc/haproxy/haproxy.cfg
@@ -47,16 +48,15 @@ defaults
     option tcpka
     retries 3
     timeout connect 5s
-    timeout client 50000ms
-    timeout server 50000ms
+    timeout client 50000ms # 50s
+    timeout server 50000ms # 50s
 
 ## Setup for Oozie.
 #frontend oozie
-#    bind 0.0.0.0:11000 # http
-##   bind 0.0.0.0:11443 # https
 #    mode http
-#    default_backend oozie_servers
 #    option httplog
+#    bind 0.0.0.0:11000
+#    default_backend oozie_servers
 #
 #backend oozie_servers
 #    mode http
@@ -65,12 +65,21 @@ defaults
 #    server oozie1 OOZIEHOST1:11000 check
 #    server oozie2 OOZIEHOST2:11000 check
 
+## Setup for Oozie TLS.
+#listen oozie
+#    bind 0.0.0.0:11443
+#    timeout client 120s
+#    timeout server 120s
+#    balance roundrobin
+#    server oozie1 OOZIEHOST1:11000 check
+#    server oozie2 OOZIEHOST2:11000 check
+
 ## Setup for HttpFS.
 #frontend httpfs
-#    bind 0.0.0.0:14000
 #    mode http
-#    default_backend httpfs_servers
 #    option httplog
+#    bind 0.0.0.0:14000
+#    default_backend httpfs_servers
 #
 #backend httpfs_servers
 #    mode http
@@ -79,59 +88,80 @@ defaults
 #    server httpfs0 HTTPFSHOST1:14000 check
 #    server httpfs1 HTTPFSHOST2:14000 check
 
+## Setup for HttpFS TLS.
+#listen httpfs
+#    bind 0.0.0.0:14000
+#    timeout client 120s
+#    timeout server 120s
+#    balance roundrobin
+#    server httpfs0 HTTPFSHOST1:14000 check
+#    server httpfs1 HTTPFSHOST2:14000 check
+
 ## Setup for Hue.
 #frontend hue
-#    bind 0.0.0.0:8889
 #    mode http
+#    option httplog
+#    bind 0.0.0.0:8889
 #    option http-server-close
 #    timeout client 120s
-#    option forwardfor
+#    option forwardfor # X-Forwarded-For
 #    default_backend hue_servers
 #    timeout http-request 5s
 #
 #backend hue_servers
 #    mode http
+#    option httplog
 #    option http-server-close
 #    timeout server 120s
-#    option forwardfor
+#    option forwardfor # X-Forwarded-For
 #    option httpchk HEAD /desktop/debug/is_alive
 #    http-check expect status 200
 #    balance source
-#    server hue1 HUEHOST1:8888 cookie ServerA check inter 2s fall 3
-#    server hue2 HUEHOST2:8888 cookie ServerB check inter 2s fall 3
+#    server hue1 HUEHOST1:8889 cookie ServerA check inter 2s fall 3
+#    server hue2 HUEHOST2:8889 cookie ServerB check inter 2s fall 3
+
+## Setup for Hue TLS.
+#listen hue
+#    bind 0.0.0.0:8889
+#    timeout client 120s
+#    timeout server 120s
+#    balance source
+#    server hue1 HUEHOST1:8889 check inter 2s fall 3
+#    server hue2 HUEHOST2:8889 check inter 2s fall 3
 
 ## Setup for Solr.
 #frontend solr
-#    bind 0.0.0.0:8983 # http
-##   bind 0.0.0.0:8985 # https
 #    mode http
-#    default_backend solr_servers
 #    option httplog
+#    bind 0.0.0.0:8983
+#    default_backend solr_servers
 #
 #backend solr_servers
 #    mode http
 #    option httplog
+##    option httpchk GET /solr/<core-name>/admin/ping\ HTTP/1.0
+##    http-check expect status 200
 #    balance roundrobin
+#    server solr0 SOLRHOST1:8983 check inter 2s fall 3
+#    server solr1 SOLRHOST2:8983 check inter 2s fall 3
+#    server solr2 SOLRHOST2:8983 check inter 2s fall 3
+#    server solr3 SOLRHOST2:8983 check inter 2s fall 3
+#    server solr4 SOLRHOST2:8983 check inter 2s fall 3
+
+## Setup for Solr TLS.
+#listen solr
+#    bind 0.0.0.0:8985
+#    timeout client 120s
+#    timeout server 120s
+#    balance leastconn
 #    server solr0 SOLRHOST1:8983 check
 #    server solr1 SOLRHOST2:8983 check
-#    server solr2 SOLRHOST2:8983 check
-#    server solr3 SOLRHOST2:8983 check
-#    server solr4 SOLRHOST2:8983 check
+#    server solr2 SOLRHOST3:8983 check
+#    server solr3 SOLRHOST4:8983 check
+#    server solr4 SOLRHOST5:8983 check
 
-### Setup for Solr Server.
-##listen solr
-##    bind 0.0.0.0:8983
-##    timeout client 1h
-##    timeout server 1h
-##    balance leastconn
-##    server solr0 SOLRHOST1:8983 check
-##    server solr1 SOLRHOST2:8983 check
-##    server solr2 SOLRHOST3:8983 check
-##    server solr3 SOLRHOST4:8983 check
-##    server solr4 SOLRHOST5:8983 check
-
-## Setup for HiveServer2.
-#listen hiveserver2
+## Setup for HiveServer2 JDBC connection.
+#listen hiveserver2-jdbc
 #    bind 0.0.0.0:10000
 #    timeout client 1h
 #    timeout server 1h
