@@ -68,7 +68,7 @@ fi
 
 if [ -f "${_DIR}/security/jks/localhost-keystore.jks" ]; then
   echo "ERROR: Keystore already exists.  Exiting..."
-  exit 1
+  exit 4
 fi
 # Generate a private RSA key and store it in JKS (localhost-keystore.jks) with the distinguished name "$DN".
 keytool -genkeypair -alias localhost -keyalg RSA -sigalg SHA256withRSA \
@@ -83,7 +83,7 @@ fi
 
 if [ -f "${_DIR}/security/x509/localhost.csr" ]; then
   echo "ERROR: CSR already exists.  Exiting..."
-  exit 2
+  exit 5
 fi
 # https://www.cloudera.com/documentation/enterprise/5-9-x/topics/cm_sg_create_deploy_certs.html#concept_frd_1px_nw
 # X509v3 Extended Key Usage:
@@ -104,7 +104,7 @@ keytool -importkeystore -srckeystore "${_DIR}/security/jks/localhost-keystore.jk
 if [ -f "${_DIR}/security/x509/localhost.e.key" ]; then
   echo "ERROR: Encrypted Key already exists.  Exiting..."
   rm -f /tmp/localhost-keystore.p12.$$
-  exit 3
+  exit 6
 fi
 # Extract the PEM encoded private key (localhost.e.key) from the PKCS12 (localhost-keystore.p12) file.
 # The private key (localhost.e.key) will still be in encrypted form.
@@ -115,7 +115,7 @@ rm -f /tmp/localhost-keystore.p12.$$
 
 if [ -f "${_DIR}/security/x509/localhost.key" ]; then
   echo "ERROR: Key already exists.  Exiting..."
-  exit 4
+  exit 7
 fi
 # Extract the unencrypted PEM encoded private key (localhost.key) from encrypted private key (localhost.e.key).
 openssl rsa -in "${_DIR}/security/x509/localhost.e.key" \
@@ -125,7 +125,7 @@ chmod 0400 "${_DIR}/security/x509/localhost.key"
 if [ "$_TYPE" == cloudera ]; then
   if [ -f /etc/cloudera-scm-agent/agentkey.pw ]; then
     echo "ERROR: Agent PW already exists.  Exiting..."
-    exit 5
+    exit 8
   fi
   install -o root -g root -m 0755 -d /etc/cloudera-scm-agent
   install -o root -g root -m 0600 /dev/null /etc/cloudera-scm-agent/agentkey.pw
