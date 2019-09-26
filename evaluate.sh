@@ -143,9 +143,9 @@ echo "** memory:"
 echo "memory          : $(free -g | awk '/^Mem:/{print $2}') GiB"
 echo "** Disks:"
 if [ "$OS" == "SUSE LINUX" ] && [ "$OSREL" == 11 ]; then
-  lsblk -lo NAME,SIZE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^\//'
+  lsblk -lo NAME,SIZE,ROTA,SCHED,MOUNTPOINT | awk '$1~/^NAME$/; $NF~/^\//'
 else
-  lsblk -lo NAME,SIZE,TYPE,ROTA,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
+  lsblk -lo NAME,SIZE,TYPE,ROTA,SCHED,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
 fi
 echo "** Logical Volumes:"
 sudo -n pvs
