@@ -14,8 +14,6 @@
 #
 # Copyright Clairvoyant 2017
 
-exit 1
-
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
@@ -53,8 +51,8 @@ defaults
     option tcpka
     retries 3
     timeout connect 5s
-    timeout client 50000ms # 50s
-    timeout server 50000ms # 50s
+    timeout client 50s
+    timeout server 50s
 
 ## Setup for Oozie.
 #frontend oozie
@@ -106,7 +104,7 @@ defaults
 #    bind 0.0.0.0:8889
 #    option http-server-close
 #    timeout client 120s
-#    option forwardfor # X-Forwarded-For
+#    option forwardfor    # X-Forwarded-For
 #    default_backend hue_servers
 #    timeout http-request 5s
 #
@@ -115,12 +113,12 @@ defaults
 #    option httplog
 #    option http-server-close
 #    timeout server 120s
-#    option forwardfor # X-Forwarded-For
+#    option forwardfor    # X-Forwarded-For
 #    option httpchk HEAD /desktop/debug/is_alive
 #    http-check expect status 200
 #    balance source
-#    server hue-HUEHOST1 HUEHOST1.DOMAIN:8889 cookie ServerA check inter 2s fall 3
-#    server hue-HUEHOST2 HUEHOST2.DOMAIN:8889 cookie ServerB check inter 2s fall 3
+#    server hue-HUEHOST1 HUEHOST1.DOMAIN:8889 cookie ServerA check
+#    server hue-HUEHOST2 HUEHOST2.DOMAIN:8889 cookie ServerB check
 
 ## Setup for Hue TLS.
 #listen hue
@@ -128,8 +126,8 @@ defaults
 #    timeout client 120s
 #    timeout server 120s
 #    balance source
-#    server hue-HUEHOST1 HUEHOST1.DOMAIN:8889 check inter 2s fall 3
-#    server hue-HUEHOST2 HUEHOST2.DOMAIN:8889 check inter 2s fall 3
+#    server hue-HUEHOST1 HUEHOST1.DOMAIN:8889 check
+#    server hue-HUEHOST2 HUEHOST2.DOMAIN:8889 check
 
 ## Setup for Solr.
 #frontend solr
@@ -144,21 +142,21 @@ defaults
 ##    option httpchk GET /solr/<core-name>/admin/ping\ HTTP/1.0
 ##    http-check expect status 200
 #    balance roundrobin
-#    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8983 check inter 2s fall 3
-#    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8983 check inter 2s fall 3
-#    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8983 check inter 2s fall 3
-#    server solr-SOLRHOST4 SOLRHOST4.DOMAIN:8983 check inter 2s fall 3
-#    server solr-SOLRHOST5 SOLRHOST5.DOMAIN:8983 check inter 2s fall 3
+#    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8983 check
+#    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8983 check
+#    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8983 check
+#    server solr-SOLRHOST4 SOLRHOST4.DOMAIN:8983 check
+#    server solr-SOLRHOST5 SOLRHOST5.DOMAIN:8983 check
 
 ## Setup for Solr TLS.
 #listen solr
 #    bind 0.0.0.0:8985
 #    balance roundrobin
-#    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8985 check inter 2s fall 3
-#    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8985 check inter 2s fall 3
-#    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8985 check inter 2s fall 3
-#    server solr-SOLRHOST4 SOLRHOST4.DOMAIN:8985 check inter 2s fall 3
-#    server solr-SOLRHOST5 SOLRHOST5.DOMAIN:8985 check inter 2s fall 3
+#    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8985 check
+#    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8985 check
+#    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8985 check
+#    server solr-SOLRHOST4 SOLRHOST4.DOMAIN:8985 check
+#    server solr-SOLRHOST5 SOLRHOST5.DOMAIN:8985 check
 
 ## Setup for HiveServer2 JDBC connection.
 #listen hiveserver2-jdbc
