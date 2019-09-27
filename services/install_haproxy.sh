@@ -71,13 +71,12 @@ defaults
 #    server oozie-OOZIEHOST2 OOZIEHOST2.DOMAIN:11000 check
 
 ## Setup for Oozie TLS.
-#listen oozie
+## Non-TLS Oozie configuration is also required.
+#listen oozieTLS
 #    bind 0.0.0.0:11443
-#    timeout client 120s
-#    timeout server 120s
 #    balance roundrobin
-#    server oozie-OOZIEHOST1 OOZIEHOST1.DOMAIN:11443 check
-#    server oozie-OOZIEHOST2 OOZIEHOST2.DOMAIN:11443 check
+#    server oozieT-OOZIEHOST1 OOZIEHOST1.DOMAIN:11443 check
+#    server oozieT-OOZIEHOST2 OOZIEHOST2.DOMAIN:11443 check
 
 ## Setup for HttpFS.
 #frontend httpfs
@@ -96,8 +95,6 @@ defaults
 ## Setup for HttpFS TLS.
 #listen httpfs
 #    bind 0.0.0.0:14000
-#    timeout client 120s
-#    timeout server 120s
 #    balance roundrobin
 #    server httpfs-HTTPFSHOST1 HTTPFSHOST1.DOMAIN:14000 check
 #    server httpfs-HTTPFSHOST2 HTTPFSHOST2.DOMAIN:14000 check
@@ -156,9 +153,7 @@ defaults
 ## Setup for Solr TLS.
 #listen solr
 #    bind 0.0.0.0:8985
-#    timeout client 120s
-#    timeout server 120s
-#    balance leastconn
+#    balance roundrobin
 #    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8985 check inter 2s fall 3
 #    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8985 check inter 2s fall 3
 #    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8985 check inter 2s fall 3
@@ -171,12 +166,21 @@ defaults
 #    timeout client 1h
 #    timeout server 1h
 #    balance leastconn
-#    server hs2-HIVESERVER2HOST1 HIVESERVER2HOST1:10000 check
-#    server hs2-HIVESERVER2HOST2 HIVESERVER2HOST2:10000 check
+#    server hs2J-HIVESERVER2HOST1 HIVESERVER2HOST1:10000 check
+#    server hs2J-HIVESERVER2HOST2 HIVESERVER2HOST2:10000 check
 
-## Setup for beeswax (impala-shell) or original ODBC driver.
-## For JDBC or ODBC version 2.x driver, use port 21050 instead of 21000.
+## Setup for HiveServer2 Hue JDBC connection.
 ## Set Hue "server_conn_timeout = 1 hour" to match the HAproxy timeout.
+#listen hiveserver2-hue
+#    bind 0.0.0.0:10001
+#    timeout client 1h
+#    timeout server 1h
+#    balance source
+#    server hs2H-HIVESERVER2HOST1 HIVESERVER2HOST1:10000 check
+#    server hs2H-HIVESERVER2HOST2 HIVESERVER2HOST2:10000 check
+
+## Setup for Impala beeswax (impala-shell) or original ODBC driver.
+## For JDBC or ODBC version 2.x driver, use port 21050 instead of 21000.
 #listen impala-shell
 #    bind 0.0.0.0:21000
 #    timeout client 1h
@@ -188,18 +192,31 @@ defaults
 #    server impalaS-IMPALAHOST4 IMPALAHOST4.DOMAIN:21000 check
 #    server impalaS-IMPALAHOST5 IMPALAHOST5.DOMAIN:21000 check
 
-## Setup for Hue or other JDBC-enabled applications.
-## In particular, Hue requires sticky sessions.
+## Setup for Impala JDBC connections.
 #listen impala-jdbc
 #    bind 0.0.0.0:21050
 #    timeout client 1h
 #    timeout server 1h
-#    balance source
+#    balance leastconn
 #    server impalaJ-IMPALAHOST1 IMPALAHOST1.DOMAIN:21050 check
 #    server impalaJ-IMPALAHOST2 IMPALAHOST2.DOMAIN:21050 check
 #    server impalaJ-IMPALAHOST3 IMPALAHOST3.DOMAIN:21050 check
 #    server impalaJ-IMPALAHOST4 IMPALAHOST4.DOMAIN:21050 check
 #    server impalaJ-IMPALAHOST5 IMPALAHOST5.DOMAIN:21050 check
+
+## Setup for Impala Hue JDBC connection.
+## In particular, Hue requires sticky sessions.
+## Set Hue "server_conn_timeout = 1 hour" to match the HAproxy timeout.
+#listen impala-hue
+#    bind 0.0.0.0:21051
+#    timeout client 1h
+#    timeout server 1h
+#    balance source
+#    server impalaH-IMPALAHOST1 IMPALAHOST1.DOMAIN:21050 check
+#    server impalaH-IMPALAHOST2 IMPALAHOST2.DOMAIN:21050 check
+#    server impalaH-IMPALAHOST3 IMPALAHOST3.DOMAIN:21050 check
+#    server impalaH-IMPALAHOST4 IMPALAHOST4.DOMAIN:21050 check
+#    server impalaH-IMPALAHOST5 IMPALAHOST5.DOMAIN:21050 check
 
 # This sets up the admin page for HA Proxy at port 1936.
 listen stats :1936
