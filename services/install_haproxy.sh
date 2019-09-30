@@ -249,5 +249,9 @@ fi
 service haproxy start
 chkconfig haproxy on
 
+echo "****************************************"
+echo "Now go and configure /etc/haproxy/haproxy.cfg to meet your needs."
+echo "****************************************"
 echo "Set Hue server_conn_timeout = 1 hour to match the HAproxy timeout."
+echo "****************************************"
 
