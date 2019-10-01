@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2016
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 SFILE=/etc/sudoers.d/90-cloud-init-users
 TFILE=/etc/sudoers.d/90-cloud-init-users_requiretty
 

@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2017
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # https://access.redhat.com/sites/default/files/attachments/20150325_network_performance_tuning.pdf
 # https://docs.aws.amazon.com/AmazonS3/latest/dev/TCPWindowScaling.html
 # https://docs.aws.amazon.com/AmazonS3/latest/dev/TCPSelectiveAcknowledgement.html

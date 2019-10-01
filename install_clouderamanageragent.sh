@@ -15,6 +15,8 @@
 #
 # Copyright Clairvoyant 2015
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # ARGV:
 # 1 - SCM server hostname - required
 # 2 - SCM agent version - optional

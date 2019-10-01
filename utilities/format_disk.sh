@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2016
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # ARGV:
 # 1 - Name of disk (ie sda) - required
 # 2 - Mountpoint number (ie 2 for /data/2) - required

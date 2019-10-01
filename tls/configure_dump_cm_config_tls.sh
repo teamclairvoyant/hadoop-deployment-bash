@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2017
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 CMHOST=localhost
 CMPORT=7180
 CMPORTTLS=7183

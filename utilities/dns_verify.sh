@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2019
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 echo "****************************************"
 echo "*** DNS"
 IPS=$(ip -4 a | awk '/inet/{print $2}' | grep -Ev '127.0.0.1|169.254.' | sed -e 's|/[0-9].*$||')

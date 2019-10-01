@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2019
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # ARGV:
 # 1 - TLS certificate Common Name - required
 # 2 - JKS store password - required

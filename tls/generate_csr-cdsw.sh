@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2015
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # ARGV:
 # 1 - CDSW DNS subdomain name - required
 # 2 - JKS store password - required

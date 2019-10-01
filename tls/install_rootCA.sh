@@ -15,6 +15,8 @@
 #
 # Copyright Clairvoyant 2015
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
@@ -105,6 +107,7 @@ if [ -z "${JAVA_HOME}" ]; then echo "ERROR: \$JAVA_HOME is not set."; exit 10; f
 
 if [ ! -f "${JAVA_HOME}"/jre/lib/security/jssecacerts ]; then
   #TODO: On el7: /usr/java/default/jre/lib/security/cacerts -> /etc/pki/java/cacerts
+  #TODO: On xenial: /usr/java/default/jre/lib/security/cacerts -> /etc/ssl/certs/java/cacerts
   /bin/cp -p "${JAVA_HOME}/jre/lib/security/cacerts" "${JAVA_HOME}/jre/lib/security/jssecacerts"
 fi
 # Import ROOT CA certificate (ca.cert.pem) in system truststore file (jssecacerts)

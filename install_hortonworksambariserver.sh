@@ -16,6 +16,8 @@
 # Copyright Clairvoyant 2017
 #
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # ARGV:
 # 1 - Ambari server database type : embedded, postgresql, mysql, or oracle - optional
 # 2 - Ambari server version - optional

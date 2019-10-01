@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2018
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # ARGV:
 # 1 - JKS store password - required
 

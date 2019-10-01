@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2015
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # https://blog.stathat.com/2014/12/22/fix_ec2_network_issue_skb_rides_the_rocket.html
 # Fix EC2 Network Issue: skb rides the rocket: 19 slots
 
