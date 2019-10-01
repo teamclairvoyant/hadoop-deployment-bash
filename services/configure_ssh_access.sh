@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2017
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # This is useful to configure EC2 instances to allow SSHD to authenticate users
 # via password.  It changes the SSH daemon config to allow password-based
 # authentication and specifically denies root login.

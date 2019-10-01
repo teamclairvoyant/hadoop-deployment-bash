@@ -15,6 +15,8 @@
 #
 # Copyright Clairvoyant 2015
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # ARGV:
 # 1 - JDBC driver type : mysql, postgresql, oracle, or sqlserver - optional
 #                        installs mysql and postgresql JDBC drivers by default

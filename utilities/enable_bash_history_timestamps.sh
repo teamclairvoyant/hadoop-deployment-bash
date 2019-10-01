@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2018
 
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
-echo "Updating /etc/hosts..."
-IP=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-H1=$(hostname -f)
-H2=$(hostname -s)
-sed -i -e "/^$IP/d" /etc/hosts
-echo "$IP	$H1 $H2" >>/etc/hosts
-hostname "$H1"
+echo "Enabling Bash History Timestamps..."
+cat <<EOF >/etc/profile.d/shell_history.sh
+# Enable shell command history timestamps.
+# CLAIRVOYANT
+export HISTTIMEFORMAT="%F %T "
+EOF
+chown root:root /etc/profile.d/shell_history.sh
+chmod 0644 /etc/profile.d/shell_history.sh
 

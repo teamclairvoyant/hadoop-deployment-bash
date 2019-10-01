@@ -15,6 +15,8 @@
 #
 # Copyright Clairvoyant 2015
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # The original intent of this script was to install the unlimited strength JCE
 # to *all* Oracle JDKs installed on the system.  With the advent of the JCE
 # being delivered within the JDK, and the added complexity of trying to

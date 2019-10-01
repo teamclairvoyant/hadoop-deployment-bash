@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2015
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 DATE=$(date +'%Y%m%d%H%M%S')
 
 # Function to discover basic OS details.

@@ -15,6 +15,8 @@
 #
 # Copyright Clairvoyant 2016
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # ARGV:
 # 1 - SCM agent version - optional
 
@@ -22,8 +24,6 @@
 # We assume that the CM server is also running the CM agent.
 # We assume that the CM server and CM database have been previously shut down.
 # If CM server or CM database are found, they will be re-started.
-
-PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 
 # Function to discover basic OS details.
 discover_os() {

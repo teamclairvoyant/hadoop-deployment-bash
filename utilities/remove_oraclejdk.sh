@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2019
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then

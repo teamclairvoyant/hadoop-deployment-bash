@@ -14,6 +14,8 @@
 #
 # Copyright Clairvoyant 2016
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # https://www.cloudera.com/documentation/enterprise/5-5-x/topics/sg_optimize_hdfs_encryption.html
 
 # Function to discover basic OS details.

@@ -12,18 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2019
 
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
-echo "Updating /etc/hosts..."
-IP=$(/usr/bin/curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-H1=$(hostname -f)
-H2=$(hostname -s)
-sed -i -e "/^$IP/d" /etc/hosts
-echo "$IP	$H1 $H2" >>/etc/hosts
-hostname "$H1"
+echo "Validating X.509 certifiacte and RSA key..."
+KEY=$(openssl rsa -modulus -noout -in /opt/cloudera/security/x509/localhost.key | openssl sha -sha512)
+CRT=$(openssl x509 -modulus -noout -in /opt/cloudera/security/x509/localhost.pem | openssl sha -sha512)
+
+if [ "$KEY" == "$CRT" ]; then
+  echo "SUCCESS: The key matches the certificate."
+else
+  echo "ERROR: The key does not match the certificate."
+fi
 

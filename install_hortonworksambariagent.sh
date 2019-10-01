@@ -15,6 +15,8 @@
 #
 # Copyright Clairvoyant 2017
 
+PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
+
 # ARGV:
 # 1 - Ambari server hostname - required
 # 2 - Ambari agent version - optional

@@ -100,7 +100,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20190912'
+echo 'Version: 20190924'
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
@@ -143,9 +143,9 @@ echo "** memory:"
 echo "memory          : $(free -g | awk '/^Mem:/{print $2}') GiB"
 echo "** Disks:"
 if [ "$OS" == "SUSE LINUX" ] && [ "$OSREL" == 11 ]; then
-  lsblk -lo NAME,SIZE,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^\//'
+  lsblk -lo NAME,SIZE,ROTA,SCHED,MOUNTPOINT | awk '$1~/^NAME$/; $NF~/^\//'
 else
-  lsblk -lo NAME,SIZE,TYPE,ROTA,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
+  lsblk -lo NAME,SIZE,TYPE,ROTA,SCHED,MOUNTPOINT | awk '$1~/^NAME$/; $3~/^disk$/'
 fi
 echo "** Logical Volumes:"
 sudo -n pvs
@@ -298,6 +298,7 @@ else
   echo "There are $IPTCOUNT active iptables rules."
 fi
 IP6T=$(sudo -n ip6tables -nL)
+RETVAL=$?
 IP6TCOUNT=$(echo "$IP6T" | grep -cvE '^Chain|^target|^$')
 if [ "$RETVAL" -ne 0 ]; then
   echo "There are UNKOWN active ip6tables rules."
@@ -686,12 +687,41 @@ fi
 
 echo "****************************************"
 echo "*** PCI Devices"
-echo "PCI: RAID"
-lspci -mm -d ::0104
-echo "PCI: SATA"
-lspci -mm -d ::0106
-echo "PCI: Ethernet"
-lspci -mm -d ::0200
+if { [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" == 6 ]; then
+  _LSPCI_OLD=true
+elif [ "$OS" == Debian ] && { [ "$OSVER" == 7 ] || [ "$OSVER" == 8 ]; }; then
+  _LSPCI_OLD=true
+elif [ "$OS" == Ubuntu ] && [ "$OSVER" == 14.04 ]; then
+  _LSPCI_OLD=true
+elif [ "$OS" == "SUSE LINUX" ] && { [ "$OSVER" == 11 ] || [ "$OSVER" == 12 ]; }; then
+  _LSPCI_OLD=true
+else
+  _LSPCI_OLD=false
+fi
+if [ "$_LSPCI_OLD" == true ]; then
+  _LSPCI=$(lspci -mm)
+  echo "PCI: SCSI"
+  echo "$_LSPCI" | grep 'SCSI storage controller'
+  echo "PCI: RAID"
+  echo "$_LSPCI" | grep 'RAID bus controller'
+  echo "PCI: SATA"
+  echo "$_LSPCI" | grep 'SATA controller'
+  echo "PCI: SAS"
+  echo "$_LSPCI" | grep 'Serial Attached SCSI controller'
+  echo "PCI: Ethernet"
+  echo "$_LSPCI" | grep 'Ethernet controller'
+else
+  echo "PCI: SCSI"
+  lspci -mm -d ::0100
+  echo "PCI: RAID"
+  lspci -mm -d ::0104
+  echo "PCI: SATA"
+  lspci -mm -d ::0106
+  echo "PCI: SAS"
+  lspci -mm -d ::0107
+  echo "PCI: Ethernet"
+  lspci -mm -d ::0200
+fi
 
 #echo "****************************************"
 #echo "*** "
