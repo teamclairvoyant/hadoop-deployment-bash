@@ -202,7 +202,7 @@ use_fully_qualified_names = False' -i /etc/sssd/sssd.conf
       -e '/^\[domain/a\
 # We have to use FILE: until JVM can support something better.\
 # https://community.hortonworks.com/questions/11288/kerberos-cache-in-ipa-redhat-idm-keyring-solved.html\
-#default_ccache_name = FILE:/tmp/krb5cc_%{uid}' -i /etc/sssd/sssd.conf
+default_ccache_name = FILE:/tmp/krb5cc_%{uid}' -i /etc/sssd/sssd.conf
   service sssd restart
 
 elif { [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; } && [ "$OSREL" == 6 ]; then
@@ -229,10 +229,10 @@ elif { [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; } && [ "$OSRE
  renew_lifetime = 7d
  forwardable = true
  rdns = false
- default_ccache_name = KEYRING:persistent:%{uid}
+ #default_ccache_name = KEYRING:persistent:%{uid}
  # We have to use FILE: until JVM can support something better.
  # https://community.hortonworks.com/questions/11288/kerberos-cache-in-ipa-redhat-idm-keyring-solved.html
- #default_ccache_name = FILE:/tmp/krb5cc_%{uid}
+ default_ccache_name = FILE:/tmp/krb5cc_%{uid}
 
 [realms]
 
