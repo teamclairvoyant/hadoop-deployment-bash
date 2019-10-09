@@ -273,7 +273,8 @@ elif [ "$DB_TYPE" == mysql ]; then
   fi
 
   mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -e "CREATE DATABASE $DB_NAME DEFAULT CHARACTER SET utf8;"
-  mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -e "GRANT ALL ON ${DB_NAME}.* TO '$DB_USER'@'$AM_HOST' IDENTIFIED BY '$DB_PASSWD';"
+  mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -e "CREATE USER '$DB_USER'@'$AM_HOST' IDENTIFIED BY '$DB_PASSWD';"
+  mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -e "GRANT ALL ON ${DB_NAME}.* TO '$DB_USER'@'$AM_HOST';"
 # mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -D "$DB_NAME" -e 'SOURCE /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql;'
   mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER"    -p"${DB_PASSWD}"    -D "$DB_NAME" -e 'SOURCE /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql;'
 
