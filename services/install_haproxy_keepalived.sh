@@ -31,6 +31,7 @@ print_help() {
   echo "        $1 -t|--type <primary|backup>"
   echo "        $1 -i|--ipaddress <IPv4 address> # VIP"
   echo "        $1 [-n|--nic <NIC device name>] # Defaults to eth0"
+  echo "        $1 [-p|--peeripaddress <unicast peer IPv4 address>] # AWS Peer's IP"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
   echo ""
@@ -104,6 +105,16 @@ discover_os() {
   fi
 }
 
+is_virtual() {
+  grep -Eqi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine|Amazon EC2' /sys/devices/virtual/dmi/id/*
+  return $?
+}
+
+is_aws() {
+  grep -qi 'amazon' /sys/devices/virtual/dmi/id/*
+  return $?
+}
+
 ## If the variable DEBUG is set, then turn on tracing.
 ## http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
 #if [ $DEBUG ]; then
@@ -132,7 +143,11 @@ while [[ $1 = -* ]]; do
       ;;
     -i|--ipaddress)
       shift
-      KEEPALIVED_IP=$1
+      KEEPALIVED_VIP=$1
+      ;;
+    -p|--peeripaddress)
+      shift
+      KEEPALIVED_PEERIP=$1
       ;;
     -h|--help)
       print_help "$(basename "$0")"
@@ -164,7 +179,7 @@ if [ "$KEEPALIVED_TYPE" != "primary" ] && [ "$KEEPALIVED_TYPE" != "backup" ]; th
   echo ""
   print_help "$(basename "$0")"
 fi
-if [ -z "$KEEPALIVED_IP" ]; then
+if [ -z "$KEEPALIVED_VIP" ]; then
   echo "** ERROR: --ipaddress must be specified."
   echo ""
   print_help "$(basename "$0")"
@@ -194,7 +209,79 @@ elif [ "$KEEPALIVED_TYPE" == "backup" ]; then
   PRIORITY=100
 fi
 
-cat <<EOF >/etc/keepalived/keepalived.conf
+if is_aws; then
+  # AWS does not support multicast, so we must use unicast in Keepalived.
+  cat <<EOF >/etc/keepalived/keepalived.conf
+# CLAIRVOYANT
+# Configuration File for keepalived
+# https://accelazh.github.io/loadbalance/HA-Of-Haproxy-Using-Keepalived-VRRP
+# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html-single/load_balancer_administration/index
+
+global_defs {
+#  notification_email {
+#    root@localdomain
+#  }
+#  notification_email_from keepalived@localdomain
+  smtp_server 127.0.0.1
+  smtp_connect_timeout 60
+  router_id LVS_DEVEL
+  vrrp_skip_check_adv_addr
+#  vrrp_strict
+  vrrp_garp_interval 0
+  vrrp_gna_interval 0
+  enable_script_security
+  script_user root
+}
+
+vrrp_script chk_haproxy {
+  script "/usr/bin/pkill -0 haproxy"     # verify the pid existance
+  interval 2                             # check every 2 seconds
+  weight 2                               # add 2 points of priority if OK
+}
+
+vrrp_instance VI_1 {
+  interface ${KEEPALIVED_NIC}                         # interface to monitor
+  virtual_router_id 51                   # Assign one ID for this route
+  priority ${PRIORITY}                           # Prevent automatic fail-back and a second outage with identical priority.
+  state BACKUP
+#  nopreempt                              # Prevent fail-back
+  track_script {
+    chk_haproxy
+  }
+  authentication {
+    auth_type PASS
+    auth_pass changeme
+  }
+  unicast_src_ip $(ip -4 addr show dev "${KEEPALIVED_NIC}" | awk '/inet/{print $2}' | awk -F/ '{print $1}')
+  unicast_peer {
+    ${KEEPALIVED_PEERIP}
+  }
+  notify_master "/etc/keepalived/assign_vip.sh ${KEEPALIVED_VIP} ${KEEPALIVED_NIC}"
+}
+EOF
+  cat <<EOF2>/etc/keepalived/assign_vip.sh
+#!/bin/bash
+# https://gist.github.com/kntyskw/5417140
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+VIP=\$1
+IF=\$2
+
+# Determine the interface's MAC address
+MAC=\$(ip link show \$IF | awk '/ether/ {print \$2}')
+
+# Determine ENI ID of the interface
+ENI_ID=\$(curl -s http://169.254.169.254/latest/meta-data/network/interfaces/macs/\$MAC/interface-id)
+
+# Set the current region as default
+export AWS_DEFAULT_REGION=\$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone | rev | cut -c 2- | rev)
+
+aws ec2 assign-private-ip-addresses --network-interface-id \$ENI_ID --private-ip-addresses \$VIP --allow-reassignment
+
+EOF2
+  chmod 0755 /etc/keepalived/assign_vip.sh
+  chown root:root /etc/keepalived/assign_vip.sh
+else
+  cat <<EOF >/etc/keepalived/keepalived.conf
 # CLAIRVOYANT
 # Configuration File for keepalived
 # https://accelazh.github.io/loadbalance/HA-Of-Haproxy-Using-Keepalived-VRRP
@@ -225,10 +312,11 @@ vrrp_script chk_haproxy {
 vrrp_instance VI_1 {
   interface ${KEEPALIVED_NIC}                         # interface to monitor
   virtual_router_id 51                   # Assign one ID for this route
-  priority ${PRIORITY}                           # 101 on primary, 100 on backup
-  state MASTER
+  priority ${PRIORITY}                           # Prevent automatic fail-back and a second outage with identical priority.
+  state BACKUP
+  nopreempt                              # Prevent fail-back
   virtual_ipaddress {
-    ${KEEPALIVED_IP}
+    ${KEEPALIVED_VIP}
   }
   track_script {
     chk_haproxy
@@ -239,6 +327,7 @@ vrrp_instance VI_1 {
   }
 }
 EOF
+fi
 
 echo "Set the Kernel to allow binding a non-local IP."
 echo "Changing net.ipv4.ip_nonlocal_bind running value to 1."
