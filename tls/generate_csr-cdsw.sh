@@ -68,7 +68,7 @@ fi
 # Generate a private RSA key and store it in JKS (cdsw-keystore.jks) with the distinguished name "$DN".
 keytool -genkeypair -alias cdsw -keyalg RSA -sigalg SHA256withRSA \
  -keystore "${_DIR}/security/jks/cdsw-keystore.jks" \
- -keysize 2048 -dname "$DN" -storepass "$SP" -keypass "$KP"
+ -keysize 2048 -dname "CN=$DN" -storepass "$SP" -keypass "$KP"
 chmod 0440 "${_DIR}/security/jks/cdsw-keystore.jks"
 if [ "$_TYPE" == cloudera ]; then
   chown root:cloudera-scm "${_DIR}/security/jks/cdsw-keystore.jks"
