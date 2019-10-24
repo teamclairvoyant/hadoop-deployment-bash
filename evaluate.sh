@@ -100,7 +100,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20190924'
+echo 'Version: 20191023'
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
@@ -281,7 +281,8 @@ if grep -q swap /etc/fstab; then
       BDEVICE="$SWAPLINE $BDEVICE"
     fi
   done
-  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT "$BDEVICE"
+  # shellcheck disable=SC2086
+  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT $BDEVICE
 fi
 echo "** startup config:"
 grep swap /etc/fstab || echo "none"
@@ -582,7 +583,7 @@ echo "** system hostname is: ${_HOSTNAME}"
 # DNS tools provide the trailing dot on the forward result...
 if command -v dig >/dev/null 2>&1; then
   echo "DNS: dig"
-  ADDR=$(dig "$(hostname)" +short)
+  ADDR=$(dig "$_HOSTNAME" +short)
   HOST=$(dig -x "$ADDR" +short)
   ADDR2=$(dig "$HOST" +short)
   # Remove the trailing dot.
