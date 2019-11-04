@@ -39,6 +39,8 @@ print_help() {
   echo "        [--ambari-host <hostname>]"
   echo ""
   echo "   ex.  $1 mysql -h dbhost -u dba -p dbapass --ambari-host \$(hostname) ambaridb ambariuser password"
+  echo ""
+  echo "Further documentation can be found at https://www.cloudera.com/documentation/enterprise/latest/topics/prepare_cm_database.html"
   exit 1
 }
 
