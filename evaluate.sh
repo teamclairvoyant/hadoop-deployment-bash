@@ -100,7 +100,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20191023'
+echo 'Version: 20191115'
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
@@ -528,6 +528,12 @@ echo "****************************************"
 echo "*** NSCD"
 echo "** running config:"
 service nscd status
+echo "* enable-cache:"
+sed -e '/enable-cache[[:blank:]]*passwd/p' \
+    -e '/enable-cache[[:blank:]]*group/p' \
+    -e '/enable-cache[[:blank:]]*hosts/p' \
+    -e '/enable-cache[[:blank:]]*services/p' \
+    -e '/enable-cache[[:blank:]]*netgroup/p' -n /etc/nscd.conf
 echo "** startup config:"
 chkconfig --list nscd
 
