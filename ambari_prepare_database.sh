@@ -39,6 +39,8 @@ print_help() {
   echo "        [--ambari-host <hostname>]"
   echo ""
   echo "   ex.  $1 mysql -h dbhost -u dba -p dbapass --ambari-host \$(hostname) ambaridb ambariuser password"
+  echo ""
+  echo "Further documentation can be found at https://www.cloudera.com/documentation/enterprise/latest/topics/prepare_cm_database.html"
   exit 1
 }
 
@@ -273,7 +275,8 @@ elif [ "$DB_TYPE" == mysql ]; then
   fi
 
   mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -e "CREATE DATABASE $DB_NAME DEFAULT CHARACTER SET utf8;"
-  mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -e "GRANT ALL ON ${DB_NAME}.* TO '$DB_USER'@'$AM_HOST' IDENTIFIED BY '$DB_PASSWD';"
+  mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -e "CREATE USER '$DB_USER'@'$AM_HOST' IDENTIFIED BY '$DB_PASSWD';"
+  mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -e "GRANT ALL ON ${DB_NAME}.* TO '$DB_USER'@'$AM_HOST';"
 # mysql -h "$DB_HOST" -P "$DB_PORT" -u "$ADMIN_USER" -p"${ADMIN_PASSWD}" -D "$DB_NAME" -e 'SOURCE /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql;'
   mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER"    -p"${DB_PASSWD}"    -D "$DB_NAME" -e 'SOURCE /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql;'
 

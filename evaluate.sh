@@ -100,7 +100,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20190924'
+echo 'Version: 20191115'
 echo "****************************************"
 echo "*** OS details"
 if [ -f /etc/redhat-release ]; then
@@ -281,7 +281,8 @@ if grep -q swap /etc/fstab; then
       BDEVICE="$SWAPLINE $BDEVICE"
     fi
   done
-  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT "$BDEVICE"
+  # shellcheck disable=SC2086
+  lsblk -lo NAME,SIZE,TYPE,MOUNTPOINT $BDEVICE
 fi
 echo "** startup config:"
 grep swap /etc/fstab || echo "none"
@@ -374,6 +375,11 @@ grep noatime /etc/fstab || echo "none"
 grep noatime /etc/navencrypt/ztab || echo "none"
 #grep noatime /etc/fstab || echo "WARNING: No filesystems mounted with noatime."
 #tune2fs -l /dev/sda | grep blah
+echo "** type"
+echo "** running config:"
+mount -t xfs,ext4,ext3
+echo "** startup config:"
+grep -E 'xfs|ext4|ext3' /etc/fstab || echo "none"
 
 echo "****************************************"
 echo "*** Entropy"
@@ -522,6 +528,12 @@ echo "****************************************"
 echo "*** NSCD"
 echo "** running config:"
 service nscd status
+echo "* enable-cache:"
+sed -e '/enable-cache[[:blank:]]*passwd/p' \
+    -e '/enable-cache[[:blank:]]*group/p' \
+    -e '/enable-cache[[:blank:]]*hosts/p' \
+    -e '/enable-cache[[:blank:]]*services/p' \
+    -e '/enable-cache[[:blank:]]*netgroup/p' -n /etc/nscd.conf
 echo "** startup config:"
 chkconfig --list nscd
 
@@ -582,7 +594,7 @@ echo "** system hostname is: ${_HOSTNAME}"
 # DNS tools provide the trailing dot on the forward result...
 if command -v dig >/dev/null 2>&1; then
   echo "DNS: dig"
-  ADDR=$(dig "$(hostname)" +short)
+  ADDR=$(dig "$_HOSTNAME" +short)
   HOST=$(dig -x "$ADDR" +short)
   ADDR2=$(dig "$HOST" +short)
   # Remove the trailing dot.

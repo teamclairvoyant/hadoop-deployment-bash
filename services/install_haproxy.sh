@@ -46,11 +46,17 @@ global
     # turn on stats unix socket
     #stats socket /var/lib/haproxy/stats
 
+peers mypeers
+    disabled
+#    peer PROXYHOST1.DOMAIN PROXYIP1:1024
+#    peer PROXYHOST2.DOMAIN PROXYIP2:1024
+
 defaults
     mode tcp
     log global
     option tcplog
     option tcpka
+    option dontlognull
     retries 3
     timeout connect 5s
     timeout client 50s
@@ -218,13 +224,16 @@ defaults
 #    server impalaH-IMPALAHOST4 IMPALAHOST4.DOMAIN:21050 check
 #    server impalaH-IMPALAHOST5 IMPALAHOST5.DOMAIN:21050 check
 
-# This sets up the admin page for HA Proxy at port 1936.
-listen stats :1936
+# This sets up the admin page for HAProxy at port 1936.
+listen stats
+    bind :1936
     mode http
     stats enable
     stats uri /
     stats hide-version
+    stats show-node
     stats refresh 30s
+    maxconn 10
 
 EOF
 

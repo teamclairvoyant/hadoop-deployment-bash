@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2019
 #
 if [ -n "$DEBUG" ]; then set -x; fi
 if [ -n "$DEBUG" ]; then ECHO="echo"; fi
@@ -140,7 +140,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename "$0")"
       ;;
     -v|--version)
-      echo "Create the airflow user and database in MySQL."
+      echo "Create the Schema Regsitry user and database in MySQL."
       exit 0
       ;;
     *)
@@ -184,17 +184,15 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   $ECHO sudo apt-get -y -q install mysql-client apg || err_msg 4
   if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
-AIRFLOWDB_PASSWORD=$(eval "$PWCMD")
+REGISTRYDB_PASSWORD=$(eval "$PWCMD")
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
 echo "*** SAVE THIS PASSWORD"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE airflow DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;'
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "CREATE USER 'airflow'@'localhost' IDENTIFIED BY '$AIRFLOWDB_PASSWORD';"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "CREATE USER 'airflow'@'%' IDENTIFIED BY '$AIRFLOWDB_PASSWORD';"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON airflow.* TO 'airflow'@'localhost';"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON airflow.* TO 'airflow'@'%';"
-echo "airflow : $AIRFLOWDB_PASSWORD"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE registry;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "CREATE USER 'registry'@'%' IDENTIFIED BY '$REGISTRYDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL PRIVILEGES ON registry.* TO 'registry'@'%' WITH GRANT OPTION;"
+echo "registry : $REGISTRYDB_PASSWORD"
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"

@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2017
 #
 if [ -n "$DEBUG" ]; then set -x; fi
 if [ -n "$DEBUG" ]; then ECHO="echo"; fi
 #
 ##### START CONFIG ###################################################
+
+PG_PORT=5432
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
@@ -26,9 +28,10 @@ PWCMD='< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo'
 
 # Function to print the help screen.
 print_help() {
-  echo "Usage:  $1 --host <hostname> --user <username> --password <password>"
+  echo "Usage:  $1 --host <hostname> [--port <port>] --user <username> --password <password>"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
+  echo ""
   echo "   ex.  $1 --host dbhost --user foo --password bar"
   exit 1
 }
@@ -126,21 +129,25 @@ while [[ $1 = -* ]]; do
   case $1 in
     -h|--host)
       shift
-      MYSQL_HOST=$1
+      PG_HOST=$1
+      ;;
+    -P|--port)
+      shift
+      PG_PORT=$1
       ;;
     -u|--user)
       shift
-      MYSQL_USER=$1
+      PG_USER=$1
       ;;
     -p|--password)
       shift
-      MYSQL_PASSWORD=$1
+      export PGPASSWORD=$1
       ;;
     -H|--help)
       print_help "$(basename "$0")"
       ;;
     -v|--version)
-      echo "Create the airflow user and database in MySQL."
+      echo "Create the Schema Registry user and database in MySQL."
       exit 0
       ;;
     *)
@@ -151,7 +158,7 @@ while [[ $1 = -* ]]; do
 done
 
 # Check to see if we have the required parameters.
-if [ -z "$MYSQL_HOST" ] || [ -z "$MYSQL_USER" ] || [ -z "$MYSQL_PASSWORD" ]; then print_help "$(basename "$0")"; fi
+if [ -z "$PG_HOST" ] || [ -z "$PG_USER" ] || [ -z "$PGPASSWORD" ]; then print_help "$(basename "$0")"; fi
 
 # Lets not bother continuing unless we have the privs to do something.
 #check_root
@@ -167,34 +174,28 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
 fi
 
 # main
-echo "Creating users and databases in MySQL for Airflow..."
+echo "Creating users and databases in PostgreSQL for Airflow..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
     $ECHO sudo rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
   fi
-  if [ "$OSREL" == 6 ]; then
-    $ECHO sudo yum -y -e1 -d1 install mysql apg || err_msg 4
-  else
-    $ECHO sudo yum -y -e1 -d1 install mariadb apg || err_msg 4
-  fi
-  if rpm -q apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
+  $ECHO sudo yum -y -e1 -d1 install postgresql apg || err_msg 4
+  if rpm -q apg; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
-  $ECHO sudo apt-get -y -q install mysql-client apg || err_msg 4
+  $ECHO sudo apt-get -y -q install postgresql-client apg || err_msg 4
   if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
-AIRFLOWDB_PASSWORD=$(eval "$PWCMD")
+STREAMSMSGMGRDB_PASSWORD=$(eval "$PWCMD")
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
 echo "*** SAVE THIS PASSWORD"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE airflow DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;'
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "CREATE USER 'airflow'@'localhost' IDENTIFIED BY '$AIRFLOWDB_PASSWORD';"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "CREATE USER 'airflow'@'%' IDENTIFIED BY '$AIRFLOWDB_PASSWORD';"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON airflow.* TO 'airflow'@'localhost';"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL ON airflow.* TO 'airflow'@'%';"
-echo "airflow : $AIRFLOWDB_PASSWORD"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" postgres -c "CREATE DATABASE streamsmsgmgr;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" postgres -c "CREATE USER streamsmsgmgr WITH PASSWORD '$STREAMSMSGMGRDB_PASSWORD';"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" postgres -c 'GRANT ALL PRIVILEGES ON DATABASE "streamsmsgmgr" to streamsmsgmgr;'
+echo "streamsmsgmgr : $STREAMSMSGMGRDB_PASSWORD"
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
