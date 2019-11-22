@@ -19,7 +19,7 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
-echo "Validating X.509 certifiacte and RSA key..."
+echo "Validating X.509 certificate and RSA key..."
 KEY=$(openssl rsa -modulus -noout -in /opt/cloudera/security/x509/localhost.key | openssl sha -sha512)
 CRT=$(openssl x509 -modulus -noout -in /opt/cloudera/security/x509/localhost.pem | openssl sha -sha512)
 
