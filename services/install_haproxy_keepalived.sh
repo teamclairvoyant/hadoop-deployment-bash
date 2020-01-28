@@ -19,6 +19,7 @@ if [ -n "$DEBUG" ]; then set -x; fi
 ##### START CONFIG ###################################################
 
 KEEPALIVED_NIC=eth0
+KEEPALIVED_NETMASK=255.255.255.128  # TODO
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
@@ -168,7 +169,8 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -280,6 +282,14 @@ aws ec2 assign-private-ip-addresses --network-interface-id \$ENI_ID --private-ip
 EOF2
   chmod 0755 /etc/keepalived/assign_vip.sh
   chown root:root /etc/keepalived/assign_vip.sh
+  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+    echo -e "DEVICE=${KEEPALIVED_NIC}:0\nIPADDR=${KEEPALIVED_VIP}\nNETMASK=${KEEPALIVED_NETMASK}\nONPARENT=yes" >"/tmp/ifcfg-${KEEPALIVED_NIC}:0"
+    install -m 0664 -o root -g root "/tmp/ifcfg-${KEEPALIVED_NIC}:0" "/etc/sysconfig/network-scripts/ifcfg-${KEEPALIVED_NIC}:0"
+    /sbin/ifup "${KEEPALIVED_NIC}:0"
+  elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
+    # TODO
+    echo "WARNING: Interface ${KEEPALIVED_NIC}:0 is not configured! FIXME!!"
+  fi
 else
   cat <<EOF >/etc/keepalived/keepalived.conf
 # CLAIRVOYANT
@@ -325,6 +335,7 @@ vrrp_instance VI_1 {
     auth_type PASS
     auth_pass changeme
   }
+  if is_virtual; then echo -e "  # on VMware: https://sourceforge.net/p/keepalived/mailman/message/35113578/\n  garp_master_refresh 5\n  garp_master_refresh_repeat 1"; fi
 }
 EOF
 fi
