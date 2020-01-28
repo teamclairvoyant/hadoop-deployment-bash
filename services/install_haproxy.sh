@@ -73,6 +73,8 @@ defaults
 #    mode http
 #    option httplog
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server oozie-OOZIEHOST1 OOZIEHOST1.DOMAIN:11000 check
 #    server oozie-OOZIEHOST2 OOZIEHOST2.DOMAIN:11000 check
 
@@ -81,6 +83,8 @@ defaults
 #listen oozieTLS
 #    bind 0.0.0.0:11443
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server oozieT-OOZIEHOST1 OOZIEHOST1.DOMAIN:11443 check
 #    server oozieT-OOZIEHOST2 OOZIEHOST2.DOMAIN:11443 check
 
@@ -95,6 +99,8 @@ defaults
 #    mode http
 #    option httplog
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server httpfs-HTTPFSHOST1 HTTPFSHOST1.DOMAIN:14000 check
 #    server httpfs-HTTPFSHOST2 HTTPFSHOST2.DOMAIN:14000 check
 
@@ -102,6 +108,8 @@ defaults
 #listen httpfs
 #    bind 0.0.0.0:14000
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server httpfs-HTTPFSHOST1 HTTPFSHOST1.DOMAIN:14000 check
 #    server httpfs-HTTPFSHOST2 HTTPFSHOST2.DOMAIN:14000 check
 
@@ -150,6 +158,8 @@ defaults
 ##    option httpchk GET /solr/<core-name>/admin/ping\ HTTP/1.0
 ##    http-check expect status 200
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8983 check
 #    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8983 check
 #    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8983 check
@@ -160,6 +170,8 @@ defaults
 #listen solr
 #    bind 0.0.0.0:8985
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8985 check
 #    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8985 check
 #    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8985 check
@@ -172,6 +184,8 @@ defaults
 #    timeout client 1h
 #    timeout server 1h
 #    balance leastconn
+##    stick-table type ip size 20k expire 5m peers mypeers
+##    stick on src
 #    server hs2J-HIVESERVER2HOST1 HIVESERVER2HOST1:10000 check
 #    server hs2J-HIVESERVER2HOST2 HIVESERVER2HOST2:10000 check
 
@@ -192,6 +206,8 @@ defaults
 #    timeout client 1h
 #    timeout server 1h
 #    balance leastconn
+##    stick-table type ip size 20k expire 5m peers mypeers
+##    stick on src
 #    server impalaS-IMPALAHOST1 IMPALAHOST1.DOMAIN:21000 check
 #    server impalaS-IMPALAHOST2 IMPALAHOST2.DOMAIN:21000 check
 #    server impalaS-IMPALAHOST3 IMPALAHOST3.DOMAIN:21000 check
@@ -204,6 +220,8 @@ defaults
 #    timeout client 1h
 #    timeout server 1h
 #    balance leastconn
+##    stick-table type ip size 20k expire 5m peers mypeers
+##    stick on src
 #    server impalaJ-IMPALAHOST1 IMPALAHOST1.DOMAIN:21050 check
 #    server impalaJ-IMPALAHOST2 IMPALAHOST2.DOMAIN:21050 check
 #    server impalaJ-IMPALAHOST3 IMPALAHOST3.DOMAIN:21050 check
