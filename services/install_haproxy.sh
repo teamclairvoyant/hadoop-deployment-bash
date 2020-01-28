@@ -88,6 +88,34 @@ defaults
 #    server oozieT-OOZIEHOST1 OOZIEHOST1.DOMAIN:11443 check
 #    server oozieT-OOZIEHOST2 OOZIEHOST2.DOMAIN:11443 check
 
+## Setup for HBase REST.
+#frontend hbaserest
+#    mode http
+#    option httplog
+#    bind 0.0.0.0:20050
+#    default_backend hbaserest_servers
+#
+#backend hbaserest_servers
+#    mode http
+#    option httplog
+#    option forwardfor    # X-Forwarded-For
+#    option httpchk GET '/status/cluster'
+#    http-check expect string hbase
+#    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
+#    server hbaserest-HBASERESTHOST1 HBASERESTHOST1.DOMAIN:20050 check
+#    server hbaserest-HBASERESTHOST2 HBASERESTHOST2.DOMAIN:20050 check
+
+## Setup for HBase REST TLS.
+#listen hbaserest
+#    bind 0.0.0.0:20550
+#    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
+#    server hbaserest-HBASERESTHOST1 HBASERESTHOST1.DOMAIN:20550 check
+#    server hbaserest-HBASERESTHOST2 HBASERESTHOST2.DOMAIN:20550 check
+
 ## Setup for HttpFS.
 #frontend httpfs
 #    mode http
