@@ -72,6 +72,9 @@ defaults
 #backend oozie_servers
 #    mode http
 #    option httplog
+#     # httpchk does not work when Kerberized.
+##    option httpchk GET '/oozie/v1/admin/status'
+##    http-check expect string '{"systemMode":"NORMAL"}'
 #    balance roundrobin
 #    stick-table type ip size 20k expire 5m peers mypeers
 #    stick on src
