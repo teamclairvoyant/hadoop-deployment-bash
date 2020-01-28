@@ -145,6 +145,37 @@ defaults
 #    server hue-HUEHOST1 HUEHOST1.DOMAIN:8889 check
 #    server hue-HUEHOST2 HUEHOST2.DOMAIN:8889 check
 
+## Setup for NiFi.
+## https://pierrevillard.com/2017/02/10/haproxy-load-balancing-in-front-of-apache-nifi/
+#frontend nifi
+#    mode http
+#    option httplog
+#    bind 0.0.0.0:8080
+#    default_backend nifi_servers
+#
+#backend nifi_servers
+#    mode http
+#    option httplog
+#    option forwardfor    # X-Forwarded-For
+##    option httpchk GET "/nifi/"
+##    http-check expect string "NiFi"
+#    option httpchk GET /nifi-api/controller/cluster
+#    http-check expect status 200
+#    balance roundrobin
+#    stick-table type ip size 200k expire 30m peers mypeers
+#    stick on src
+#    server nifi-NIFIHOST1 NIFIHOST1.DOMAIN:8080 check
+#    server nifi-NIFIHOST2 NIFIHOST2.DOMAIN:8080 check
+
+## Setup for NiFi TLS.
+#listen nifi
+#    bind 0.0.0.0:8443
+#    balance roundrobin
+#    stick-table type ip size 200k expire 30m peers mypeers
+#    stick on src
+#    server nifi-NIFIHOST1 NIFIHOST1.DOMAIN:8443 check
+#    server nifi-NIFIHOST2 NIFIHOST2.DOMAIN:8443 check
+
 ## Setup for Solr.
 #frontend solr
 #    mode http
