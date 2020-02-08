@@ -20,7 +20,7 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 # ARGV:
 # 1 - SCM server hostname - required
 # 2 - SCM agent version - optional
-SCMVERSION=6.1.1
+SCMVERSION=6.3.1
 
 # Function to discover basic OS details.
 discover_os() {
