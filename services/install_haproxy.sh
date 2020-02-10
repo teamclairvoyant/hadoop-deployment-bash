@@ -72,7 +72,12 @@ defaults
 #backend oozie_servers
 #    mode http
 #    option httplog
+#     # httpchk does not work when Kerberized.
+##    option httpchk GET '/oozie/v1/admin/status'
+##    http-check expect string '{"systemMode":"NORMAL"}'
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server oozie-OOZIEHOST1 OOZIEHOST1.DOMAIN:11000 check
 #    server oozie-OOZIEHOST2 OOZIEHOST2.DOMAIN:11000 check
 
@@ -81,8 +86,38 @@ defaults
 #listen oozieTLS
 #    bind 0.0.0.0:11443
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server oozieT-OOZIEHOST1 OOZIEHOST1.DOMAIN:11443 check
 #    server oozieT-OOZIEHOST2 OOZIEHOST2.DOMAIN:11443 check
+
+## Setup for HBase REST.
+#frontend hbaserest
+#    mode http
+#    option httplog
+#    bind 0.0.0.0:20050
+#    default_backend hbaserest_servers
+#
+#backend hbaserest_servers
+#    mode http
+#    option httplog
+#    option forwardfor    # X-Forwarded-For
+#    option httpchk GET '/status/cluster'
+#    http-check expect string hbase
+#    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
+#    server hbaserest-HBASERESTHOST1 HBASERESTHOST1.DOMAIN:20050 check
+#    server hbaserest-HBASERESTHOST2 HBASERESTHOST2.DOMAIN:20050 check
+
+## Setup for HBase REST TLS.
+#listen hbaserest
+#    bind 0.0.0.0:20550
+#    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
+#    server hbaserest-HBASERESTHOST1 HBASERESTHOST1.DOMAIN:20550 check
+#    server hbaserest-HBASERESTHOST2 HBASERESTHOST2.DOMAIN:20550 check
 
 ## Setup for HttpFS.
 #frontend httpfs
@@ -95,6 +130,8 @@ defaults
 #    mode http
 #    option httplog
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server httpfs-HTTPFSHOST1 HTTPFSHOST1.DOMAIN:14000 check
 #    server httpfs-HTTPFSHOST2 HTTPFSHOST2.DOMAIN:14000 check
 
@@ -102,6 +139,8 @@ defaults
 #listen httpfs
 #    bind 0.0.0.0:14000
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server httpfs-HTTPFSHOST1 HTTPFSHOST1.DOMAIN:14000 check
 #    server httpfs-HTTPFSHOST2 HTTPFSHOST2.DOMAIN:14000 check
 
@@ -137,6 +176,37 @@ defaults
 #    server hue-HUEHOST1 HUEHOST1.DOMAIN:8889 check
 #    server hue-HUEHOST2 HUEHOST2.DOMAIN:8889 check
 
+## Setup for NiFi.
+## https://pierrevillard.com/2017/02/10/haproxy-load-balancing-in-front-of-apache-nifi/
+#frontend nifi
+#    mode http
+#    option httplog
+#    bind 0.0.0.0:8080
+#    default_backend nifi_servers
+#
+#backend nifi_servers
+#    mode http
+#    option httplog
+#    option forwardfor    # X-Forwarded-For
+##    option httpchk GET "/nifi/"
+##    http-check expect string "NiFi"
+#    option httpchk GET /nifi-api/controller/cluster
+#    http-check expect status 200
+#    balance roundrobin
+#    stick-table type ip size 200k expire 30m peers mypeers
+#    stick on src
+#    server nifi-NIFIHOST1 NIFIHOST1.DOMAIN:8080 check
+#    server nifi-NIFIHOST2 NIFIHOST2.DOMAIN:8080 check
+
+## Setup for NiFi TLS.
+#listen nifi
+#    bind 0.0.0.0:8443
+#    balance roundrobin
+#    stick-table type ip size 200k expire 30m peers mypeers
+#    stick on src
+#    server nifi-NIFIHOST1 NIFIHOST1.DOMAIN:8443 check
+#    server nifi-NIFIHOST2 NIFIHOST2.DOMAIN:8443 check
+
 ## Setup for Solr.
 #frontend solr
 #    mode http
@@ -150,6 +220,8 @@ defaults
 ##    option httpchk GET /solr/<core-name>/admin/ping\ HTTP/1.0
 ##    http-check expect status 200
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8983 check
 #    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8983 check
 #    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8983 check
@@ -160,6 +232,8 @@ defaults
 #listen solr
 #    bind 0.0.0.0:8985
 #    balance roundrobin
+#    stick-table type ip size 20k expire 5m peers mypeers
+#    stick on src
 #    server solr-SOLRHOST1 SOLRHOST1.DOMAIN:8985 check
 #    server solr-SOLRHOST2 SOLRHOST2.DOMAIN:8985 check
 #    server solr-SOLRHOST3 SOLRHOST3.DOMAIN:8985 check
@@ -172,6 +246,8 @@ defaults
 #    timeout client 1h
 #    timeout server 1h
 #    balance leastconn
+##    stick-table type ip size 20k expire 5m peers mypeers
+##    stick on src
 #    server hs2J-HIVESERVER2HOST1 HIVESERVER2HOST1:10000 check
 #    server hs2J-HIVESERVER2HOST2 HIVESERVER2HOST2:10000 check
 
@@ -192,6 +268,8 @@ defaults
 #    timeout client 1h
 #    timeout server 1h
 #    balance leastconn
+##    stick-table type ip size 20k expire 5m peers mypeers
+##    stick on src
 #    server impalaS-IMPALAHOST1 IMPALAHOST1.DOMAIN:21000 check
 #    server impalaS-IMPALAHOST2 IMPALAHOST2.DOMAIN:21000 check
 #    server impalaS-IMPALAHOST3 IMPALAHOST3.DOMAIN:21000 check
@@ -204,6 +282,8 @@ defaults
 #    timeout client 1h
 #    timeout server 1h
 #    balance leastconn
+##    stick-table type ip size 20k expire 5m peers mypeers
+##    stick on src
 #    server impalaJ-IMPALAHOST1 IMPALAHOST1.DOMAIN:21050 check
 #    server impalaJ-IMPALAHOST2 IMPALAHOST2.DOMAIN:21050 check
 #    server impalaJ-IMPALAHOST3 IMPALAHOST3.DOMAIN:21050 check

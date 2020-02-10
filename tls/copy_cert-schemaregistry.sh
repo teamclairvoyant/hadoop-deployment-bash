@@ -19,13 +19,6 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
-echo "Validating X.509 certificate and RSA key..."
-KEY=$(openssl rsa -modulus -noout -in /opt/cloudera/security/x509/localhost.key | openssl sha -sha512)
-CRT=$(openssl x509 -modulus -noout -in /opt/cloudera/security/x509/localhost.pem | openssl sha -sha512)
-
-if [ "$KEY" == "$CRT" ]; then
-  echo "SUCCESS: The key matches the certificate."
-else
-  echo "ERROR: The key does not match the certificate."
-fi
+echo "Copying Schema Registry TLS certs and keys..."
+install -m 0440 -o root -g schemaregistry /opt/cloudera/security/jks/localhost-keystore.jks /opt/cloudera/security/jks/schemaregistry-keystore.jks
 
