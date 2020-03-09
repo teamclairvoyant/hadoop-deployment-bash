@@ -100,7 +100,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20200116'
+echo 'Version: 20200309'
 echo "Date: $(date -u '+%FT%T.000Z')"
 echo "****************************************"
 echo "*** OS details"
@@ -610,7 +610,9 @@ fi
 echo "** DNS forward is: $HOST"
 echo "** DNS reverse is: $ADDR"
 # Make sure that hostname matches DNS FQDN and both IP lookups match each other.
-if [ "$_HOSTNAME" == "$HOST" ] && [ "$ADDR" == "$ADDR2" ]; then
+_HOSTNAME_NORMALIZED=$(echo "$_HOSTNAME" | tr '[:upper:]' '[:lower:]')
+_HOST_NORMALIZED=$(echo "$HOST" | tr '[:upper:]' '[:lower:]')
+if [ "$_HOSTNAME_NORMALIZED" == "$_HOST_NORMALIZED" ] && [ "$ADDR" == "$ADDR2" ]; then
   # Then make sure the IP lookup matches one of the system IPs.
   if [ "${DNSMULTIPLE}" == true ]; then
     DNSMATCH=false
