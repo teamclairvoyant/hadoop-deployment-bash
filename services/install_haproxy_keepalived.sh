@@ -290,6 +290,57 @@ EOF2
     # TODO
     echo "WARNING: Interface ${KEEPALIVED_NIC}:0 is not configured! FIXME!!"
   fi
+elif is_virtual; then
+  cat <<EOF >/etc/keepalived/keepalived.conf
+# CLAIRVOYANT
+# Configuration File for keepalived
+# https://accelazh.github.io/loadbalance/HA-Of-Haproxy-Using-Keepalived-VRRP
+# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html-single/load_balancer_administration/index
+
+global_defs {
+#  notification_email {
+#    root@localdomain
+#  }
+#  notification_email_from keepalived@localdomain
+  smtp_server 127.0.0.1
+  smtp_connect_timeout 60
+  router_id LVS_DEVEL
+  vrrp_skip_check_adv_addr
+  # https://bugzilla.redhat.com/show_bug.cgi?id=1762624
+  #vrrp_strict
+  vrrp_garp_interval 0
+  vrrp_gna_interval 0
+  enable_script_security
+  script_user root
+}
+
+vrrp_script chk_haproxy {
+  script "/usr/bin/pkill -0 haproxy"     # verify the pid existance
+  interval 2                             # check every 2 seconds
+  weight 2                               # add 2 points of priority if OK
+}
+
+vrrp_instance VI_1 {
+  interface ${KEEPALIVED_NIC}                         # interface to monitor
+  virtual_router_id 51                   # Assign one ID for this route
+  priority ${PRIORITY}                           # Prevent automatic fail-back and a second outage with identical priority.
+  state BACKUP
+  #nopreempt                              # Prevent fail-back
+  virtual_ipaddress {
+    ${KEEPALIVED_VIP}
+  }
+  track_script {
+    chk_haproxy
+  }
+  authentication {
+    auth_type PASS
+    auth_pass changeme
+  }
+  # on VMware: https://sourceforge.net/p/keepalived/mailman/message/35113578/
+  #garp_master_refresh 5
+  #garp_master_refresh_repeat 1
+}
+EOF
 else
   cat <<EOF >/etc/keepalived/keepalived.conf
 # CLAIRVOYANT
@@ -335,7 +386,6 @@ vrrp_instance VI_1 {
     auth_type PASS
     auth_pass changeme
   }
-  if is_virtual; then echo -e "  # on VMware: https://sourceforge.net/p/keepalived/mailman/message/35113578/\n  garp_master_refresh 5\n  garp_master_refresh_repeat 1"; fi
 }
 EOF
 fi
