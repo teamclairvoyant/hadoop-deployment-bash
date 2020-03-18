@@ -101,6 +101,10 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
   echo "ERROR: Unsupported OS."
   exit 3
 fi
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] && [ "$OSREL" -ge 8 ]; then
+  echo "ERROR: NTP no longer ships with RHEL/CentOS 8. Use chrony instead."
+  exit 4
+fi
 
 echo "Installing Network Time Protocol..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
