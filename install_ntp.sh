@@ -117,6 +117,8 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if is_virtual; then
     tinker_ntp.conf
   fi
+  service ntpdate start
+  chkconfig ntpdate on
   service ntpd start
   chkconfig ntpd on
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
