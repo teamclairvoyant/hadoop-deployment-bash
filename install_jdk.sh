@@ -332,6 +332,7 @@ elif [ "$JDK_TYPE" == "openjdk" ]; then
       yum -y -e1 -d1 install java-1.8.0-openjdk-devel
       ;;
     11)
+      # Not on EL6
       yum -y -e1 -d1 install java-11-openjdk-devel
       ;;
     *)
@@ -349,6 +350,7 @@ elif [ "$JDK_TYPE" == "openjdk" ]; then
       apt-get -y -q install openjdk-8-jdk
       ;;
     11)
+      # Not on Debian 8/9 or Ubuntu 16.04
       apt-get -y -q install openjdk-11-jdk
       ;;
     *)

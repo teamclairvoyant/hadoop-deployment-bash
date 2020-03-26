@@ -14,13 +14,42 @@
 # limitations under the License.
 #
 # Copyright Clairvoyant 2015
+#
+if [ -n "$DEBUG" ]; then set -x; fi
+#
+##### START CONFIG ###################################################
 
+##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 
 # ARGV:
 # 1 - SCM server hostname - required
 # 2 - SCM agent version - optional
-SCMVERSION=6.3.1
+_SCMVERSION=6.3.1
+
+# Function to print the help screen.
+print_help() {
+  echo "Usage:  $1 <args> servername [version]"
+  echo ""
+  echo "        $1  -H|--scmserver    <hostname>"
+  echo "        $1 [-V|--scmversion]  <CM version>"
+  echo "        $1 [-u|--username]    <repo username>"
+  echo "        $1 [-p|--password]    <repo password>"
+  echo "        $1 [-h|--help]"
+  echo "        $1 [-v|--version]"
+  echo ""
+  echo "   ex.  $1 --scmserver localhost.localdomain --scmversion 5.16.2"
+  echo "   ex.  $1 -H cm.example.com -V 6.3.3 -u d542bc8c-0ebb-4f2c-8709-6f292ceedf4e -p 1234567890"
+  exit 1
+}
+
+# Function to check for root privileges.
+check_root() {
+  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
+    echo "You must have root privileges to run this program."
+    exit 2
+  fi
+}
 
 # Function to discover basic OS details.
 discover_os() {
@@ -80,6 +109,54 @@ discover_os() {
   fi
 }
 
+## If the variable DEBUG is set, then turn on tracing.
+## http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
+#if [ $DEBUG ]; then
+#  # This will turn on the ksh xtrace option for mainline code
+#  set -x
+#
+#  # This will turn on the ksh xtrace option for all functions
+#  typeset +f |
+#  while read F junk
+#  do
+#    typeset -ft $F
+#  done
+#  unset F junk
+#fi
+
+# Process arguments.
+while [[ $1 = -* ]]; do
+  case $1 in
+    -H|--scmserver)
+      shift
+      _SCMHOST=$1
+      ;;
+    -V|--scmversion)
+      shift
+      _SCMVERSION=$1
+      ;;
+    -u|--username)
+      shift
+      _REPO_USER=$1
+      ;;
+    -p|--password)
+      shift
+      _REPO_PASSWD=$1
+      ;;
+    -h|--help)
+      print_help "$(basename "$0")"
+      ;;
+    -v|--version)
+      echo "Installs the Cloudera Manager Agent."
+      exit 0
+      ;;
+    *)
+      print_help "$(basename "$0")"
+      ;;
+  esac
+  shift
+done
+
 echo "********************************************************************************"
 echo "*** $(basename "$0") $*"
 echo "********************************************************************************"
@@ -90,14 +167,29 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
   exit 3
 fi
 
-SCMHOST=$1
+# Check to see if we have the required parameters.
+SCMHOST=${1:-$_SCMHOST}
 if [ -z "$SCMHOST" ]; then
   echo "ERROR: Missing SCM hostname."
-  exit 1
+  echo ""
+  print_help "$(basename "$0")"
 fi
-SCMVERSION=${2:-$SCMVERSION}
+SCMVERSION=${2:-$_SCMVERSION}
 SCMVERSION_MAJ=$(echo "${SCMVERSION}" | awk -F. '{print $1}')
+SCMVERSION_MIN=$(echo "${SCMVERSION}" | awk -F. '{print $2}')
+SCMVERSION_PATCH=$(echo "${SCMVERSION}" | awk -F. '{print $3}')
+if { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -eq 3 ] && [ "$SCMVERSION_PATCH" -ge 3 ]; } || { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -ge 4 ]; }; then
+  if [ -z "$_REPO_USER" ] || [ -z "$_REPO_PASSWD" ]; then
+    echo "ERROR: Missing username and/or password for software repository."
+    echo ""
+    print_help "$(basename "$0")"
+  fi
+fi
 
+# Lets not bother continuing unless we have the privs to do something.
+check_root
+
+# main
 PROXY=$(grep -Eh '^ *http_proxy=http|^ *https_proxy=http' /etc/profile.d/*)
 eval "$PROXY"
 export http_proxy
@@ -115,7 +207,21 @@ echo "CM version is: $SCMVERSION"
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
-    if [ "$SCMVERSION_MAJ" -eq 6 ]; then
+    # Require username/password for 6.3.3 and newer.
+    if { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -eq 3 ] && [ "$SCMVERSION_PATCH" -ge 3 ]; } || { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -ge 4 ]; }; then
+      wget -q "https://${_REPO_USER}:${_REPO_PASSWD}@archive.cloudera.com/p/cm6/${SCMVERSION}/redhat${OSREL}/yum/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
+      RETVAL=$?
+      if [ "$RETVAL" -ne 0 ]; then
+        echo "** ERROR: Could not download https://${_REPO_USER}:${_REPO_PASSWD}@archive.cloudera.com/p/cm6/${SCMVERSION}/redhat${OSREL}/yum/cloudera-manager.repo"
+        exit 8
+      fi
+      chown root:root /etc/yum.repos.d/cloudera-manager.repo
+      chmod 0644 /etc/yum.repos.d/cloudera-manager.repo
+      sed -e "s|//archive.cloudera.com|//${_REPO_USER}:${_REPO_PASSWD}@archive.cloudera.com|" \
+          -e 's|archive.cloudera.com/cm|archive.cloudera.com/p/cm|' \
+          -e 's|http:|https:|' \
+          -i /etc/yum.repos.d/cloudera-manager.repo
+    elif [ "$SCMVERSION_MAJ" -eq 6 ]; then
       wget -q "https://archive.cloudera.com/cm6/${SCMVERSION}/redhat${OSREL}/yum/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
       RETVAL=$?
       if [ "$RETVAL" -ne 0 ]; then
@@ -124,9 +230,6 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
       fi
       chown root:root /etc/yum.repos.d/cloudera-manager.repo
       chmod 0644 /etc/yum.repos.d/cloudera-manager.repo
-#      if [ -n "$SCMVERSION" ]; then
-#        sed -e "s|6.0.0|${SCMVERSION}|g" -i /etc/yum.repos.d/cloudera-manager.repo
-#      fi
     elif [ "$SCMVERSION_MAJ" -eq 5 ]; then
       wget -q "https://archive.cloudera.com/cm5/redhat/${OSREL}/x86_64/cm/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
       RETVAL=$?
@@ -156,7 +259,23 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
     elif [ "$OS" == Ubuntu ]; then
       OS_LOWER=ubuntu
     fi
-    if [ "$SCMVERSION_MAJ" -eq 6 ]; then
+    # Require username/password for 6.3.3 and newer.
+    if { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -eq 3 ] && [ "$SCMVERSION_PATCH" -ge 3 ]; } || { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -ge 4 ]; }; then
+      OSVER_NUMERIC=${OSVER//./}
+      wget -q "https://${_REPO_USER}:${_REPO_PASSWD}@archive.cloudera.com/p/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/cloudera-manager.list" -O /etc/apt/sources.list.d/cloudera-manager.list
+      RETVAL=$?
+      if [ "$RETVAL" -ne 0 ]; then
+        echo "** ERROR: Could not download https://${_REPO_USER}:${_REPO_PASSWD}@archive.cloudera.com/p/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/cloudera-manager.list"
+        exit 9
+      fi
+      chown root:root /etc/apt/sources.list.d/cloudera-manager.list
+      chmod 0644 /etc/apt/sources.list.d/cloudera-manager.list
+      sed -e "s|//archive.cloudera.com|//${_REPO_USER}:${_REPO_PASSWD}@archive.cloudera.com|" \
+          -e 's|archive.cloudera.com/cm|archive.cloudera.com/p/cm|' \
+          -e 's|http:|https:|' \
+          -i /etc/apt/sources.list.d/cloudera-manager.list
+      curl -s "https://${_REPO_USER}:${_REPO_PASSWD}@archive.cloudera.com/p/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/archive.key" | apt-key add -
+    elif [ "$SCMVERSION_MAJ" -eq 6 ]; then
       OSVER_NUMERIC=${OSVER//./}
       wget -q "https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/cloudera-manager.list" -O /etc/apt/sources.list.d/cloudera-manager.list
       RETVAL=$?
@@ -166,9 +285,6 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
       fi
       chown root:root /etc/apt/sources.list.d/cloudera-manager.list
       chmod 0644 /etc/apt/sources.list.d/cloudera-manager.list
-#      if [ -n "$SCMVERSION" ]; then
-#        sed -e "s|6.0.0|${SCMVERSION}|g" -i /etc/apt/sources.list.d/cloudera-manager.list
-#      fi
       curl -s "https://archive.cloudera.com/cm6/${SCMVERSION}/${OS_LOWER}${OSVER_NUMERIC}/apt/archive.key" | apt-key add -
     elif [ "$SCMVERSION_MAJ" -eq 5 ]; then
       wget -q "https://archive.cloudera.com/cm5/${OS_LOWER}/${OSNAME}/amd64/cm/cloudera.list" -O /etc/apt/sources.list.d/cloudera-manager.list

@@ -90,6 +90,9 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     JAVA_HOME=/usr/java/default
   elif [ -L /usr/lib/jvm/java ]; then
     JAVA_HOME=/usr/lib/jvm/java
+  else
+    echo "ERROR: No JDK found!"
+    exit 10
   fi
 
   cat <<EOF >/etc/profile.d/java.sh
@@ -103,6 +106,13 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
     JAVA_HOME=$(dpkg -L oracle-j2sdk1.7 2>/dev/null | grep /usr/lib/jvm/java | head -1)
     if [ -z "$JAVA_HOME" ]; then
       JAVA_HOME=$(dpkg -L openjdk-8-jdk 2>/dev/null | grep /usr/lib/jvm/java | head -1)
+    fi
+    if [ -z "$JAVA_HOME" ]; then
+      JAVA_HOME=$(dpkg -L openjdk-11-jdk 2>/dev/null | grep /usr/lib/jvm/java | head -1)
+    fi
+    if [ -z "$JAVA_HOME" ]; then
+      echo "ERROR: No JDK found!"
+      exit 11
     fi
 
     cat <<EOF >/etc/profile.d/java.sh

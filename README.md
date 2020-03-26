@@ -68,6 +68,7 @@ for HOST in `cat HOSTLIST`; do
   ${GITREPO}/install_jdk.sh \
   ${GITREPO}/configure_javahome.sh \
   ${GITREPO}/install_jce.sh \
+  ${GITREPO}/configure_jdk_krbref.sh \
   ${GITREPO}/install_krb5.sh \
   ${GITREPO}/configure_tuned.sh \
   ${GITREPO}/install_entropy.sh \
@@ -97,6 +98,7 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./install_jdk.sh --jdktype openjdk --jdkversion 8; \
   sudo bash $BOPT ./configure_javahome.sh; \
   sudo bash $BOPT ./install_jce.sh; \
+  sudo bash $BOPT ./configure_jdk_krbref.sh; \
   sudo bash $BOPT ./install_krb5.sh; \
   sudo bash $BOPT ./configure_tuned.sh; \
   sudo bash $BOPT ./install_entropy.sh"
@@ -186,6 +188,7 @@ for HOST in `cat HOSTLIST`; do
   ${GITREPO}/install_jdk.sh \
   ${GITREPO}/configure_javahome.sh \
   ${GITREPO}/install_jce.sh \
+  ${GITREPO}/configure_jdk_krbref.sh \
   ${GITREPO}/install_krb5.sh \
   ${GITREPO}/configure_tuned.sh \
   ${GITREPO}/install_entropy.sh \
@@ -214,6 +217,7 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./install_jdk.sh --jdktype openjdk --jdkversion 8; \
   sudo bash $BOPT ./configure_javahome.sh; \
   sudo bash $BOPT ./install_jce.sh; \
+  sudo bash $BOPT ./configure_jdk_krbref.sh; \
   sudo bash $BOPT ./install_krb5.sh; \
   sudo bash $BOPT ./configure_tuned.sh; \
   sudo bash $BOPT ./install_entropy.sh"

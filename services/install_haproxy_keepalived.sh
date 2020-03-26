@@ -27,16 +27,18 @@ DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
 print_help() {
-  echo "Usage:  $1 --type <primary|backup> --ipaddress <10.2.3.4>"
+  echo "Usage:  $1 --type <primary|backup> --ipaddress <10.2.3.4> --routerid 50 --password mypass"
   echo ""
   echo "        $1 -t|--type <primary|backup>"
   echo "        $1 -i|--ipaddress <IPv4 address> # VIP"
-  echo "        $1 [-n|--nic <NIC device name>] # Defaults to eth0"
-  echo "        $1 [-p|--peeripaddress <unicast peer IPv4 address>] # AWS Peer's IP"
+  echo "        $1 -r|--routerid <integer> # must be the same for all cluster nodes"
+  echo "        $1 -P|--password <password> # must be the same for all cluster nodes"
+  echo "        $1 [-n|--nic <NIC device name>] # defaults to eth0"
+  echo "        $1 [-p|--peeripaddress <unicast peer IPv4 address>] # AWS Peer's instance IP"
   echo "        $1 [-h|--help]"
   echo "        $1 [-v|--version]"
   echo ""
-  echo "   ex.  $1 -t primary -i 10.100.2.34 -n em1"
+  echo "   ex.  $1 -t primary -i 10.100.2.34 -n em1 -r 51 -P changeme"
   exit 1
 }
 
@@ -150,6 +152,14 @@ while [[ $1 = -* ]]; do
       shift
       KEEPALIVED_PEERIP=$1
       ;;
+    -r|--routerid)
+      shift
+      KEEPALIVED_ROUTERID=$1
+      ;;
+    -P|--password)
+      shift
+      KEEPALIVED_PASSWORD=$1
+      ;;
     -h|--help)
       print_help "$(basename "$0")"
       ;;
@@ -183,6 +193,16 @@ if [ "$KEEPALIVED_TYPE" != "primary" ] && [ "$KEEPALIVED_TYPE" != "backup" ]; th
 fi
 if [ -z "$KEEPALIVED_VIP" ]; then
   echo "** ERROR: --ipaddress must be specified."
+  echo ""
+  print_help "$(basename "$0")"
+fi
+if [ -z "$KEEPALIVED_ROUTERID" ]; then
+  echo "** ERROR: --routerid must be specified."
+  echo ""
+  print_help "$(basename "$0")"
+fi
+if [ -z "$KEEPALIVED_PASSWORD" ]; then
+  echo "** ERROR: --password must be specified."
   echo ""
   print_help "$(basename "$0")"
 fi
@@ -243,7 +263,7 @@ vrrp_script chk_haproxy {
 
 vrrp_instance VI_1 {
   interface ${KEEPALIVED_NIC}                         # interface to monitor
-  virtual_router_id 51                   # Assign one ID for this route
+  virtual_router_id ${KEEPALIVED_ROUTERID}                   # Assign one ID for this route
   priority ${PRIORITY}                           # Prevent automatic fail-back and a second outage with identical priority.
   state BACKUP
 #  nopreempt                              # Prevent fail-back
@@ -252,7 +272,7 @@ vrrp_instance VI_1 {
   }
   authentication {
     auth_type PASS
-    auth_pass changeme
+    auth_pass ${KEEPALIVED_PASSWORD}
   }
   unicast_src_ip $(ip -4 addr show dev "${KEEPALIVED_NIC}" | awk '/inet/{print $2}' | awk -F/ '{print $1}')
   unicast_peer {
@@ -290,6 +310,57 @@ EOF2
     # TODO
     echo "WARNING: Interface ${KEEPALIVED_NIC}:0 is not configured! FIXME!!"
   fi
+elif is_virtual; then
+  cat <<EOF >/etc/keepalived/keepalived.conf
+# CLAIRVOYANT
+# Configuration File for keepalived
+# https://accelazh.github.io/loadbalance/HA-Of-Haproxy-Using-Keepalived-VRRP
+# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html-single/load_balancer_administration/index
+
+global_defs {
+#  notification_email {
+#    root@localdomain
+#  }
+#  notification_email_from keepalived@localdomain
+  smtp_server 127.0.0.1
+  smtp_connect_timeout 60
+  router_id LVS_DEVEL
+  vrrp_skip_check_adv_addr
+  # https://bugzilla.redhat.com/show_bug.cgi?id=1762624
+  #vrrp_strict
+  vrrp_garp_interval 0
+  vrrp_gna_interval 0
+  enable_script_security
+  script_user root
+}
+
+vrrp_script chk_haproxy {
+  script "/usr/bin/pkill -0 haproxy"     # verify the pid existance
+  interval 2                             # check every 2 seconds
+  weight 2                               # add 2 points of priority if OK
+}
+
+vrrp_instance VI_1 {
+  interface ${KEEPALIVED_NIC}                         # interface to monitor
+  virtual_router_id ${KEEPALIVED_ROUTERID}                   # Assign one ID for this route
+  priority ${PRIORITY}                           # Prevent automatic fail-back and a second outage with identical priority.
+  state BACKUP
+  #nopreempt                              # Prevent fail-back
+  virtual_ipaddress {
+    ${KEEPALIVED_VIP}
+  }
+  track_script {
+    chk_haproxy
+  }
+  authentication {
+    auth_type PASS
+    auth_pass ${KEEPALIVED_PASSWORD}
+  }
+  # on VMware: https://sourceforge.net/p/keepalived/mailman/message/35113578/
+  #garp_master_refresh 5
+  #garp_master_refresh_repeat 1
+}
+EOF
 else
   cat <<EOF >/etc/keepalived/keepalived.conf
 # CLAIRVOYANT
@@ -321,7 +392,7 @@ vrrp_script chk_haproxy {
 
 vrrp_instance VI_1 {
   interface ${KEEPALIVED_NIC}                         # interface to monitor
-  virtual_router_id 51                   # Assign one ID for this route
+  virtual_router_id ${KEEPALIVED_ROUTERID}                   # Assign one ID for this route
   priority ${PRIORITY}                           # Prevent automatic fail-back and a second outage with identical priority.
   state BACKUP
   nopreempt                              # Prevent fail-back
@@ -333,9 +404,8 @@ vrrp_instance VI_1 {
   }
   authentication {
     auth_type PASS
-    auth_pass changeme
+    auth_pass ${KEEPALIVED_PASSWORD}
   }
-  if is_virtual; then echo -e "  # on VMware: https://sourceforge.net/p/keepalived/mailman/message/35113578/\n  garp_master_refresh 5\n  garp_master_refresh_repeat 1"; fi
 }
 EOF
 fi
