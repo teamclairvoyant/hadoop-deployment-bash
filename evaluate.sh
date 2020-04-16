@@ -100,7 +100,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20200309'
+echo 'Version: 20200416'
 echo "Date: $(date -u '+%FT%T.000Z')"
 echo "****************************************"
 echo "*** OS details"
@@ -424,17 +424,26 @@ else
   echo "Java not found."
 fi
 if [ -n "$_JAVA" ]; then
-  #java -version 2>&1 || ${JAVA_HOME}/java -version 2>&1
-  "$_JAVA" -version 2>&1
-  _JAVA_VERSION=$("$_JAVA" -version 2>&1 | awk -F '"' '/version/ {print $2}')
+  _JAVA_VERSION=$("$_JAVA" -version 2>&1)
+  echo "$_JAVA_VERSION"
+  if echo "${_JAVA_VERSION}" | grep -q ^OpenJDK; then
+    _JAVA_TYPE=OpenJDK
+  elif echo "${_JAVA_VERSION}" | grep -q "^Java HotSpot"; then
+    _JAVA_TYPE=Oracle
+  else
+    _JAVA_TYPE=unknown
+  fi
+  _JAVA_VERSION=$(echo "${_JAVA_VERSION}" | awk -F '"' '/version/ {print $2}')
   _JAVA_VERSION_MAJ=$(echo "${_JAVA_VERSION}" | awk -F. '{print $1}')
   _JAVA_VERSION_MIN=$(echo "${_JAVA_VERSION}" | awk -F. '{print $2}')
-  #_JAVA_VERSION_PATCH=$(echo "${_JAVA_VERSION}" | awk -F. '{print $3}' | sed -e 's|_.*||')
+  _JAVA_VERSION_PATCH=$(echo "${_JAVA_VERSION}" | awk -F. '{print $3}' | sed -e 's|_.*||')
   _JAVA_VERSION_RELEASE=$(echo "${_JAVA_VERSION}" | awk -F_ '{print $2}')
 else
+  _JAVA_TYPE=unknown
+  _JAVA_VERSION=unknown
   _JAVA_VERSION_MAJ=0
   _JAVA_VERSION_MIN=0
-  #_JAVA_VERSION_PATCH=0
+  _JAVA_VERSION_PATCH=0
   _JAVA_VERSION_RELEASE=0
 fi
 
@@ -500,6 +509,29 @@ for _DIR in /usr/java/default/jre/lib/security \
 done
 if [ "$_JCE_FOUND" == "false" ]; then
   echo "JCE not found."
+fi
+
+echo "****************************************"
+echo "*** Java Bugs"
+echo "** OpenJDK Kerberos issue"
+if [ "${_JAVA_TYPE}" == OpenJDK ]; then
+  # Only applies to 1.8.0_242 and 11.0.6 and newer.
+  if { [ "${_JAVA_VERSION_MAJ}" -eq 1 ] && [ "${_JAVA_VERSION_MIN}" -eq 8 ] && [ "${_JAVA_VERSION_RELEASE}" -ge 242 ]; } || { [ "${_JAVA_VERSION_MAJ}" -eq 11 ] && [ "${_JAVA_VERSION_MIN}" -eq 0 ] && [ "${_JAVA_VERSION_PATCH}" -ge 6 ]; }; then
+    if [ "${_JAVA_VERSION_MAJ}" -eq 1 ]; then
+      _JSECPATH=/jre/lib
+    elif [ "${_JAVA_VERSION_MAJ}" -eq 11 ]; then
+      _JSECPATH=/conf
+    fi
+    if grep -q ^sun.security.krb5.disableReferrals=true "${JAVA_HOME}${_JSECPATH}/security/java.security"; then
+      echo "OpenJDK Kerberos issue is remediated for JDK version ${_JAVA_VERSION}."
+    else
+      echo "OpenJDK Kerberos issue is present for JDK version ${_JAVA_VERSION}."
+    fi
+  else
+    echo "OpenJDK Kerberos issue does not exist for JDK version ${_JAVA_VERSION}."
+  fi
+else
+  echo "OpenJDK Kerberos issue does not apply to ${_JAVA_TYPE} JDK."
 fi
 
 echo "****************************************"
