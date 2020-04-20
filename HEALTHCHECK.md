@@ -44,6 +44,19 @@ An Ambari Blueprint defines the Stack version and service components for a clust
 * Ambari user credentials with admin privileges
 * Cluster name
 
+### Automated Steps:
+First, download the `dump_ambari_blueprint.sh` script to a local system and set the execute bits.  This local system could be a Linux workstation, Windows machine with a Cygwin installation, OS X laptop, or one of the Linux machines that will become a part of the cluster.  It does not matter so long as it has the [cURL](http://curl.haxx.se/) program available.
+```
+wget https://raw.githubusercontent.com/teamclairvoyant/hadoop-deployment-bash/master/api/dump_ambari_blueprint.sh
+chmod 0755 dump_ambari_blueprint.sh
+```
+Edit the file to set the Ambari user, password, hostname, and port.
+
+Run the Blueprint dump script to gather the configuration of the cluster.
+```
+./dump_ambari_blueprint.sh >blueprint.json
+```
+
 ### Manual Steps:
 Execute API command:
 ```
@@ -59,47 +72,12 @@ curl -s -H 'X-Requested-By: ambari' -u "${_USER}:${_PASSWD}" "http://${_AMHOST}:
 curl -s -H 'X-Requested-By: ambari' -u "${_USER}:${_PASSWD}" -k "https://${_AMHOST}:8443/api/v1/clusters/${_CLUSTER}?format=blueprint" >blueprint.json
 ```
 
-### Automated Steps:
-First, download the `dump_ambari_blueprint.sh` script to a local system and set the execute bits.  This local system could be a Linux workstation, Windows machine with a Cygwin installation, OS X laptop, or one of the Linux machines that will become a part of the cluster.  It does not matter so long as it has the [cURL](http://curl.haxx.se/) program available.
-```
-wget https://raw.githubusercontent.com/teamclairvoyant/hadoop-deployment-bash/master/api/dump_ambari_blueprint.sh
-chmod 0755 dump_ambari_blueprint.sh
-```
-Edit the file to set the Ambari user, password, hostname, and port.
-
-Run the Blueprint dump script to gather the configuration of the cluster.
-```
-./dump_ambari_blueprint.sh >blueprint.json
-```
-
 ## 2b. Cloudera Manager Configuration
 
 You can use the Cloudera Manager API to programmatically export a definition of all the entities in your Cloudera Manager-managed deployment—clusters, service, roles, hosts, users and so on.  If you have a Cloudera cluster and Cloudera Manager, then you will need the following:
 
 * Cloudera Manager server URL
 * Cloudera Manager user credentials with Full Admin privileges
-
-### Manual Steps (WebUI):
-Log in to the Cloudera Manager server with a user that has the Full Admin privileges.  Then, modify the URL in your web browesr to have the following after the port number: `/api/v5/cm/deployment?view=export_redacted`
-
-Example:
-```
-http://cmhost.localdomain:7180/api/v5/cm/deployment?view=export_redacted
-```
-
-### Manual Steps (CLI):
-Execute API command:
-```
-_USER=
-_PASSWD=
-_CMHOST=
-
-# HTTP site:
-curl -s -u "${_USER}:${_PASSWD}" "http://${_CMHOST}:7180/api/v5/cm/deployment?view=export_redacted" >cm_config.json
-
-# HTTPS site:
-curl -s -u "${_USER}:${_PASSWD}" -k "https://${_CMHOST}:7183/api/v5/cm/deployment?view=export_redacted" >cm_config.json
-```
 
 ### Automated Steps (CLI):
 First, download the `dump_cm_config.sh` script to a local system and set the execute bits.  This local system could be a Linux workstation, Windows machine with a Cygwin installation, OS X laptop, or one of the Linux machines that will become a part of the cluster.  It does not matter so long as it has the [cURL](http://curl.haxx.se/) program available.
@@ -112,6 +90,28 @@ Edit the file to set the CM user, password, and hostname.
 Run the CM dump script to gather the configuration of the environment.
 ```
 ./dump_cm_config.sh >cm_config.json
+```
+
+### Manual Steps (WebUI):
+Log in to the Cloudera Manager server with a user that has the Full Admin privileges.  Then, modify the URL in your web browesr to have the following after the port number: `/api/v6/cm/deployment?view=export_redacted`
+
+Example:
+```
+http://cmhost.localdomain:7180/api/v6/cm/deployment?view=export_redacted
+```
+
+### Manual Steps (CLI):
+Execute API command:
+```
+_USER=
+_PASSWD=
+_CMHOST=
+
+# HTTP site:
+curl -s -u "${_USER}:${_PASSWD}" "http://${_CMHOST}:7180/api/v6/cm/deployment?view=export_redacted" >cm_config.json
+
+# HTTPS site:
+curl -s -u "${_USER}:${_PASSWD}" -k "https://${_CMHOST}:7183/api/v6/cm/deployment?view=export_redacted" >cm_config.json
 ```
 
 ## 3. Send Data

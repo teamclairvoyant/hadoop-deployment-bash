@@ -206,6 +206,9 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
 fi
 
 APIPASS=$(eval "$PWCMD")
+# shellcheck disable=SC2086
+APIVERSION=$(curl -s $OPT -u "${ADMINUSER}:${ADMINPASS}" "${BASEURL}/api/version")
+API=${APIVERSION:-$API}
 
 if curl -s $OPT -X GET -u "${ADMINUSER}:${ADMINPASS}" "${BASEURL}/api/${API}/users/${APIUSER}" | grep -q "does not exist"; then
   curl -s $OPT -X POST -u "${ADMINUSER}:${ADMINPASS}" -H "content-type:application/json" -d \

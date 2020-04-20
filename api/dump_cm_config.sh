@@ -32,7 +32,9 @@ if [ "$CMPORT" -eq 7183 ]; then
 fi
 
 BASEURL=$CMSCHEME://$CMHOST:$CMPORT
-API=v5
+# shellcheck disable=SC2086
+APIVERSION=$(curl -s $OPT -u "${APIUSER}:${APIPASS}" $CURLDEBUG "${BASEURL}/api/version")
+API=${APIVERSION:-v5}
 
 # shellcheck disable=SC2086
 curl -s $OPT -u "${APIUSER}:${APIPASS}" $CURLDEBUG "${BASEURL}/api/${API}/cm/deployment?view=export_redacted"
