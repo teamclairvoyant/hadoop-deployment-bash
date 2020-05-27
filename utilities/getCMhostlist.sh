@@ -15,9 +15,12 @@
 # Copyright Clairvoyant 2020
 #
 if [ -n "$DEBUG" ]; then set -x; fi
-VERSION=1.0.0
+#
+VERSION=2.0.0
 #
 ##### START CONFIG ###################################################
+
+CMPORT=7180
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin:/opt/anaconda3/bin
@@ -33,29 +36,6 @@ print_help() {
   exit 1
 }
 
-# Function to check for root privileges.
-check_root() {
-  if [[ $(/usr/bin/id | awk -F= '{print $2}' | awk -F"(" '{print $1}' 2>/dev/null) -ne 0 ]]; then
-    echo "You must have root privileges to run this program."
-    exit 2
-  fi
-}
-
-## If the variable DEBUG is set, then turn on tracing.
-## http://www.research.att.com/lists/ast-users/2003/05/msg00009.html
-#if [ $DEBUG ]; then
-#  # This will turn on the ksh xtrace option for mainline code
-#  set -x
-#
-#  # This will turn on the ksh xtrace option for all functions
-#  typeset +f |
-#  while read F junk
-#  do
-#    typeset -ft $F
-#  done
-#  unset F junk
-#fi
-
 # Process arguments.
 while [[ $1 = -* ]]; do
   case $1 in
@@ -65,7 +45,7 @@ while [[ $1 = -* ]]; do
       ;;
     -C|--cluster)
       shift
-      _CLUSTER=$1
+      _CLUSTER_NAME=$1
       ;;
     -u|--user)
       shift
@@ -90,47 +70,56 @@ while [[ $1 = -* ]]; do
 done
 
 # Check to see if we have the required parameters.
-if [ -z "$_CM" ] || [ -z "$_CLUSTER" ] || [ -z "$_USERNAME" ] || [ -z "$_PASSWORD" ]; then print_help "$(basename "$0")"; fi
+if [ -z "$_CM" ] || [ -z "$_CLUSTER_NAME" ] || [ -z "$_USERNAME" ] || [ -z "$_PASSWORD" ]; then print_help "$(basename "$0")"; fi
 
-# Lets not bother continuing unless we have the privs to do something.
-#check_root
+# Determine the CM API version.
+_API=$(curl -skLu "${_USERNAME}:${_PASSWORD}" "http://${_CM}:${CMPORT}/api/version")
+if [ -z "$_API" ]; then
+  echo "ERROR: No API version output from the CM server." >&2
+  exit 2
+fi
+# Strip the leading "v" from the version string so that we have a numeral.
+_APINUM=${_API#v}
 
-# shellcheck disable=SC2086
-#_APIVERSION=$(curl -skLu "${_USERNAME}:${_PASSWORD}" "http://${_CM}:7180/api/version")
-#API=${_APIVERSION:-v6}
-#echo "** Using API version ${API}"
-
-CLUSTER_NAMES=$_CLUSTER
+# Figure out which Python version we have and URL escape the $_CLUSTER_NAME string.
 if command -v python3 >/dev/null; then
   # BEGIN: Do not mess with the indentation or multiple lines in this Python code.
-  CLUSTER_NAMES_ESCAPED=$(echo "${CLUSTER_NAMES}" | python3 -c 'import sys, urllib.parse;
+  CLUSTER_NAME_ESCAPED=$(echo "${_CLUSTER_NAME}" | python3 -c 'import sys, urllib.parse;
 for x in sys.stdin.readlines():
   print(urllib.parse.quote(x.rstrip()))')
   # END: Do not mess with the indentation or multiple lines in this Python code.
 elif command -v python2 >/dev/null; then
   # BEGIN: Do not mess with the indentation or multiple lines in this Python code.
-  CLUSTER_NAMES_ESCAPED=$(echo "${CLUSTER_NAMES}" | python2 -c 'import sys, urllib;
+  CLUSTER_NAME_ESCAPED=$(echo "${_CLUSTER_NAME}" | python2 -c 'import sys, urllib;
 for x in sys.stdin.readlines():
   print(urllib.quote(x.rstrip()))')
   # END: Do not mess with the indentation or multiple lines in this Python code.
 else
-  echo "ERROR: No Python installed."
-  exit 1
+  echo "ERROR: No Python installed." >&2
+  exit 3
 fi
 
-for CLUSTER in ${CLUSTER_NAMES_ESCAPED}; do
-  HOSTS_OUTPUT=$(curl -skLu "${_USERNAME}:${_PASSWORD}" -X GET "http://${_CM}:7180/api/v6/clusters/${CLUSTER}/hosts")
-  if [ -z "$HOSTS_OUTPUT" ]; then
-    echo "ERROR: No output from the CM server."
-    exit 2
-  fi
+# Get the list of hostIds (and hostnames) for the given cluster.
+HOSTS_OUTPUT=$(curl -skLu "${_USERNAME}:${_PASSWORD}" -X GET "http://${_CM}:${CMPORT}/api/${_API}/clusters/${CLUSTER_NAME_ESCAPED}/hosts")
+if [ -z "$HOSTS_OUTPUT" ]; then
+  echo "ERROR: No host output from the CM server. Is --cluster correct?" >&2
+  exit 4
+fi
+
+# CM API greater than or equal to v31 also include hostnames in the output.
+if [ "$_APINUM" -ge 31 ]; then
+  HOST_NAMES=$(echo "${HOSTS_OUTPUT}" | python -c 'import json, sys; obj=json.load(sys.stdin); print(" ".join([x["hostname"] for x in obj["items"]]))')
+  # Since we have hostnames, we are all done.
+  HOSTS_ARRAY+=( "$HOST_NAMES" )
+else
   HOST_IDS=$(echo "${HOSTS_OUTPUT}" | python -c 'import json, sys; obj=json.load(sys.stdin); print(" ".join([x["hostId"] for x in obj["items"]]))')
+  # Since we do not have hostnames, we need to convert the hostIds to hostnames.
   for HOST in $HOST_IDS; do
-    _HOSTNAME=$(curl -skLu "${_USERNAME}:${_PASSWORD}" -X GET "http://${_CM}:7180/api/v6/hosts/${HOST}" | python -c 'import json, sys; obj=json.load(sys.stdin); print(obj["hostname"])')
+    _HOSTNAME=$(curl -skLu "${_USERNAME}:${_PASSWORD}" -X GET "http://${_CM}:${CMPORT}/api/${_API}/hosts/${HOST}" | python -c 'import json, sys; obj=json.load(sys.stdin); print(obj["hostname"])')
     HOSTS_ARRAY+=( "$_HOSTNAME" )
   done
+fi
 
-  echo "${HOSTS_ARRAY[@]}"
-  unset HOSTS_ARRAY
-done
+# Print out the results.
+echo "${HOSTS_ARRAY[@]}"
 
