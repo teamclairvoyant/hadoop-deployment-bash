@@ -59,7 +59,7 @@ while [[ $1 = -* ]]; do
       print_help "$(basename "$0")"
       ;;
     -v|--version)
-      echo -e "Print a list of hostnames for the given cluster CLoudera Manager.\nVersion: $VERSION"
+      echo -e "Print a list of hostnames for the given cluster in Cloudera Manager.\nVersion: $VERSION"
       exit 0
       ;;
     *)
