@@ -109,8 +109,8 @@ fi
 # CM API greater than or equal to v31 also include hostnames in the output.
 if [ "$_APINUM" -ge 31 ]; then
   HOST_NAMES=$(echo "${HOSTS_OUTPUT}" | python -c 'import json, sys; obj=json.load(sys.stdin); print(" ".join([x["hostname"] for x in obj["items"]]))')
-  # Since we have hostnames, we are all done.
-  HOSTS_ARRAY+=( "$HOST_NAMES" )
+  # Since we have hostnames, we are all done. SC2034
+  IFS=' ' read -r -a HOSTS_ARRAY <<< "$HOST_NAMES"
 else
   HOST_IDS=$(echo "${HOSTS_OUTPUT}" | python -c 'import json, sys; obj=json.load(sys.stdin); print(" ".join([x["hostId"] for x in obj["items"]]))')
   # Since we do not have hostnames, we need to convert the hostIds to hostnames.
