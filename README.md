@@ -63,7 +63,7 @@ for HOST in `cat HOSTLIST`; do
   ${GITREPO}/disable_ipv6.sh \
   ${GITREPO}/disable_selinux.sh \
   ${GITREPO}/disable_thp.sh \
-  ${GITREPO}/install_ntp.sh \
+  ${GITREPO}/install_chrony.sh \
   ${GITREPO}/install_nscd.sh \
   ${GITREPO}/install_jdk.sh \
   ${GITREPO}/configure_javahome.sh \
@@ -82,8 +82,7 @@ done
 Run the scripts to prep the system for Cloudera Manager installation.  Pin the version of Cloudera Manager to the value in $CMVER.  Also deploy Oracle JDK 8.
 ```
 #BOPT="-x"    # Turn on bash debugging.
-#CMVER=5.9.1  # Set specific Cloudera Manager version, or ...
-CMVER=5       # ... use major version 5.
+CMVER=6.3.2   # Set specific Cloudera Manager version.
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
   ssh -t $HOST " \
@@ -93,7 +92,7 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./disable_ipv6.sh; \
   sudo bash $BOPT ./disable_selinux.sh; \
   sudo bash $BOPT ./disable_thp.sh; \
-  sudo bash $BOPT ./install_ntp.sh; \
+  sudo bash $BOPT ./install_chrony.sh; \
   sudo bash $BOPT ./install_nscd.sh; \
   sudo bash $BOPT ./install_jdk.sh --jdktype openjdk --jdkversion 8; \
   sudo bash $BOPT ./configure_javahome.sh; \
@@ -110,14 +109,14 @@ Install the Cloudera Manager agent.
 CMSERVER=ip-10-2-5-22.ec2.internal
 for HOST in `cat HOSTLIST`; do
   echo "*** $HOST"
-  ssh -t $HOST "sudo bash $BOPT ./install_clouderamanageragent.sh $CMSERVER $CMVER"
+  ssh -t $HOST "sudo bash $BOPT ./install_clouderamanageragent.sh -H $CMSERVER -V $CMVER"
 done
 ```
 
 Install the Cloudera Manager server with the embedded PostgreSQL database.
 ```
 scp -p ${GITREPO}/install_clouderamanagerserver.sh ${CMSERVER}:
-ssh -t ${CMSERVER} "sudo bash $BOPT ./install_clouderamanagerserver.sh embedded $CMVER"
+ssh -t ${CMSERVER} "sudo bash $BOPT ./install_clouderamanagerserver.sh -d embedded -V $CMVER"
 ```
 You can use the argument embedded, postgresql, mysql, or oracle.
 
@@ -183,7 +182,7 @@ for HOST in `cat HOSTLIST`; do
   ${GITREPO}/disable_ipv6.sh \
   ${GITREPO}/disable_selinux.sh \
   ${GITREPO}/disable_thp.sh \
-  ${GITREPO}/install_ntp.sh \
+  ${GITREPO}/install_chrony.sh \
   ${GITREPO}/install_nscd.sh \
   ${GITREPO}/install_jdk.sh \
   ${GITREPO}/configure_javahome.sh \
@@ -212,7 +211,7 @@ for HOST in `cat HOSTLIST`; do
   sudo bash $BOPT ./disable_ipv6.sh; \
   sudo bash $BOPT ./disable_selinux.sh; \
   sudo bash $BOPT ./disable_thp.sh; \
-  sudo bash $BOPT ./install_ntp.sh; \
+  sudo bash $BOPT ./install_chrony.sh; \
   sudo bash $BOPT ./install_nscd.sh; \
   sudo bash $BOPT ./install_jdk.sh --jdktype openjdk --jdkversion 8; \
   sudo bash $BOPT ./configure_javahome.sh; \
