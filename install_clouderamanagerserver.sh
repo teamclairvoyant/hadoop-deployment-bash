@@ -26,7 +26,7 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 # 1 - SCM server database type : embedded, postgresql, mysql, or oracle - optional
 # 2 - SCM server version - optional
 _INSTALLDB=embedded
-_SCMVERSION=6.3.1
+_SCMVERSION=6.3.2
 
 # Function to print the help screen.
 print_help() {
@@ -207,7 +207,7 @@ SCMVERSION=${2:-$_SCMVERSION}
 SCMVERSION_MAJ=$(echo "${SCMVERSION}" | awk -F. '{print $1}')
 SCMVERSION_MIN=$(echo "${SCMVERSION}" | awk -F. '{print $2}')
 SCMVERSION_PATCH=$(echo "${SCMVERSION}" | awk -F. '{print $3}')
-if { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -eq 3 ] && [ "$SCMVERSION_PATCH" -ge 3 ]; } || { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -ge 4 ]; }; then
+if { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -eq 3 ] && [ "$SCMVERSION_PATCH" -ge 3 ]; } || { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -ge 4 ]; } || { [ "$SCMVERSION_MAJ" -eq 7 ]; }; then
   if [ -z "$_REPO_USER" ] || [ -z "$_REPO_PASSWD" ]; then
     echo "ERROR: Missing username and/or password for software repository."
     echo ""
@@ -243,7 +243,19 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
     # Require username/password for 6.3.3 and newer.
-    if { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -eq 3 ] && [ "$SCMVERSION_PATCH" -ge 3 ]; } || { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -ge 4 ]; }; then
+    if [ "$SCMVERSION_MAJ" -eq 7 ]; then
+      wget -q "https://${_REPO_USER}:${_REPO_PASSWD}@archive.cloudera.com/p/cm7/${SCMVERSION}/redhat${OSREL}/yum/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
+      RETVAL=$?
+      if [ "$RETVAL" -ne 0 ]; then
+        echo "** ERROR: Could not download https://${_REPO_USER}:${_REPO_PASSWD}@archive.cloudera.com/p/cm7/${SCMVERSION}/redhat${OSREL}/yum/cloudera-manager.repo"
+        exit 8
+      fi
+      chown root:root /etc/yum.repos.d/cloudera-manager.repo
+      chmod 0640 /etc/yum.repos.d/cloudera-manager.repo
+      sed -e "s|^username=.*|username=${_REPO_USER}|" \
+          -e "s|^password=.*|password=${_REPO_PASSWD}|" \
+          -i /etc/yum.repos.d/cloudera-manager.repo
+    elif { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -eq 3 ] && [ "$SCMVERSION_PATCH" -ge 3 ]; } || { [ "$SCMVERSION_MAJ" -eq 6 ] && [ "$SCMVERSION_MIN" -ge 4 ]; }; then
       wget -q "https://${_REPO_USER}:${_REPO_PASSWD}@archive.cloudera.com/p/cm6/${SCMVERSION}/redhat${OSREL}/yum/cloudera-manager.repo" -O /etc/yum.repos.d/cloudera-manager.repo
       RETVAL=$?
       if [ "$RETVAL" -ne 0 ]; then
@@ -312,7 +324,11 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
     echo "****************************************"
     echo "** Now you must configure the Cloudera Manager server to connect to the external"
     echo "** database.  Please run:"
-    echo "/usr/share/cmf/schema/scm_prepare_database.sh"
+    if [ "$SCMVERSION_MAJ" -ge 6 ]; then
+      echo "/opt/cloudera/cm/schema/scm_prepare_database.sh"
+    else
+      echo "/usr/share/cmf/schema/scm_prepare_database.sh"
+    fi
     echo "** and then:"
     echo "service cloudera-scm-server start"
     echo "chkconfig cloudera-scm-server on"
@@ -404,7 +420,11 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
     echo "****************************************"
     echo "** Now you must configure the Cloudera Manager server to connect to the external"
     echo "** database.  Please run:"
-    echo "/usr/share/cmf/schema/scm_prepare_database.sh"
+    if [ "$SCMVERSION_MAJ" -ge 6 ]; then
+      echo "/opt/cloudera/cm/schema/scm_prepare_database.sh"
+    else
+      echo "/usr/share/cmf/schema/scm_prepare_database.sh"
+    fi
     echo "** and then:"
     echo "service cloudera-scm-server start"
     echo "update-rc.d cloudera-scm-server-db defaults"
