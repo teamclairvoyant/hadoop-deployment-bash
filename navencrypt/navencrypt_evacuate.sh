@@ -142,7 +142,7 @@ echo "** Moving data off of ${MOUNTPOINT}..."
 mkdir -p -m 0755 "${MOUNTPOINT}tmp"
 mv "${MOUNTPOINT}/"* "${MOUNTPOINT}tmp/"
 umount "$MOUNTPOINT"
-sed -e "/${MOUNTPOINT} /d" -i /etc/fstab
+sed -e "/${ESCMOUNTPOINT} /d" -i /etc/fstab
 chattr -i "$MOUNTPOINT"
 rmdir "$MOUNTPOINT"
 mv "${MOUNTPOINT}tmp" "$MOUNTPOINT"
