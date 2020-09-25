@@ -110,7 +110,6 @@ fi
 
 ESCMOUNTPOINT="${MOUNTPOINT//\//\\/}"
 FULLDEVICE=$(mount | awk "\$3~/${ESCMOUNTPOINT}\$/{print \$1}")
-ESCFULLDEVICE="${FULLDEVICE//\//\\/}"
 # Find the parent device (ie not the partition).
 # shellcheck disable=SC2001
 DEVICE=$(echo "$FULLDEVICE" | sed -e 's|[0-9]$||')
