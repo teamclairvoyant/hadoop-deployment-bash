@@ -35,7 +35,8 @@ FORCE=no
 print_help() {
   printf 'Usage:  %s --navpass <password> --device <device> --emountpoint <emountpoint> [--fstype <fstype>] [--mountoptions <options>]\n' "$1"
   printf '\n'
-  printf '         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n'
+  printf '         -n|--navpass          First password used to encrypt the local Navigator Encrypt configuration.\n'
+  printf '         -2|--navpass2         Second password used to encrypt the local Navigator Encrypt configuration.  This parameter is not needed for the single-passphrase key type.\n'
   printf '         -d|--device           Disk device to encrypt.  Device will be wiped.\n'
   printf '         -e|--emountpoint      Mountpoint of the encrypted filesystem.\n'
   printf '        [-t|--fstype]          Filesystem type.  Default is xfs.\n'
@@ -77,6 +78,10 @@ while [[ $1 = -* ]]; do
     -n|--navpass)
       shift
       NAVPASS=$1
+      ;;
+    -2|--navpass2)
+      shift
+      NAVPASS2=$1
       ;;
     -d|--device)
       shift
@@ -120,7 +125,7 @@ if [[ -z "$NAVPASS" ]]; then print_help "$(basename "$0")"; fi
 if [[ -z "$DEVICE" ]]; then print_help "$(basename "$0")"; fi
 if [[ -z "$EMOUNTPOINT" ]]; then print_help "$(basename "$0")"; fi
 
-# Lets not bother continuing unless we have the privs to do something.
+# Let's not bother continuing unless we have the privs to do something.
 check_root
 
 # main
@@ -172,7 +177,8 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
     # shellcheck disable=SC2174
     mkdir -p -m 0755 "$EMOUNTPOINT" && \
     chattr +i "$EMOUNTPOINT" && \
-    printf '%s' "$NAVPASS" |
+    printf -v NAVPASS_ANSWERS "$NAVPASS\n$NAVPASS2" && \
+    echo "$NAVPASS_ANSWERS" |
     navencrypt-prepare -t "$FSTYPE" -o "$FSMOUNTOPT" --use-uuid "${DEVICE}${PART}" "$EMOUNTPOINT" -
     RETVAL=$?
     if [ "$RETVAL" -ne 0 ]; then

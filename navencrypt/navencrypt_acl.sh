@@ -32,7 +32,8 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin
 print_help() {
   printf 'Usage:  %s --navpass <password>\n' "$1"
   printf '\n'
-  printf '         -n|--navpass          Password used to encrypt the local Navigator Encrypt configuration.\n'
+  printf '         -n|--navpass          First password used to encrypt the local Navigator Encrypt configuration.\n'
+  printf '         -2|--navpass2         Second password used to encrypt the local Navigator Encrypt configuration.  This parameter is not needed for the single-passphrase key type.\n'
   printf '        [-h|--help]\n'
   printf '        [-v|--version]\n'
   printf '\n'
@@ -70,6 +71,10 @@ while [[ $1 = -* ]]; do
       shift
       NAVPASS=$1
       ;;
+    -2|--navpass2)
+      shift
+      NAVPASS2=$1
+      ;;
     -h|--help)
       print_help "$(basename "$0")"
       ;;
@@ -98,9 +103,10 @@ set -u
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   echo "Disabling ACLs for Navigator Encrypt..."
-  printf '%s' "$NAVPASS" | \
+  printf -v NAVPASS_ANSWERS "$NAVPASS\n$NAVPASS2"
+  echo "$NAVPASS_ANSWERS" | \
   navencrypt acl --add --rule="ALLOW @* * *"
-  printf '%s' "$NAVPASS" | \
+  echo "$NAVPASS_ANSWERS" | \
   navencrypt acl --list --all
 else
   printf "** WARNING: This host is not yet registered.  Skipping..."
