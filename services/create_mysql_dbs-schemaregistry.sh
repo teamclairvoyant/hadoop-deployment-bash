@@ -167,7 +167,7 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
 fi
 
 # main
-echo "Creating users and databases in MySQL for Airflow..."
+echo "Creating users and databases in MySQL for Schema Registry..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
