@@ -131,10 +131,10 @@ if [[ -z "$KTPASS" ]]; then print_help "$(basename "$0")"; fi
 if [[ -z "$KTTYPE" ]]; then print_help "$(basename "$0")"; fi
 case $KTTYPE in
   single-passphrase)
-    printf -v NAVPASS_ANSWERS "$NAVPASS\n$NAVPASS" 
+    printf -v NAVPASS_ANSWERS '%s\n%s' "$NAVPASS" "$NAVPASS"
     ;;
   dual-passphrase)
-    printf -v NAVPASS_ANSWERS "$NAVPASS\n$NAVPASS\n$NAVPASS2\n$NAVPASS2"
+    printf -v NAVPASS_ANSWERS '%s\n%s\n%s\n%s' "$NAVPASS" "$NAVPASS" "$NAVPASS2" "$NAVPASS2"
     ;;
   *)
     echo "ERROR: key-type must be one of single-passphrase or dual-passphrase"

@@ -124,7 +124,7 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   if [ -d "$MOUNTPOINT" ]; then
     if [ -d "$EMOUNTPOINT" ]; then
       echo "Moving data from ${MOUNTPOINT} to ${EMOUNTPOINT} for encryption..."
-      printf -v NAVPASS_ANSWERS "$NAVPASS\n$NAVPASS2"
+      printf -v NAVPASS_ANSWERS '%s\n%s' "$NAVPASS" "$NAVPASS2"
       echo "$NAVPASS_ANSWERS" |
       navencrypt-move encrypt "@${CATEGORY}" "$MOUNTPOINT" "$EMOUNTPOINT"
     else

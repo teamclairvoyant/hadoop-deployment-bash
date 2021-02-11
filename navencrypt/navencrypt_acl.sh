@@ -103,7 +103,7 @@ set -u
 
 if [ -f /etc/navencrypt/keytrustee/clientname ]; then
   echo "Disabling ACLs for Navigator Encrypt..."
-  printf -v NAVPASS_ANSWERS "$NAVPASS\n$NAVPASS2"
+  printf -v NAVPASS_ANSWERS '%s\n%s' "$NAVPASS" "$NAVPASS2"
   echo "$NAVPASS_ANSWERS" | \
   navencrypt acl --add --rule="ALLOW @* * *"
   echo "$NAVPASS_ANSWERS" | \

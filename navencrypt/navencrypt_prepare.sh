@@ -177,7 +177,7 @@ if [ -f /etc/navencrypt/keytrustee/clientname ]; then
     # shellcheck disable=SC2174
     mkdir -p -m 0755 "$EMOUNTPOINT" && \
     chattr +i "$EMOUNTPOINT" && \
-    printf -v NAVPASS_ANSWERS "$NAVPASS\n$NAVPASS2" && \
+    printf -v NAVPASS_ANSWERS '%s\n%s' "$NAVPASS" "$NAVPASS2" && \
     echo "$NAVPASS_ANSWERS" |
     navencrypt-prepare -t "$FSTYPE" -o "$FSMOUNTOPT" --use-uuid "${DEVICE}${PART}" "$EMOUNTPOINT" -
     RETVAL=$?

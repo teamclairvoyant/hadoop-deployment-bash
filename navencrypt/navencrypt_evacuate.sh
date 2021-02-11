@@ -110,7 +110,6 @@ fi
 
 ESCMOUNTPOINT="${MOUNTPOINT//\//\\/}"
 FULLDEVICE=$(mount | awk "\$3~/${ESCMOUNTPOINT}\$/{print \$1}")
-ESCFULLDEVICE="${FULLDEVICE//\//\\/}"
 # Find the parent device (ie not the partition).
 # shellcheck disable=SC2001
 DEVICE=$(echo "$FULLDEVICE" | sed -e 's|[0-9]$||')
@@ -143,7 +142,7 @@ echo "** Moving data off of ${MOUNTPOINT}..."
 mkdir -p -m 0755 "${MOUNTPOINT}tmp"
 mv "${MOUNTPOINT}/"* "${MOUNTPOINT}tmp/"
 umount "$MOUNTPOINT"
-sed -e "/${MOUNTPOINT} /d" -i /etc/fstab
+sed -e "/${ESCMOUNTPOINT} /d" -i /etc/fstab
 chattr -i "$MOUNTPOINT"
 rmdir "$MOUNTPOINT"
 mv "${MOUNTPOINT}tmp" "$MOUNTPOINT"

@@ -16,6 +16,7 @@
 #
 if [ -n "$DEBUG" ]; then set -x; fi
 #
+# https://blog.cloudera.com/best-practices-guide-for-systems-security-services-daemon-configuration-and-installation-part-1/
 ##### START CONFIG ###################################################
 
 ##### STOP CONFIG ####################################################

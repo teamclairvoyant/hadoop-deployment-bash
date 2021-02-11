@@ -167,22 +167,32 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debi
 fi
 
 # main
-echo "Creating users and databases in MySQL for Airflow..."
+echo "Creating users and databases in MySQL for Schema Registry..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
     $ECHO sudo rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
   fi
   if [ "$OSREL" == 6 ]; then
-    $ECHO sudo yum -y -e1 -d1 install mysql apg || err_msg 4
+    if ! rpm -q mysql; then
+      $ECHO sudo yum -y -e1 -d1 install mysql apg || err_msg 4
+    fi
   else
-    $ECHO sudo yum -y -e1 -d1 install mariadb apg || err_msg 4
+    if ! rpm -q mariadb; then
+      $ECHO sudo yum -y -e1 -d1 install mariadb apg || err_msg 4
+    fi
   fi
-  if rpm -q apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
+  if rpm -q apg; then
+    export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'
+  fi
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
-  export DEBIAN_FRONTEND=noninteractive
-  $ECHO sudo apt-get -y -q install mysql-client apg || err_msg 4
-  if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
+  if dpkg -l mysql-client >/dev/null; then
+    export DEBIAN_FRONTEND=noninteractive
+    $ECHO sudo apt-get -y -q install mysql-client apg || err_msg 4
+  fi
+  if dpkg -l apg >/dev/null; then
+    export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'
+  fi
 fi
 REGISTRYDB_PASSWORD=$(eval "$PWCMD")
 echo "****************************************"
