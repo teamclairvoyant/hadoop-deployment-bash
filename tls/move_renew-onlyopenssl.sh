@@ -25,11 +25,6 @@ if [ ! -f /opt/cloudera/security/x509/localhost_renew.csr ]; then
   exit 1
 fi
 
-if [ ! -f /opt/cloudera/security/x509/localhost_renew.e.key ]; then
-  echo "ERROR: New encrypted key does not exist.  Exiting..."
-  exit 2
-fi
-
 if [ ! -f /opt/cloudera/security/x509/localhost_renew.key ]; then
   echo "ERROR: New private key does not exist.  Exiting..."
   exit 3
@@ -41,7 +36,6 @@ if [ ! -f /opt/cloudera/security/x509/localhost_renew.pem ]; then
 fi
 
 mv /opt/cloudera/security/x509/localhost_renew.csr /opt/cloudera/security/x509/localhost.csr
-mv /opt/cloudera/security/x509/localhost_renew.e.key /opt/cloudera/security/x509/localhost.e.key
 mv /opt/cloudera/security/x509/localhost_renew.key /opt/cloudera/security/x509/localhost.key
 mv /opt/cloudera/security/x509/localhost_renew.pem /opt/cloudera/security/x509/localhost.pem
 
