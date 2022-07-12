@@ -770,6 +770,13 @@ else
   lspci -mm -d ::0200
 fi
 
+echo "****************************************"
+echo "*** Linux Kernel Tuning"
+#echo "** running config:"
+#sysctl -a
+echo "** startup config:"
+find /etc/sysctl.conf /etc/sysctl.d/*.conf -type f -exec grep -H '' '{}' \;
+
 #echo "****************************************"
 #echo "*** "
 #echo "** running config:"
