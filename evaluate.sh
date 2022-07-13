@@ -610,7 +610,7 @@ IPS=$(ip -4 a | awk '/inet/{print $2}' | grep -Ev '127.0.0.1|169.254.' | sed -e 
 # shellcheck disable=SC2116,SC2086
 IP=$(echo $IPS)
 NUMIPS=$(echo "$IPS" | wc -l)
-_HOSTNAME=$(hostname)
+_HOSTNAME=$(hostname -f)
 if [ "$NUMIPS" -gt 1 ]; then
   DNSMULTIPLE=true
   echo "DNS: Multiple IPs present."
@@ -769,6 +769,13 @@ else
   echo "PCI: Ethernet"
   lspci -mm -d ::0200
 fi
+
+echo "****************************************"
+echo "*** Linux Kernel Tuning"
+#echo "** running config:"
+#sysctl -a
+echo "** startup config:"
+find /etc/sysctl.conf /etc/sysctl.d/*.conf -type f -exec grep -H '' '{}' \;
 
 #echo "****************************************"
 #echo "*** "
