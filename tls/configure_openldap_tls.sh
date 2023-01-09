@@ -58,7 +58,15 @@ discover_os() {
     OSNAME=$(lsb_release -cs)
   else
     if [ -f /etc/redhat-release ]; then
-      if [ -f /etc/centos-release ]; then
+      if [ -f /etc/almalinux-release ]; then
+        # shellcheck disable=SC2034
+        OS=AlmaLinux
+        # 8.6
+        # shellcheck disable=SC2034
+        OSVER=$(rpm -qf /etc/almalinux-release --qf='%{VERSION}\n')
+        # shellcheck disable=SC2034
+        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
+      elif [ -f /etc/centos-release ]; then
         # shellcheck disable=SC2034
         OS=CentOS
         # 7.5.1804.4.el7.centos, 6.10.el6.centos.12.3
