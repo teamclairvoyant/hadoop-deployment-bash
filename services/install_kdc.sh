@@ -26,18 +26,17 @@ DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
 print_help() {
-  echo "Usage:  $1 --realm <realm> --cm_principal <princ>"
-#  echo "Usage:  $1 --realm <realm> [--kdc_password <password>] --cm_principal <princ> [--cm_principal_password <password>]"
+  echo "Usage:  $1 --realm <realm> [--kdc_password <password>] --cm_principal <princ> [--cm_principal_password <password>]"
   echo ""
   echo "        -r|--realm                   <Kerberos realm>"
   echo "        -c|--cm_principal            <CM principal>"
-#  echo "        [-k|--kdc_password           <KDC password>]"
-#  echo "        [-p|--cm_principal_password  <CM principal password>]"
+  echo "        [-k|--kdc_password           <KDC password>]"
+  echo "        [-p|--cm_principal_password  <CM principal password>]"
   echo "        [-h|--help]"
   echo "        [-v|--version]"
   echo ""
   echo "   ex.  $1 --realm HADOOP.COM --cm_principal cloudera-scm"
-#  echo "   ex.  $1 --realm HADOOP.COM --kdc_password 1234567890 --cm_principal cloudera-scm --cm_principal_password abcdefghij"
+  echo "   ex.  $1 --realm HADOOP.COM --kdc_password 1234567890 --cm_principal cloudera-scm --cm_principal_password abcdefghij"
   exit 1
 }
 
@@ -130,18 +129,18 @@ while [[ $1 = -* ]]; do
       _REALM_UPPER=$(echo "$1" | tr '[:lower:]' '[:upper:]')
       _REALM_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
       ;;
-#    -k|--kdc_password)
-#      shift
-#      _KDC_PASSWORD=$1
-#      ;;
+    -k|--kdc_password)
+      shift
+      _KDC_PASSWORD=$1
+      ;;
     -c|--cm_principal)
       shift
       _CM_PRINCIPAL=$1
       ;;
-#    -p|--cm_principal_password)
-#      shift
-#      _CM_PRINCIPAL_PASSWORD=$1
-#      ;;
+    -p|--cm_principal_password)
+      shift
+      _CM_PRINCIPAL_PASSWORD=$1
+      ;;
     -h|--help)
       print_help "$(basename "$0")"
       ;;
@@ -287,34 +286,38 @@ $_REALM_UPPER = {
 $_REALM_LOWER = $_REALM_UPPER
 EOF
 
-  echo "** Generating initial KDC database ..."
-  _KDC_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_KDC_PASSWORD" ]; then
-    _KDC_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    echo "** Generating initial KDC database ..."
+    _KDC_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
+    if [ -z "$_KDC_PASSWORD" ]; then
+      _KDC_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "*** SAVE THIS PASSWORD"
+    echo "KDC : ${_KDC_PASSWORD}"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
-  echo "*** SAVE THIS PASSWORD"
-  echo "KDC : ${_KDC_PASSWORD}"
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
   kdb5_util -P "$_KDC_PASSWORD" create -s >/dev/null
 
-  echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
-  _CM_PRINCIPAL_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
-    _CM_PRINCIPAL_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
+    _CM_PRINCIPAL_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
+    if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
+      _CM_PRINCIPAL_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "*** SAVE THIS PASSWORD"
+    echo "${_CM_PRINCIPAL}@${_REALM_UPPER} : ${_CM_PRINCIPAL_PASSWORD}"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
-  echo "*** SAVE THIS PASSWORD"
-  echo "${_CM_PRINCIPAL}@${_REALM_UPPER} : ${_CM_PRINCIPAL_PASSWORD}"
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
   kadmin.local >/dev/null <<EOF
 addpol default
 addprinc -pw $_CM_PRINCIPAL_PASSWORD $_CM_PRINCIPAL
@@ -437,34 +440,38 @@ $_REALM_UPPER = {
 $_REALM_LOWER = $_REALM_UPPER
 EOF
 
-  echo "** Generating initial KDC database ..."
-  _KDC_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_KDC_PASSWORD" ]; then
-    _KDC_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    echo "** Generating initial KDC database ..."
+    _KDC_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
+    if [ -z "$_KDC_PASSWORD" ]; then
+      _KDC_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "*** SAVE THIS PASSWORD"
+    echo "KDC : ${_KDC_PASSWORD}"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
-  echo "*** SAVE THIS PASSWORD"
-  echo "KDC : ${_KDC_PASSWORD}"
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
   kdb5_util -P "$_KDC_PASSWORD" create -s >/dev/null
 
-  echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
-  _CM_PRINCIPAL_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
-    _CM_PRINCIPAL_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
+    _CM_PRINCIPAL_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
+    if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
+      _CM_PRINCIPAL_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "*** SAVE THIS PASSWORD"
+    echo "${_CM_PRINCIPAL}@${_REALM_UPPER} : ${_CM_PRINCIPAL_PASSWORD}"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
-  echo "*** SAVE THIS PASSWORD"
-  echo "${_CM_PRINCIPAL}@${_REALM_UPPER} : ${_CM_PRINCIPAL_PASSWORD}"
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
   kadmin.local >/dev/null <<EOF
 addpol default
 addprinc -pw $_CM_PRINCIPAL_PASSWORD $_CM_PRINCIPAL

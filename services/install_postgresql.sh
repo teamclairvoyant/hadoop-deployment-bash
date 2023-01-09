@@ -16,6 +16,18 @@
 
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 
+# Function to print the help screen.
+print_help() {
+  echo "Usage:  $1 [--password <password>]"
+  echo ""
+  echo "        [-p|--password  <database root user password>]"
+  echo "        [-h|--help]"
+  echo "        [-v|--version]"
+  echo ""
+  echo "   ex.  $1 --password abcdefghij"
+  exit 1
+}
+
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
@@ -73,6 +85,27 @@ discover_os() {
     fi
   fi
 }
+
+# Process arguments.
+while [[ $1 = -* ]]; do
+  case $1 in
+    -p|--password)
+      shift
+      _PASS=$1
+      ;;
+    -h|--help)
+      print_help "$(basename "$0")"
+      ;;
+    -v|--version)
+      echo "Install PostgreSQL."
+      exit 0
+      ;;
+    *)
+      print_help "$(basename "$0")"
+      ;;
+  esac
+  shift
+done
 
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
@@ -135,18 +168,20 @@ EOF
   service postgresql restart
   chkconfig postgresql on
 
-  _PASS=$(apg -a 1 -M NCL -m 20 -x 20 -n 1)
   if [ -z "$_PASS" ]; then
-    _PASS=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    _PASS=$(apg -a 1 -M NCL -m 20 -x 20 -n 1)
+    if [ -z "$_PASS" ]; then
+      _PASS=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "*** SAVE THIS PASSWORD"
+    echo "postgres : ${_PASS}"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
-  echo "*** SAVE THIS PASSWORD"
-  echo "postgres : ${_PASS}"
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
 
   # shellcheck disable=SC1117
   su - postgres -c 'psql' <<EOF
