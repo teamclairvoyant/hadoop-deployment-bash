@@ -89,7 +89,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -98,7 +98,7 @@ echo "Changing vm.swappiness running value to ${VAL}."
 sysctl -w vm.swappiness=$VAL
 
 echo "Setting vm.swappiness startup value to ${VAL}."
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   if [ "$OSREL" == 6 ]; then
     if grep -q vm.swappiness /etc/sysctl.conf; then
       sed -i -e "/^vm.swappiness/s|=.*|= $VAL|" /etc/sysctl.conf

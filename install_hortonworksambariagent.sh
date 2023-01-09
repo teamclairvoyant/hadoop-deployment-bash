@@ -93,7 +93,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -120,7 +120,7 @@ echo "Installing Hortonworks Ambari Agent..."
 echo "AMB server is: $AMBHOST"
 echo "AMB version is: $AMBVERSION"
 OS_LOWER=$(echo "$OS" | tr '[:upper:]' '[:lower:]')
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/ambari.repo ]; then
     wget -q "http://public-repo-1.hortonworks.com/ambari/${OS_LOWER}${OSREL}/2.x/updates/${AMBVERSION}/ambari.repo" -O /etc/yum.repos.d/ambari.repo

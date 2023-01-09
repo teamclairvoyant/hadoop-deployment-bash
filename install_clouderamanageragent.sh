@@ -170,7 +170,7 @@ echo "*** $(basename "$0") $*"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -212,7 +212,7 @@ fi
 echo "Installing Cloudera Manager Agent..."
 echo "CM server is: $SCMHOST"
 echo "CM version is: $SCMVERSION"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/cloudera-manager.repo ]; then
     # Require username/password for 6.3.3 and newer.

@@ -103,13 +103,13 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 echo "Installing Centrify agent..."
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   _get_proxy
   wget -q -c -O /tmp/centrify-suite-2017.3-rhel5-x86_64.tgz https://downloads.centrify.com/products/centrify-suite/2017-update-3/centrify-suite-2017.3-rhel5-x86_64.tgz
   cd /tmp || exit

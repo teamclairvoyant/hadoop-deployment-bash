@@ -89,7 +89,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -97,7 +97,7 @@ fi
 echo "** Before disabling IPv6:"
 ip -6 address
 
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   echo "** sysctl method"
   echo "** Disabling IPv6 kernel configuration..."
   # https://access.redhat.com/solutions/8709
@@ -206,7 +206,7 @@ ip -6 address
 exit 0
 
 # Fix any breakage in other applications.
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   if rpm -q postfix >/dev/null; then
     echo "** Disabling IPv6 in Postfix..."
     cp -p /etc/postfix/main.cf /etc/postfix/main.cf."${DATE}"

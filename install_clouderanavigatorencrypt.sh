@@ -90,14 +90,35 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
-#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
 
 echo "Installing Cloudera Navigator Encrypt..."
-if [ "$OS" == CentOS ]; then
+if [ "$OS" == AlmaLinux ]; then
+  YUMHOST=$1
+  if [ -z "$YUMHOST" ]; then
+    echo "ERROR: Missing YUM hostname."
+    exit 1
+  fi
+
+  echo "** Find the correct kernel-headers and kernel-devel that match the running kernel."
+  yum -y -e1 -d1 install kernel-headers-"$(uname -r)" kernel-devel-"$(uname -r)"
+
+  yum -y -e1 -d1 install epel-release
+  wget -q "http://${YUMHOST}/navigator-encrypt/latest/el${OSREL}/cloudera-navencrypt.repo" -O /etc/yum.repos.d/cloudera-navencrypt.repo
+  RETVAL=$?
+  if [ "$RETVAL" -ne 0 ]; then
+    echo "** ERROR: Could not download http://${YUMHOST}/navigator-encrypt/latest/el${OSREL}/cloudera-navencrypt.repo"
+    exit 4
+  fi
+  chown root:root /etc/yum.repos.d/cloudera-navencrypt.repo
+  chmod 0644 /etc/yum.repos.d/cloudera-navencrypt.repo
+  yum -y -e1 -d1 install navencrypt
+  chkconfig navencrypt-mount on
+elif [ "$OS" == CentOS ]; then
   YUMHOST=$1
   if [ -z "$YUMHOST" ]; then
     echo "ERROR: Missing YUM hostname."

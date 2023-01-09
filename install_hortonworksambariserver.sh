@@ -122,7 +122,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -149,7 +149,7 @@ OS_LOWER=$(echo "$OS" | tr '[:upper:]' '[:lower:]')
 echo "Installing Hortonworks Ambari Server..."
 echo "AMB database is: $INSTALLDB"
 echo "AMB version is: $AMBVERSION"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   # Test to see if JDK 6 is present.
   if rpm -q jdk >/dev/null; then
     HAS_JDK=yes

@@ -160,8 +160,8 @@ echo "**************************************************************************
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
-#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -178,7 +178,7 @@ echo "Installing phpLDAPadmin..."
 #_ROOTDN=$(echo "$_ROOTDN" | sed -e 's|cn=||' -e "s|,${_SUFFIX}||")
 #_ROOTDN="cn=${_ROOTDN},${_SUFFIX}"
 
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   setsebool -P httpd_can_connect_ldap=on
 
   yum -y -e1 -d1 install epel-release

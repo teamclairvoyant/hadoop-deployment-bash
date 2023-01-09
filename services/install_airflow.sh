@@ -190,8 +190,8 @@ echo "**************************************************************************
 # Check to see if we are on a supported OS.
 # Currently only EL7.
 discover_os
-if { [ "$OS" != RedHatEnterpriseServer ] || [ "$OS" != CentOS ]; } && [ "$OSREL" != 7 ]; then
-#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if { [ "$OS" != RedHatEnterpriseServer ] || [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ]; } && [ "$OSREL" != 7 ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -222,7 +222,7 @@ if ! getent passwd airflow >/dev/null; then
   useradd "$AIRFLOWUID" -g airflow -c "Airflow Daemon" -m -d /var/lib/airflow -k /dev/null -r airflow
 fi
 
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   echo "** Installing software dependencies via YUM."
   yum -y -e1 -d1 groupinstall "Development tools"
   yum -y -e1 -d1 install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel python-devel wget cyrus-sasl-devel.x86_64

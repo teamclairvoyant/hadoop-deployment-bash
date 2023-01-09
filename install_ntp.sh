@@ -105,17 +105,17 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] && [ "$OSREL" -ge 8 ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] && [ "$OSREL" -ge 8 ]; then
   echo "ERROR: NTP no longer ships with RHEL/CentOS 8. Use chrony instead."
   exit 4
 fi
 
 echo "Installing Network Time Protocol..."
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   if [ "$OSREL" == 7 ]; then
     # https://www.centos.org/forums/viewtopic.php?f=47&t=47626
     systemctl disable chronyd.service

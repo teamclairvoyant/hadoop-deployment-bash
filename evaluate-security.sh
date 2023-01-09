@@ -130,7 +130,7 @@ if [ -f /etc/lsb-release ]; then /usr/bin/lsb_release -ds; fi
 echo "****************************************"
 echo "*** Entropy"
 echo "** running config:"
-if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; then
+if [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; then
   service rngd status
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   service rng-tools status || ps -o user,pid,command -C rngd
@@ -249,13 +249,13 @@ grep -v ^# /etc/krb5.conf | cat
 
 echo "****************************************"
 echo "*** Cloudera Software"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^cloudera\* ^navencrypt\* \*keytrustee\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*cloudera\* \*navencrypt\* \*keytrustee\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Cloudera Hadoop Packages"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^hadoop\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -267,13 +267,13 @@ ls -l /opt/cloudera/csd
 
 echo "****************************************"
 echo "*** Hortonworks Software"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^ambari\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*ambari\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Hortonworks Hadoop Packages"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^hadoop\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l hadoop-?-?-?-?-???? | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'

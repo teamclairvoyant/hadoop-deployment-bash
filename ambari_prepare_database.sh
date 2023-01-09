@@ -227,7 +227,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -236,7 +236,7 @@ fi
 set -eo pipefail
 echo "** Configuring Database..."
 if [ "$DB_TYPE" == postgresql ]; then
-  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
     JOPTS=("--jdbc-driver=/usr/share/java/postgresql-jdbc.jar")
     if ! rpm -q postgresql >/dev/null 2>&1; then
       yum -y -e1 -d1 install postgresql
@@ -263,7 +263,7 @@ if [ "$DB_TYPE" == postgresql ]; then
   OPTS=("--databasehost=$DB_HOST" "--databaseport=$DB_PORT" "--databaseusername=$DB_USER" "--databasepassword=$DB_PASSWD")
   OPTS+=("--databasename=$DB_NAME" "--database=postgres" "--postgresschema=$PG_SCHEMA")
 elif [ "$DB_TYPE" == mysql ]; then
-  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
     JOPTS=("--jdbc-driver=/usr/share/java/mysql-connector-java.jar")
     if [ "$OSREL" == 6 ]; then
       if ! rpm -q mysql >/dev/null 2>&1; then

@@ -93,7 +93,7 @@ echo "**************************************************************************
 # Check to see if we are on a supported OS.
 # Only available on EL.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
