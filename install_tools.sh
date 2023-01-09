@@ -93,7 +93,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   if [ "$OS" == RedHatEnterpriseServer ]; then
     subscription-manager repos --enable="rhel-${OSREL}-server-optional-rpms"
   fi
-  yum -y -e1 -d1 install wget unzip deltarpm
+  yum -y -e1 -d1 --skip-broken install wget unzip deltarpm
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get -y -q install wget curl unzip
