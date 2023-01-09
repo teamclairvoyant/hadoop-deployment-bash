@@ -21,7 +21,7 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 # 1 - JDBC driver type : mysql, postgresql, oracle, or sqlserver - optional
 #                        installs mysql and postgresql JDBC drivers by default
 
-MYSQL_VERSION=5.1.46
+MYSQL_VERSION=5.1.48
 
 # Function to discover basic OS details.
 discover_os() {
@@ -190,7 +190,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   else
     if [ "$INSTALLDB" == mysql ]; then
       echo "** NOTICE: Installing mysql JDBC driver."
-      if [ "$OSREL" == 6 ]; then
+#      if [ "$OSREL" == 6 ]; then
         _get_proxy
         wget -q -O /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MYSQL_VERSION}.tar.gz
         tar xf /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz -C /tmp
@@ -200,12 +200,12 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
         install -o root -g root -m 0644 /tmp/mysql-connector-java-${MYSQL_VERSION}/mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/
         ln -sf mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/mysql-connector-java.jar
         ls -l /usr/share/java/*sql*
-      else
-        yum -y -e1 -d1 install mysql-connector-java
-	# Removes JDK 6 if it snuck onto the system. Tests for the actual RPM
-	# named "jdk" to keep virtual packages from causing a JDK 8 uninstall.
-        if [ "$HAS_JDK" == no ] && rpm -q jdk >/dev/null; then yum -y -e1 -d1 remove jdk; fi
-      fi
+#      else
+#        yum -y -e1 -d1 install mysql-connector-java
+#        # Removes JDK 6 if it snuck onto the system. Tests for the actual RPM
+#        # named "jdk" to keep virtual packages from causing a JDK 8 uninstall.
+#        if [ "$HAS_JDK" == no ] && rpm -q jdk >/dev/null; then yum -y -e1 -d1 remove jdk; fi
+#      fi
     elif [ "$INSTALLDB" == postgresql ]; then
       echo "** NOTICE: Installing postgresql JDBC driver."
       yum -y -e1 -d1 install postgresql-jdbc
