@@ -182,7 +182,7 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Alma
 fi
 
 # main
-echo "Creating users and databases in PostgreSQL for Airflow..."
+echo "Creating users and databases in PostgreSQL for Ranger..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then

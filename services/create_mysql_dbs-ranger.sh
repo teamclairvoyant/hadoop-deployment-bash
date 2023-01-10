@@ -175,7 +175,7 @@ if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Alma
 fi
 
 # main
-echo "Creating users and databases in MySQL for Streams Messaging Manager..."
+echo "Creating users and databases in MySQL for Ranger..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
   $ECHO sudo yum -y -e1 -d1 install epel-release
   if ! rpm -q epel-release; then
