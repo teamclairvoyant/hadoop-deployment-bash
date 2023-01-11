@@ -108,7 +108,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20200416'
+echo 'Version: 20230109'
 echo "Date: $(date -u '+%FT%T.000Z')"
 echo "****************************************"
 echo "*** OS details"
@@ -593,14 +593,14 @@ if [ "$OS" == Debian ] || [ "$OS" == Ubuntu ] || [ "$OS" == "SUSE LINUX" ]; then
 else
   chkconfig --list ntpd
 fi
-if { [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" == 7 ]; then
+if { [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" -ge 7 ]; then
   systemctl --lines 0 status chronyd.service
   RETVAL=$?
   # Do we want to support chrony? Does CM?
 fi
 echo "** timesync status:"
 ntpq -p
-if { [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && { [ "$OSREL" == 7 ] && [ "$RETVAL" == 0 ]; }; then
+if { [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && { [ "$OSREL" -ge 7 ] && [ "$RETVAL" == 0 ]; }; then
   chronyc sources
 fi
 
