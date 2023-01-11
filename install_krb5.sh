@@ -99,7 +99,7 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == Alma
   if ! rpm -q epel-release; then
     rpm -Uvh "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${OSREL}.noarch.rpm"
   fi
-  yum -y -e1 -d1 install kstart k5start
+  yum -y -e1 -d1 --skip-broken install kstart k5start
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get -y -q install krb5-user kstart
