@@ -313,10 +313,12 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == Alma
     chkconfig cloudera-scm-server on
   else
     if [ "$INSTALLDB" == mysql ]; then
-      yum -y -e1 -d1 install mysql-connector-java
-      # Removes JDK 6 if it snuck onto the system. Tests for the actual RPM
-      # named "jdk" to keep virtual packages from causing a JDK 8 uninstall.
-      if [ "$HAS_JDK" == no ] && rpm -q jdk >/dev/null; then yum -y -e1 -d1 remove jdk; fi
+      if [ ! -f /usr/share/java/mysql-connector-java.jar ]; then
+        yum -y -e1 -d1 install mysql-connector-java
+        # Removes JDK 6 if it snuck onto the system. Tests for the actual RPM
+        # named "jdk" to keep virtual packages from causing a JDK 8 uninstall.
+        if [ "$HAS_JDK" == no ] && rpm -q jdk >/dev/null; then yum -y -e1 -d1 remove jdk; fi
+      fi
     elif [ "$INSTALLDB" == postgresql ]; then
       yum -y -e1 -d1 install postgresql-jdbc
     elif [ "$INSTALLDB" == oracle ]; then
