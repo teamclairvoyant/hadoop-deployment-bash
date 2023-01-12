@@ -271,6 +271,10 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * kms/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * llama/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * mapred/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * oozie/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangeradmin/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangertagsync/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerusersync/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerlookup/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sentry/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * solr/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * spark/*@${_REALM_UPPER}
@@ -425,6 +429,10 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * kms/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * llama/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * mapred/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * oozie/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangeradmin/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangertagsync/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerusersync/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerlookup/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sentry/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * solr/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * spark/*@${_REALM_UPPER}
