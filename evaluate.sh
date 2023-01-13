@@ -223,13 +223,16 @@ echo "****************************************"
 echo "*** kernel bugs"
 echo "** running config:"
 uname -r
+if [ "$OS" == OracleServer ] && uname -r | grep -q uek; then
+  echo "Kernel is UEK.  RHCK must be running instead."
+fi
 echo "** installed kernels:"
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   if [ "$OS" == OracleServer ]; then
-    rpm -q kernel kernel-uek
+    rpm -q kernel kernel-uek kernel-core kernel-uek-core
     if uname -r | grep -q uek; then K="uek-"; fi
   else
-    rpm -q kernel
+    rpm -q kernel kernel-core
   fi
   echo "** running kernel has fix?:"
   if uname -r | grep -Eq '^4\.[0-9].*uek'; then
