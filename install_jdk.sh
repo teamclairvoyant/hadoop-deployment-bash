@@ -192,7 +192,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -221,7 +221,7 @@ fi
 
 if [ "$JDK_TYPE" == "cloudera" ]; then
   echo "Installing Cloudera's Oracle JDK ${JDK_VERSION} ..."
-  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
     case "$JDK_VERSION" in
     7)
       # Because it may have been put there by some other process.
@@ -313,7 +313,7 @@ if [ "$JDK_TYPE" == "cloudera" ]; then
   fi
 elif [ "$JDK_TYPE" == "oracle" ]; then
   echo "Installing Oracle JDK ${JDK_VERSION} ..."
-  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
     case "$JDK_VERSION" in
     8)
       cd /tmp || exit
@@ -360,7 +360,7 @@ elif [ "$JDK_TYPE" == "oracle" ]; then
   fi
 elif [ "$JDK_TYPE" == "openjdk" ]; then
   echo "Installing OpenJDK ${JDK_VERSION} ..."
-  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
     case "$JDK_VERSION" in
     7)
       yum -y -e1 -d1 install java-1.7.0-openjdk-devel

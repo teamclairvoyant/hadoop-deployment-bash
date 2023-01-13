@@ -171,7 +171,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -179,7 +179,7 @@ fi
 echo "Tuning Kernel parameters..."
 FILE=/etc/sysctl.conf
 
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   if [ ! -d /etc/sysctl.d ]; then
     for PARAM in $(echo "$DATA" | awk '{print $1}'); do
       VAL=$(echo "$DATA" | awk -F= "/^${PARAM} = /{print \$2}" | sed -e 's|^ ||')

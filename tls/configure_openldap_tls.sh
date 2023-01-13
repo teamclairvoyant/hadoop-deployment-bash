@@ -182,8 +182,8 @@ echo "**************************************************************************
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ]; then
-#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -209,7 +209,7 @@ if [ ! -f /opt/cloudera/security/x509/ca-chain.cert.pem ]; then
 fi
 
 echo "Configuring OpenLDAP for TLS..."
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/localhost.pem /etc/openldap/certs/server.crt
   install -m 0440 -o ldap -g ldap /opt/cloudera/security/x509/localhost.key /etc/openldap/certs/server.key
   #install -m 0444 -o ldap -g ldap /opt/cloudera/security/x509/ca-chain.cert.pem /etc/openldap/certs/ca-bundle.crt

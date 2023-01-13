@@ -224,7 +224,7 @@ echo "*** kernel bugs"
 echo "** running config:"
 uname -r
 echo "** installed kernels:"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   if [ "$OS" == OracleServer ]; then
     rpm -q kernel kernel-uek
     if uname -r | grep -q uek; then K="uek-"; fi
@@ -339,7 +339,7 @@ fi
 echo "** startup config:"
 # There are multiple other ways for the firewall to be started (ie Shorewall).
 # We will not be probing for them.
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   if [ "$OSREL" == "7" ]; then
     systemctl --lines 0 status firewalld.service
   fi
@@ -368,7 +368,7 @@ grep -r net.ipv6.conf.default.disable_ipv6 /etc/sysctl.*
 
 echo "****************************************"
 echo "*** SElinux"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   echo "** running config:"
   getenforce
   echo "** startup config:"
@@ -387,7 +387,7 @@ cat /sys/kernel/mm/transparent_hugepage/defrag
 echo "* enabled:"
 cat /sys/kernel/mm/transparent_hugepage/enabled
 echo "** startup config:"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   grep transparent_hugepage /etc/rc.d/rc.local
 elif [ "$OS" == "SUSE LINUX" ]; then
   grep transparent_hugepage /etc/init.d/after.local
@@ -414,7 +414,7 @@ grep -E 'xfs|ext4|ext3' /etc/fstab || echo "none"
 echo "****************************************"
 echo "*** Entropy"
 echo "** running config:"
-if [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; then
+if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; then
   service rngd status
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   service rng-tools status || ps -o user,pid,command -C rngd
@@ -433,7 +433,7 @@ cat /proc/sys/kernel/random/entropy_avail
 echo "****************************************"
 echo "*** Java"
 echo "** installed Java(s):"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa | grep -E 'jdk|jre|^java-|j2sdk' | sort
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*jdk\* \*jre\* java-\* \*j2sdk\* oracle-java\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -566,7 +566,7 @@ fi
 echo "****************************************"
 echo "*** JDBC"
 echo "** JDBC packages:"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -q mysql-connector-java postgresql-jdbc
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l libmysql-java libpostgresql-jdbc-java | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -578,7 +578,7 @@ ls -l /usr/share/java/sqlserver-connector-java.jar /usr/share/java/sqljdbc*.jar
 
 echo "****************************************"
 echo "*** Kerberos"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   rpm -q krb5-workstation kstart k5start
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l krb5-user kstart k5start | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -602,7 +602,7 @@ chkconfig --list nscd
 echo "****************************************"
 echo "*** NTP"
 echo "** running config:"
-if [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; then
+if [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; then
   service ntpd status
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ] || [ "$OS" == "SUSE LINUX" ]; then
   service ntp status
@@ -614,14 +614,14 @@ if [ "$OS" == Debian ] || [ "$OS" == Ubuntu ] || [ "$OS" == "SUSE LINUX" ]; then
 else
   chkconfig --list ntpd
 fi
-if { [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" -ge 7 ]; then
+if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" -ge 7 ]; then
   systemctl --lines 0 status chronyd.service
   RETVAL=$?
   # Do we want to support chrony? Does CM?
 fi
 echo "** timesync status:"
 ntpq -p
-if { [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && { [ "$OSREL" -ge 7 ] && [ "$RETVAL" == 0 ]; }; then
+if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && { [ "$OSREL" -ge 7 ] && [ "$RETVAL" == 0 ]; }; then
   chronyc sources
 fi
 
@@ -707,13 +707,13 @@ awk 1 /etc/resolv.conf
 
 echo "****************************************"
 echo "*** Cloudera Software"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^cloudera\* ^navencrypt\* \*keytrustee\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*cloudera\* \*navencrypt\* \*keytrustee\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Cloudera Hadoop Packages"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^hadoop\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l hadoop | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -725,13 +725,13 @@ ls -l /opt/cloudera/csd
 
 echo "****************************************"
 echo "*** Hortonworks Software"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^ambari\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l \*ambari\* | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
 fi
 echo "*** Hortonworks Hadoop Packages"
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] || [ "$OS" == "SUSE LINUX" ]; then
   rpm -qa ^hadoop\*
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   dpkg -l hadoop-?-?-?-?-???? | awk '$1~/^ii$/{print $2"\t"$3"\t"$4}'
@@ -763,7 +763,7 @@ fi
 
 echo "****************************************"
 echo "*** PCI Devices"
-if { [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" == 6 ]; then
+if { [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" == 6 ]; then
   _LSPCI_OLD=true
 elif [ "$OS" == Debian ] && { [ "$OSVER" == 7 ] || [ "$OSVER" == 8 ]; }; then
   _LSPCI_OLD=true

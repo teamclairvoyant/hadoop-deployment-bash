@@ -117,7 +117,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -134,7 +134,7 @@ if [ -z "$http_proxy" ]; then
 fi
 
 echo "Installing Cloudera Director..."
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   # Because it may have been put there by some other process.
   if [ ! -f /etc/yum.repos.d/cloudera-director.repo ]; then
     wget -q "https://archive.cloudera.com/director/redhat/${OSREL}/x86_64/director/cloudera-director.repo" -O /etc/yum.repos.d/cloudera-director.repo

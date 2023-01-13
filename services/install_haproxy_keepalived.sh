@@ -216,8 +216,8 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ]; then
-#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -249,7 +249,7 @@ check_root
 
 # main
 echo "Installing keepalived..."
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   yum -y -d1 -e1 install keepalived
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
@@ -339,7 +339,7 @@ aws ec2 assign-private-ip-addresses --network-interface-id \$ENI_ID --private-ip
 EOF2
   chmod 0755 /etc/keepalived/assign_vip.sh
   chown root:root /etc/keepalived/assign_vip.sh
-  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+  if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
     echo -e "DEVICE=${KEEPALIVED_NIC}:0\nIPADDR=${KEEPALIVED_VIP}\nNETMASK=${KEEPALIVED_NETMASK}\nONPARENT=yes" >"/tmp/ifcfg-${KEEPALIVED_NIC}:0"
     install -m 0664 -o root -g root "/tmp/ifcfg-${KEEPALIVED_NIC}:0" "/etc/sysconfig/network-scripts/ifcfg-${KEEPALIVED_NIC}:0"
     /sbin/ifup "${KEEPALIVED_NIC}:0"
@@ -452,7 +452,7 @@ echo "Changing net.ipv4.ip_nonlocal_bind running value to 1."
 sysctl -w net.ipv4.ip_nonlocal_bind=1
 
 echo "Setting net.ipv4.ip_nonlocal_bind startup value to 1."
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   if [ "$OSREL" == 6 ]; then
     if grep -q net.ipv4.ip_nonlocal_bind /etc/sysctl.conf; then
       sed -i -e "/^net.ipv4.ip_nonlocal_bind/s|=.*|= 1|" /etc/sysctl.conf
@@ -476,7 +476,7 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   echo "net.ipv4.ip_nonlocal_bind = 1" >>/etc/sysctl.d/keepalived.conf
 fi
 
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   service keepalived start
   chkconfig keepalived on
 elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then

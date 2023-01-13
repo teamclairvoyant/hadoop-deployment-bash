@@ -117,7 +117,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != AlmaLinux ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -156,7 +156,7 @@ keytool -importcert -file "${_DIR}/security/CAcerts/intermediate.cert.pem" \
  -alias CAcertint -keystore "${JAVA_HOME}/jre/lib/security/jssecacerts" \
  -storepass changeit -noprompt -trustcacerts
 
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == AlmaLinux ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   if [ "$OS" == RedHatEnterpriseServer ]; then
     subscription-manager repos --enable="rhel-${OSREL}-server-optional-rpms"
   fi
