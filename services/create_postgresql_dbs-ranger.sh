@@ -225,6 +225,7 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   if dpkg -l apg >/dev/null; then export PWCMD='apg -a 1 -M NCL -m 20 -x 20 -n 1'; fi
 fi
 RANGERDB_PASSWORD=$(eval "$PWCMD")
+RANGERKMSDB_PASSWORD=$(eval "$PWCMD")
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
@@ -232,7 +233,11 @@ echo "*** SAVE THIS PASSWORD"
 $ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" postgres -c "CREATE DATABASE ranger;"
 $ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" postgres -c "CREATE USER ranger WITH PASSWORD '$RANGERDB_PASSWORD';"
 $ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" postgres -c 'GRANT ALL PRIVILEGES ON DATABASE "ranger" to ranger;'
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" postgres -c "CREATE DATABASE rangerkms;"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" postgres -c "CREATE USER rangerkms WITH PASSWORD '$RANGERKMSDB_PASSWORD';"
+$ECHO psql -h "$PG_HOST" -p "$PG_PORT" -U "$PG_USER" postgres -c 'GRANT ALL PRIVILEGES ON DATABASE "rangerkms" to rangerkms;'
 echo "ranger : $RANGERDB_PASSWORD"
+echo "rangerkms : $RANGERKMSDB_PASSWORD"
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"

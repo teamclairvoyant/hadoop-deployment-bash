@@ -232,14 +232,19 @@ elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
   fi
 fi
 RANGERDB_PASSWORD=$(eval "$PWCMD")
+RANGERKMSDB_PASSWORD=$(eval "$PWCMD")
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
 echo "*** SAVE THIS PASSWORD"
 $ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE ranger;'
 $ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "CREATE USER 'ranger'@'%' IDENTIFIED BY '$RANGERDB_PASSWORD';"
-$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL PRIVILEGES ON ranger.* TO 'ranger'@'%' WITH GRANT OPTION;"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL PRIVILEGES ON ranger.* TO 'ranger'@'%';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e 'CREATE DATABASE rangerkms;'
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "CREATE USER 'rangerkms'@'%' IDENTIFIED BY '$RANGERKMSDB_PASSWORD';"
+$ECHO mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"${MYSQL_PASSWORD}" -e "GRANT ALL PRIVILEGES ON rangerkms.* TO 'rangerkms'@'%';"
 echo "ranger : $RANGERDB_PASSWORD"
+echo "rangerkms : $RANGERKMSDB_PASSWORD"
 echo "****************************************"
 echo "****************************************"
 echo "****************************************"
