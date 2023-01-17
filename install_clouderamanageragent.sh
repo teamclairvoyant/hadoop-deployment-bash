@@ -296,6 +296,10 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == Orac
       exit 10
     fi
   fi
+  if [ "$OSREL" -eq 8 ]; then
+    # https://developers.redhat.com/blog/2018/11/14/python-in-rhel-8-3#why_not_just__python__
+    alternatives --set python /usr/bin/python2
+  fi
   yum -y -e1 -d1 install cloudera-manager-agent
   sed -i -e "/server_host/s|=.*|=${SCMHOST}|" /etc/cloudera-scm-agent/config.ini
   service cloudera-scm-agent start
