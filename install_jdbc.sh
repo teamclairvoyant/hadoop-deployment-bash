@@ -138,6 +138,22 @@ _jdk_major_version() {
   echo "$MAJ_JVER"
 }
 
+_install_mysql_jdbc() {
+  echo "** NOTICE: Installing mysql JDBC driver."
+  _get_proxy
+  wget -q -O /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MYSQL_VERSION}.tar.gz
+  tar xf /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz -C /tmp
+  install -o root -g root -m 0644 /tmp/mysql-connector-java-${MYSQL_VERSION}/mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/
+  ln -sf mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/mysql-connector-java.jar
+  ls -l /usr/share/java/mysql-connector-java-*-bin.jar /usr/share/java/mysql-connector-java.jar
+}
+
+_install_postgresql_jdbc() {
+  yum -y -e1 -d1 install postgresql-jdbc
+  ln -sf postgresql.jar /usr/share/java/postgresql-connector-java.jar
+  ls -l /usr/share/java/postgresql.jar /usr/share/java/postgresql-connector-java.jar
+}
+
 _install_oracle_jdbc() {
   cd "$(dirname "$0")" || exit
   if [ ! -f ojdbc6.jar ] && [ ! -f ojdbc8.jar ]; then
@@ -147,9 +163,6 @@ _install_oracle_jdbc() {
     echo "   http://www.oracle.com/technetwork/database/features/jdbc/jdbc-ucp-122-3110062.html"
     echo "   and place in the same directory as this script."
     exit 1
-  fi
-  if [ ! -d /usr/share/java ]; then
-    install -o root -g root -m 0755 -d /usr/share/java
   fi
   if [ -f ojdbc6.jar ]; then
     cp -p ojdbc6.jar /tmp/ojdbc6.jar
@@ -173,9 +186,6 @@ _install_sqlserver_jdbc() {
   SQLSERVER_VERSION=6.0.8112.100
   wget -q -c -O /tmp/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz https://download.microsoft.com/download/0/2/A/02AAE597-3865-456C-AE7F-613F99F850A8/enu/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz
   tar xf /tmp/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz -C /tmp
-  if [ ! -d /usr/share/java ]; then
-    install -o root -g root -m 0755 -d /usr/share/java
-  fi
   JVER=$(_jdk_major_version)
   if [[ "$JVER" == 7 ]]; then
     install -o root -g root -m 0644 sqljdbc_6.0/enu/jre7/sqljdbc41.jar /usr/share/java/
@@ -211,6 +221,9 @@ if [ "$INSTALLDB" == yes ]; then
 else
   echo "Driver type to install: $INSTALLDB"
 fi
+if [ ! -d /usr/share/java ]; then
+  install -o root -g root -m 0755 -d /usr/share/java
+fi
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   # Test to see if JDK 6 is present.
   if rpm -q jdk >/dev/null; then
@@ -220,32 +233,18 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == Orac
   fi
   if [ "$INSTALLDB" == yes ]; then
     echo "** NOTICE: Installing mysql and postgresql JDBC drivers."
-    yum -y -e1 -d1 install mysql-connector-java postgresql-jdbc
+    _install_mysql_jdbc
+    _install_postgresql_jdbc
     # Removes JDK 6 if it snuck onto the system. Tests for the actual RPM named
     # "jdk" to keep virtual packages from causing a JDK 8 uninstall.
     if [ "$HAS_JDK" == no ] && rpm -q jdk >/dev/null; then yum -y -e1 -d1 remove jdk; fi
   else
     if [ "$INSTALLDB" == mysql ]; then
       echo "** NOTICE: Installing mysql JDBC driver."
-#      if [ "$OSREL" == 6 ]; then
-        _get_proxy
-        wget -q -O /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MYSQL_VERSION}.tar.gz
-        tar xf /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz -C /tmp
-        if [ ! -d /usr/share/java ]; then
-          install -o root -g root -m 0755 -d /usr/share/java
-        fi
-        install -o root -g root -m 0644 /tmp/mysql-connector-java-${MYSQL_VERSION}/mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/
-        ln -sf mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/mysql-connector-java.jar
-        ls -l /usr/share/java/*sql*
-#      else
-#        yum -y -e1 -d1 install mysql-connector-java
-#        # Removes JDK 6 if it snuck onto the system. Tests for the actual RPM
-#        # named "jdk" to keep virtual packages from causing a JDK 8 uninstall.
-#        if [ "$HAS_JDK" == no ] && rpm -q jdk >/dev/null; then yum -y -e1 -d1 remove jdk; fi
-#      fi
+      _install_mysql_jdbc
     elif [ "$INSTALLDB" == postgresql ]; then
       echo "** NOTICE: Installing postgresql JDBC driver."
-      yum -y -e1 -d1 install postgresql-jdbc
+      _install_postgresql_jdbc
     elif [ "$INSTALLDB" == oracle ]; then
       echo "** NOTICE: Installing oracle JDBC driver."
       _install_oracle_jdbc
