@@ -273,6 +273,7 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * llama/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * mapred/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * om/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * oozie/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * phoenix/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangeradmin/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangertagsync/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerusersync/*@${_REALM_UPPER}
@@ -436,6 +437,7 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * llama/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * mapred/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * om/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * oozie/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * phoenix/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangeradmin/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangertagsync/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerusersync/*@${_REALM_UPPER}
