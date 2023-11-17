@@ -256,6 +256,8 @@ EOF
   cat <<EOF >/var/kerberos/krb5kdc/kadm5.acl
 */admin@${_REALM_UPPER} *
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * accumulo/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * atlas/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * cruisecontrol/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * dn/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * flume/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * hbase/*@${_REALM_UPPER}
@@ -267,8 +269,10 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * hue/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * impala/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka_mirror_maker/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * knox/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kudu/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kms/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * livy/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * llama/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * mapred/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * om/*@${_REALM_UPPER}
@@ -278,6 +282,8 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangeradmin/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangertagsync/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerusersync/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerlookup/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerkms/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerrms/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * recon/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * s3g/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * scm/*@${_REALM_UPPER}
@@ -287,6 +293,7 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * spark/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sqoop/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sqoop2/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * yarn/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * zeppelin/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * zookeeper/*@${_REALM_UPPER}
 EOF
 
@@ -420,6 +427,8 @@ EOF
   cat <<EOF >/etc/krb5kdc/kadm5.acl
 */admin@${_REALM_UPPER} *
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * accumulo/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * atlas/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * cruisecontrol/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * dn/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * flume/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * hbase/*@${_REALM_UPPER}
@@ -431,8 +440,10 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * hue/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * impala/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka_mirror_maker/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * knox/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kudu/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kms/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * livy/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * llama/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * mapred/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * om/*@${_REALM_UPPER}
@@ -442,6 +453,8 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangeradmin/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangertagsync/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerusersync/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerlookup/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerkms/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerrms/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * recon/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * s3g/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * scm/*@${_REALM_UPPER}
@@ -451,6 +464,7 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * spark/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sqoop/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sqoop2/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * yarn/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * zeppelin/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * zookeeper/*@${_REALM_UPPER}
 EOF
 
