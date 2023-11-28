@@ -26,18 +26,17 @@ DATE=$(date '+%Y%m%d%H%M%S')
 
 # Function to print the help screen.
 print_help() {
-  echo "Usage:  $1 --realm <realm> --cm_principal <princ>"
-#  echo "Usage:  $1 --realm <realm> [--kdc_password <password>] --cm_principal <princ> [--cm_principal_password <password>]"
+  echo "Usage:  $1 --realm <realm> [--kdc_password <password>] --cm_principal <princ> [--cm_principal_password <password>]"
   echo ""
   echo "        -r|--realm                   <Kerberos realm>"
   echo "        -c|--cm_principal            <CM principal>"
-#  echo "        [-k|--kdc_password           <KDC password>]"
-#  echo "        [-p|--cm_principal_password  <CM principal password>]"
+  echo "        [-k|--kdc_password           <KDC password>]"
+  echo "        [-p|--cm_principal_password  <CM principal password>]"
   echo "        [-h|--help]"
   echo "        [-v|--version]"
   echo ""
   echo "   ex.  $1 --realm HADOOP.COM --cm_principal cloudera-scm"
-#  echo "   ex.  $1 --realm HADOOP.COM --kdc_password 1234567890 --cm_principal cloudera-scm --cm_principal_password abcdefghij"
+  echo "   ex.  $1 --realm HADOOP.COM --kdc_password 1234567890 --cm_principal cloudera-scm --cm_principal_password abcdefghij"
   exit 1
 }
 
@@ -52,10 +51,10 @@ check_root() {
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
-    # CentOS, Ubuntu, RedHatEnterpriseServer, Debian, SUSE LINUX
+    # CentOS, Ubuntu, RedHatEnterpriseServer, RedHatEnterprise, Debian, SUSE LINUX, OracleServer
     # shellcheck disable=SC2034
     OS=$(lsb_release -is)
-    # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5, SLES= 11
+    # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5, SLES= 11, OEL= 7.6
     # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
@@ -69,29 +68,66 @@ discover_os() {
       if [ -f /etc/centos-release ]; then
         # shellcheck disable=SC2034
         OS=CentOS
-        # 7.5.1804.4.el7.centos, 6.10.el6.centos.12.3
         # shellcheck disable=SC2034
-        OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
         # shellcheck disable=SC2034
-        OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
+        OSNAME=$(awk -F"[()]" '{print $2}' /etc/centos-release | sed 's| ||g')
+        if [ -z "$OSNAME" ]; then
+          # shellcheck disable=SC2034
+          OSNAME="n/a"
+        fi
+        if [ "$OSREL" -le "6" ]; then
+          # 6.10.el6.centos.12.3
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        elif [ "$OSREL" == "7" ]; then
+          # 7.5.1804.4.el7.centos
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2"."$3}')
+        elif [ "$OSREL" == "8" ]; then
+          if [ "$(rpm -qf /etc/centos-release --qf='%{NAME}\n')" == "centos-stream-release" ]; then
+            # shellcheck disable=SC2034
+            OS=CentOSStream
+            # shellcheck disable=SC2034
+            OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+          else
+            # shellcheck disable=SC2034
+            OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2"."$4}')
+          fi
+        else
+          # shellcheck disable=SC2034
+          OS=CentOSStream
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
+        fi
+      elif [ -f /etc/oracle-release ]; then
+        # shellcheck disable=SC2034
+        OS=OracleServer
+        # 7.6
+        # shellcheck disable=SC2034
+        OSVER=$(rpm -qf /etc/oracle-release --qf='%{VERSION}\n')
+        # shellcheck disable=SC2034
+        OSNAME="n/a"
       else
         # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
-        # 7.5, 6Server
+        # 8.6, 7.5, 6Server
         # shellcheck disable=SC2034
         OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n')
+        # shellcheck disable=SC2034
+        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
         if [ "$OSVER" == "6Server" ]; then
           # shellcheck disable=SC2034
           OSVER=$(rpm -qf /etc/redhat-release --qf='%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        elif [ "$OSREL" == "8" ]; then
           # shellcheck disable=SC2034
-          OSNAME=Santiago
-        else
-          # shellcheck disable=SC2034
-          OSNAME=Maipo
+          OS=RedHatEnterprise
         fi
         # shellcheck disable=SC2034
-        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
+        OSNAME=$(awk -F"[()]" '{print $2}' /etc/redhat-release | sed 's| ||g')
       fi
+      # shellcheck disable=SC2034
+      OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     elif [ -f /etc/SuSE-release ]; then
       if grep -q "^SUSE Linux Enterprise Server" /etc/SuSE-release; then
         # shellcheck disable=SC2034
@@ -100,7 +136,7 @@ discover_os() {
       # shellcheck disable=SC2034
       OSVER=$(rpm -qf /etc/SuSE-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
       # shellcheck disable=SC2034
-      OSREL=$(rpm -qf /etc/SuSE-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+      OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
       # shellcheck disable=SC2034
       OSNAME="n/a"
     fi
@@ -130,18 +166,18 @@ while [[ $1 = -* ]]; do
       _REALM_UPPER=$(echo "$1" | tr '[:lower:]' '[:upper:]')
       _REALM_LOWER=$(echo "$1" | tr '[:upper:]' '[:lower:]')
       ;;
-#    -k|--kdc_password)
-#      shift
-#      _KDC_PASSWORD=$1
-#      ;;
+    -k|--kdc_password)
+      shift
+      _KDC_PASSWORD=$1
+      ;;
     -c|--cm_principal)
       shift
       _CM_PRINCIPAL=$1
       ;;
-#    -p|--cm_principal_password)
-#      shift
-#      _CM_PRINCIPAL_PASSWORD=$1
-#      ;;
+    -p|--cm_principal_password)
+      shift
+      _CM_PRINCIPAL_PASSWORD=$1
+      ;;
     -h|--help)
       print_help "$(basename "$0")"
       ;;
@@ -162,7 +198,7 @@ echo "**************************************************************************
 # Check to see if we are on a supported OS.
 # Currently only EL.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -176,7 +212,7 @@ check_root
 
 # main
 echo "Installing MIT KDC..."
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   yum -y -e1 -d1 install krb5-server krb5-workstation
 
   echo "** Writing configs..."
@@ -220,6 +256,9 @@ EOF
   cat <<EOF >/var/kerberos/krb5kdc/kadm5.acl
 */admin@${_REALM_UPPER} *
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * accumulo/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * atlas/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * cruisecontrol/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * dn/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * flume/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * hbase/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * hdfs/*@${_REALM_UPPER}
@@ -230,17 +269,31 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * hue/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * impala/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka_mirror_maker/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * knox/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kudu/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kms/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * livy/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * llama/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * mapred/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * om/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * oozie/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * phoenix/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangeradmin/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangertagsync/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerusersync/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerlookup/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerkms/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerrms/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * recon/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * s3g/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * scm/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sentry/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * solr/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * spark/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sqoop/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sqoop2/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * yarn/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * zeppelin/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * zookeeper/*@${_REALM_UPPER}
 EOF
 
@@ -287,34 +340,38 @@ $_REALM_UPPER = {
 $_REALM_LOWER = $_REALM_UPPER
 EOF
 
-  echo "** Generating initial KDC database ..."
-  _KDC_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_KDC_PASSWORD" ]; then
-    _KDC_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    echo "** Generating initial KDC database ..."
+    _KDC_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
+    if [ -z "$_KDC_PASSWORD" ]; then
+      _KDC_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "*** SAVE THIS PASSWORD"
+    echo "KDC : ${_KDC_PASSWORD}"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
-  echo "*** SAVE THIS PASSWORD"
-  echo "KDC : ${_KDC_PASSWORD}"
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
   kdb5_util -P "$_KDC_PASSWORD" create -s >/dev/null
 
-  echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
-  _CM_PRINCIPAL_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
-    _CM_PRINCIPAL_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
+    _CM_PRINCIPAL_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
+    if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
+      _CM_PRINCIPAL_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "*** SAVE THIS PASSWORD"
+    echo "${_CM_PRINCIPAL}@${_REALM_UPPER} : ${_CM_PRINCIPAL_PASSWORD}"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
-  echo "*** SAVE THIS PASSWORD"
-  echo "${_CM_PRINCIPAL}@${_REALM_UPPER} : ${_CM_PRINCIPAL_PASSWORD}"
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
   kadmin.local >/dev/null <<EOF
 addpol default
 addprinc -pw $_CM_PRINCIPAL_PASSWORD $_CM_PRINCIPAL
@@ -370,6 +427,9 @@ EOF
   cat <<EOF >/etc/krb5kdc/kadm5.acl
 */admin@${_REALM_UPPER} *
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * accumulo/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * atlas/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * cruisecontrol/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * dn/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * flume/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * hbase/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * hdfs/*@${_REALM_UPPER}
@@ -380,17 +440,31 @@ ${_CM_PRINCIPAL}@${_REALM_UPPER} * hue/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * impala/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kafka_mirror_maker/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * knox/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kudu/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * kms/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * livy/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * llama/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * mapred/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * om/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * oozie/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * phoenix/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangeradmin/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangertagsync/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerusersync/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerlookup/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerkms/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * rangerrms/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * recon/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * s3g/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * scm/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sentry/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * solr/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * spark/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sqoop/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * sqoop2/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * yarn/*@${_REALM_UPPER}
+${_CM_PRINCIPAL}@${_REALM_UPPER} * zeppelin/*@${_REALM_UPPER}
 ${_CM_PRINCIPAL}@${_REALM_UPPER} * zookeeper/*@${_REALM_UPPER}
 EOF
 
@@ -437,34 +511,38 @@ $_REALM_UPPER = {
 $_REALM_LOWER = $_REALM_UPPER
 EOF
 
-  echo "** Generating initial KDC database ..."
-  _KDC_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_KDC_PASSWORD" ]; then
-    _KDC_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    echo "** Generating initial KDC database ..."
+    _KDC_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
+    if [ -z "$_KDC_PASSWORD" ]; then
+      _KDC_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "*** SAVE THIS PASSWORD"
+    echo "KDC : ${_KDC_PASSWORD}"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
-  echo "*** SAVE THIS PASSWORD"
-  echo "KDC : ${_KDC_PASSWORD}"
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
   kdb5_util -P "$_KDC_PASSWORD" create -s >/dev/null
 
-  echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
-  _CM_PRINCIPAL_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
   if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
-    _CM_PRINCIPAL_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    echo "** Generating $_CM_PRINCIPAL principal for Cloudera Manager ..."
+    _CM_PRINCIPAL_PASSWORD=$(apg -a 1 -M NCL -m 20 -x 20 -n 1 2>/dev/null)
+    if [ -z "$_CM_PRINCIPAL_PASSWORD" ]; then
+      _CM_PRINCIPAL_PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "*** SAVE THIS PASSWORD"
+    echo "${_CM_PRINCIPAL}@${_REALM_UPPER} : ${_CM_PRINCIPAL_PASSWORD}"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
-  echo "*** SAVE THIS PASSWORD"
-  echo "${_CM_PRINCIPAL}@${_REALM_UPPER} : ${_CM_PRINCIPAL_PASSWORD}"
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
   kadmin.local >/dev/null <<EOF
 addpol default
 addprinc -pw $_CM_PRINCIPAL_PASSWORD $_CM_PRINCIPAL

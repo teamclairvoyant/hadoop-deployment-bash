@@ -21,15 +21,15 @@ PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 # 1 - JDBC driver type : mysql, postgresql, oracle, or sqlserver - optional
 #                        installs mysql and postgresql JDBC drivers by default
 
-MYSQL_VERSION=5.1.46
+MYSQL_VERSION=5.1.48
 
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
-    # CentOS, Ubuntu, RedHatEnterpriseServer, Debian, SUSE LINUX
+    # CentOS, Ubuntu, RedHatEnterpriseServer, RedHatEnterprise, Debian, SUSE LINUX, OracleServer
     # shellcheck disable=SC2034
     OS=$(lsb_release -is)
-    # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5, SLES= 11
+    # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5, SLES= 11, OEL= 7.6
     # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
@@ -43,29 +43,66 @@ discover_os() {
       if [ -f /etc/centos-release ]; then
         # shellcheck disable=SC2034
         OS=CentOS
-        # 7.5.1804.4.el7.centos, 6.10.el6.centos.12.3
         # shellcheck disable=SC2034
-        OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
         # shellcheck disable=SC2034
-        OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
+        OSNAME=$(awk -F"[()]" '{print $2}' /etc/centos-release | sed 's| ||g')
+        if [ -z "$OSNAME" ]; then
+          # shellcheck disable=SC2034
+          OSNAME="n/a"
+        fi
+        if [ "$OSREL" -le "6" ]; then
+          # 6.10.el6.centos.12.3
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        elif [ "$OSREL" == "7" ]; then
+          # 7.5.1804.4.el7.centos
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2"."$3}')
+        elif [ "$OSREL" == "8" ]; then
+          if [ "$(rpm -qf /etc/centos-release --qf='%{NAME}\n')" == "centos-stream-release" ]; then
+            # shellcheck disable=SC2034
+            OS=CentOSStream
+            # shellcheck disable=SC2034
+            OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+          else
+            # shellcheck disable=SC2034
+            OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2"."$4}')
+          fi
+        else
+          # shellcheck disable=SC2034
+          OS=CentOSStream
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
+        fi
+      elif [ -f /etc/oracle-release ]; then
+        # shellcheck disable=SC2034
+        OS=OracleServer
+        # 7.6
+        # shellcheck disable=SC2034
+        OSVER=$(rpm -qf /etc/oracle-release --qf='%{VERSION}\n')
+        # shellcheck disable=SC2034
+        OSNAME="n/a"
       else
         # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
-        # 7.5, 6Server
+        # 8.6, 7.5, 6Server
         # shellcheck disable=SC2034
         OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n')
+        # shellcheck disable=SC2034
+        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
         if [ "$OSVER" == "6Server" ]; then
           # shellcheck disable=SC2034
           OSVER=$(rpm -qf /etc/redhat-release --qf='%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        elif [ "$OSREL" == "8" ]; then
           # shellcheck disable=SC2034
-          OSNAME=Santiago
-        else
-          # shellcheck disable=SC2034
-          OSNAME=Maipo
+          OS=RedHatEnterprise
         fi
         # shellcheck disable=SC2034
-        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
+        OSNAME=$(awk -F"[()]" '{print $2}' /etc/redhat-release | sed 's| ||g')
       fi
+      # shellcheck disable=SC2034
+      OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     elif [ -f /etc/SuSE-release ]; then
       if grep -q "^SUSE Linux Enterprise Server" /etc/SuSE-release; then
         # shellcheck disable=SC2034
@@ -74,7 +111,7 @@ discover_os() {
       # shellcheck disable=SC2034
       OSVER=$(rpm -qf /etc/SuSE-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
       # shellcheck disable=SC2034
-      OSREL=$(rpm -qf /etc/SuSE-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+      OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
       # shellcheck disable=SC2034
       OSNAME="n/a"
     fi
@@ -101,6 +138,22 @@ _jdk_major_version() {
   echo "$MAJ_JVER"
 }
 
+_install_mysql_jdbc() {
+  echo "** NOTICE: Installing mysql JDBC driver."
+  _get_proxy
+  wget -q -O /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MYSQL_VERSION}.tar.gz
+  tar xf /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz -C /tmp
+  install -o root -g root -m 0644 /tmp/mysql-connector-java-${MYSQL_VERSION}/mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/
+  ln -sf mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/mysql-connector-java.jar
+  ls -l /usr/share/java/mysql-connector-java-*-bin.jar /usr/share/java/mysql-connector-java.jar
+}
+
+_install_postgresql_jdbc() {
+  yum -y -e1 -d1 install postgresql-jdbc
+  ln -sf postgresql.jar /usr/share/java/postgresql-connector-java.jar
+  ls -l /usr/share/java/postgresql.jar /usr/share/java/postgresql-connector-java.jar
+}
+
 _install_oracle_jdbc() {
   cd "$(dirname "$0")" || exit
   if [ ! -f ojdbc6.jar ] && [ ! -f ojdbc8.jar ]; then
@@ -110,9 +163,6 @@ _install_oracle_jdbc() {
     echo "   http://www.oracle.com/technetwork/database/features/jdbc/jdbc-ucp-122-3110062.html"
     echo "   and place in the same directory as this script."
     exit 1
-  fi
-  if [ ! -d /usr/share/java ]; then
-    install -o root -g root -m 0755 -d /usr/share/java
   fi
   if [ -f ojdbc6.jar ]; then
     cp -p ojdbc6.jar /tmp/ojdbc6.jar
@@ -136,9 +186,6 @@ _install_sqlserver_jdbc() {
   SQLSERVER_VERSION=6.0.8112.100
   wget -q -c -O /tmp/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz https://download.microsoft.com/download/0/2/A/02AAE597-3865-456C-AE7F-613F99F850A8/enu/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz
   tar xf /tmp/sqljdbc_${SQLSERVER_VERSION}_enu.tar.gz -C /tmp
-  if [ ! -d /usr/share/java ]; then
-    install -o root -g root -m 0755 -d /usr/share/java
-  fi
   JVER=$(_jdk_major_version)
   if [[ "$JVER" == 7 ]]; then
     install -o root -g root -m 0644 sqljdbc_6.0/enu/jre7/sqljdbc41.jar /usr/share/java/
@@ -158,7 +205,7 @@ echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -174,7 +221,10 @@ if [ "$INSTALLDB" == yes ]; then
 else
   echo "Driver type to install: $INSTALLDB"
 fi
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ ! -d /usr/share/java ]; then
+  install -o root -g root -m 0755 -d /usr/share/java
+fi
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   # Test to see if JDK 6 is present.
   if rpm -q jdk >/dev/null; then
     HAS_JDK=yes
@@ -183,32 +233,18 @@ if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
   fi
   if [ "$INSTALLDB" == yes ]; then
     echo "** NOTICE: Installing mysql and postgresql JDBC drivers."
-    yum -y -e1 -d1 install mysql-connector-java postgresql-jdbc
+    _install_mysql_jdbc
+    _install_postgresql_jdbc
     # Removes JDK 6 if it snuck onto the system. Tests for the actual RPM named
     # "jdk" to keep virtual packages from causing a JDK 8 uninstall.
     if [ "$HAS_JDK" == no ] && rpm -q jdk >/dev/null; then yum -y -e1 -d1 remove jdk; fi
   else
     if [ "$INSTALLDB" == mysql ]; then
       echo "** NOTICE: Installing mysql JDBC driver."
-      if [ "$OSREL" == 6 ]; then
-        _get_proxy
-        wget -q -O /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-${MYSQL_VERSION}.tar.gz
-        tar xf /tmp/mysql-connector-java-${MYSQL_VERSION}.tar.gz -C /tmp
-        if [ ! -d /usr/share/java ]; then
-          install -o root -g root -m 0755 -d /usr/share/java
-        fi
-        install -o root -g root -m 0644 /tmp/mysql-connector-java-${MYSQL_VERSION}/mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/
-        ln -sf mysql-connector-java-${MYSQL_VERSION}-bin.jar /usr/share/java/mysql-connector-java.jar
-        ls -l /usr/share/java/*sql*
-      else
-        yum -y -e1 -d1 install mysql-connector-java
-	# Removes JDK 6 if it snuck onto the system. Tests for the actual RPM
-	# named "jdk" to keep virtual packages from causing a JDK 8 uninstall.
-        if [ "$HAS_JDK" == no ] && rpm -q jdk >/dev/null; then yum -y -e1 -d1 remove jdk; fi
-      fi
+      _install_mysql_jdbc
     elif [ "$INSTALLDB" == postgresql ]; then
       echo "** NOTICE: Installing postgresql JDBC driver."
-      yum -y -e1 -d1 install postgresql-jdbc
+      _install_postgresql_jdbc
     elif [ "$INSTALLDB" == oracle ]; then
       echo "** NOTICE: Installing oracle JDBC driver."
       _install_oracle_jdbc

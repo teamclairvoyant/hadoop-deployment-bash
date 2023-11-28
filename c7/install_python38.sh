@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2023
 
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-
-DATE=$(date +'%Y%m%d%H%M%S')
 
 # Function to discover basic OS details.
 discover_os() {
@@ -113,59 +111,30 @@ discover_os() {
   fi
 }
 
-is_virtual() {
-  grep -Eqi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine|Amazon EC2' /sys/devices/virtual/dmi/id/*
-  return $?
-}
-
-tinker_ntp.conf() {
-  cp -p /etc/ntp.conf /etc/ntp.conf."${DATE}"
-  sed -e '/# CLAIRVOYANT$/d' -i /etc/ntp.conf
-  # shellcheck disable=SC1004
-  sed -e '1i\
-# Keep ntpd from panicking in the event of a large clock skew when # CLAIRVOYANT\
-# a VM guest is suspended and resumed.                             # CLAIRVOYANT\
-tinker panic 0                                                     # CLAIRVOYANT' \
-      -i /etc/ntp.conf
-}
-
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] && [ "$OSREL" -ge 8 ]; then
-  echo "ERROR: NTP no longer ships with RHEL/CentOS 8. Use chrony instead."
-  exit 4
-fi
 
-echo "Installing Network Time Protocol..."
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
-  if [ "$OSREL" == 7 ]; then
-    # https://www.centos.org/forums/viewtopic.php?f=47&t=47626
-    systemctl disable chronyd.service
+echo "Installing Python 3.8..."
+if [ "$OSREL" == 7 ]; then
+  if [ "$OS" == RedHatEnterpriseServer ]; then
+    subscription-manager repos --enable="rhel-server-rhscl-7-rpms"
+  elif [ "$OS" == CentOS ]; then
+    yum -y -e1 -d1 install centos-release-scl
+  elif [ "$OS" == OracleServer ]; then
+    yum -y -e1 -d1 install oracle-softwarecollection-release-el7
   fi
-  yum -y -e1 -d1 remove chrony
-  yum -y -e1 -d1 install ntp
-  if is_virtual; then
-    tinker_ntp.conf
-  fi
-  service ntpdate start
-  chkconfig ntpdate on
-  service ntpd start
-  chkconfig ntpd on
-elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get -y -q remove chrony
-  apt-get -y -q install ntp
-  if is_virtual; then
-    tinker_ntp.conf
-  fi
-  service ntp start
-  update-rc.d ntp defaults
+  yum -y -e1 -d1 install rh-python38 rh-python38-python-devel
+elif [ "$OSREL" == 8 ]; then
+  yum -y -e1 -d1 install python38 python38-devel python38-pip
+else
+  echo "ERROR: Unsupported OSREL."
+  exit 1
 fi
 

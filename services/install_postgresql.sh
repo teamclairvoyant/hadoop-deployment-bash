@@ -16,13 +16,25 @@
 
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
 
+# Function to print the help screen.
+print_help() {
+  echo "Usage:  $1 [--password <password>]"
+  echo ""
+  echo "        [-p|--password  <database root user password>]"
+  echo "        [-h|--help]"
+  echo "        [-v|--version]"
+  echo ""
+  echo "   ex.  $1 --password abcdefghij"
+  exit 1
+}
+
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
-    # CentOS, Ubuntu, RedHatEnterpriseServer, Debian, SUSE LINUX
+    # CentOS, Ubuntu, RedHatEnterpriseServer, RedHatEnterprise, Debian, SUSE LINUX, OracleServer
     # shellcheck disable=SC2034
     OS=$(lsb_release -is)
-    # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5, SLES= 11
+    # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5, SLES= 11, OEL= 7.6
     # shellcheck disable=SC2034
     OSVER=$(lsb_release -rs)
     # 7, 14
@@ -36,29 +48,66 @@ discover_os() {
       if [ -f /etc/centos-release ]; then
         # shellcheck disable=SC2034
         OS=CentOS
-        # 7.5.1804.4.el7.centos, 6.10.el6.centos.12.3
         # shellcheck disable=SC2034
-        OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
         # shellcheck disable=SC2034
-        OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
+        OSNAME=$(awk -F"[()]" '{print $2}' /etc/centos-release | sed 's| ||g')
+        if [ -z "$OSNAME" ]; then
+          # shellcheck disable=SC2034
+          OSNAME="n/a"
+        fi
+        if [ "$OSREL" -le "6" ]; then
+          # 6.10.el6.centos.12.3
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        elif [ "$OSREL" == "7" ]; then
+          # 7.5.1804.4.el7.centos
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2"."$3}')
+        elif [ "$OSREL" == "8" ]; then
+          if [ "$(rpm -qf /etc/centos-release --qf='%{NAME}\n')" == "centos-stream-release" ]; then
+            # shellcheck disable=SC2034
+            OS=CentOSStream
+            # shellcheck disable=SC2034
+            OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+          else
+            # shellcheck disable=SC2034
+            OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2"."$4}')
+          fi
+        else
+          # shellcheck disable=SC2034
+          OS=CentOSStream
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
+        fi
+      elif [ -f /etc/oracle-release ]; then
+        # shellcheck disable=SC2034
+        OS=OracleServer
+        # 7.6
+        # shellcheck disable=SC2034
+        OSVER=$(rpm -qf /etc/oracle-release --qf='%{VERSION}\n')
+        # shellcheck disable=SC2034
+        OSNAME="n/a"
       else
         # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
-        # 7.5, 6Server
+        # 8.6, 7.5, 6Server
         # shellcheck disable=SC2034
         OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n')
+        # shellcheck disable=SC2034
+        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
         if [ "$OSVER" == "6Server" ]; then
           # shellcheck disable=SC2034
           OSVER=$(rpm -qf /etc/redhat-release --qf='%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        elif [ "$OSREL" == "8" ]; then
           # shellcheck disable=SC2034
-          OSNAME=Santiago
-        else
-          # shellcheck disable=SC2034
-          OSNAME=Maipo
+          OS=RedHatEnterprise
         fi
         # shellcheck disable=SC2034
-        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
+        OSNAME=$(awk -F"[()]" '{print $2}' /etc/redhat-release | sed 's| ||g')
       fi
+      # shellcheck disable=SC2034
+      OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     elif [ -f /etc/SuSE-release ]; then
       if grep -q "^SUSE Linux Enterprise Server" /etc/SuSE-release; then
         # shellcheck disable=SC2034
@@ -67,20 +116,41 @@ discover_os() {
       # shellcheck disable=SC2034
       OSVER=$(rpm -qf /etc/SuSE-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
       # shellcheck disable=SC2034
-      OSREL=$(rpm -qf /etc/SuSE-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+      OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
       # shellcheck disable=SC2034
       OSNAME="n/a"
     fi
   fi
 }
 
+# Process arguments.
+while [[ $1 = -* ]]; do
+  case $1 in
+    -p|--password)
+      shift
+      _PASS=$1
+      ;;
+    -h|--help)
+      print_help "$(basename "$0")"
+      ;;
+    -v|--version)
+      echo "Install PostgreSQL."
+      exit 0
+      ;;
+    *)
+      print_help "$(basename "$0")"
+      ;;
+  esac
+  shift
+done
+
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ]; then
-#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ]; then
+#if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
@@ -88,7 +158,7 @@ fi
 echo "Installing PostgreSQL..."
 DATE=$(date '+%Y%m%d%H%M%S')
 
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ]; then
+if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   yum -y -e1 -d1 install postgresql-server
 
   postgresql-setup initdb
@@ -135,18 +205,20 @@ EOF
   service postgresql restart
   chkconfig postgresql on
 
-  _PASS=$(apg -a 1 -M NCL -m 20 -x 20 -n 1)
   if [ -z "$_PASS" ]; then
-    _PASS=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    _PASS=$(apg -a 1 -M NCL -m 20 -x 20 -n 1)
+    if [ -z "$_PASS" ]; then
+      _PASS=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c 20;echo)
+    fi
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
+    echo "*** SAVE THIS PASSWORD"
+    echo "postgres : ${_PASS}"
+    echo "****************************************"
+    echo "****************************************"
+    echo "****************************************"
   fi
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
-  echo "*** SAVE THIS PASSWORD"
-  echo "postgres : ${_PASS}"
-  echo "****************************************"
-  echo "****************************************"
-  echo "****************************************"
 
   # shellcheck disable=SC1117
   su - postgres -c 'psql' <<EOF

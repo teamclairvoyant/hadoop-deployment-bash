@@ -31,7 +31,7 @@ PATH=/bin:/sbin:/usr/bin:/usr/sbin
 # Function to discover basic OS details.
 discover_os() {
   if command -v lsb_release >/dev/null; then
-    # CentOS, Ubuntu, RedHatEnterpriseServer, Debian, SUSE LINUX, OracleServer
+    # CentOS, Ubuntu, RedHatEnterpriseServer, RedHatEnterprise, Debian, SUSE LINUX, OracleServer
     # shellcheck disable=SC2034
     OS=$(lsb_release -is)
     # CentOS= 6.10, 7.2.1511, Ubuntu= 14.04, RHEL= 6.10, 7.5, SLES= 11, OEL= 7.6
@@ -48,11 +48,38 @@ discover_os() {
       if [ -f /etc/centos-release ]; then
         # shellcheck disable=SC2034
         OS=CentOS
-        # 7.5.1804.4.el7.centos, 6.10.el6.centos.12.3
         # shellcheck disable=SC2034
-        OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
         # shellcheck disable=SC2034
-        OSREL=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
+        OSNAME=$(awk -F"[()]" '{print $2}' /etc/centos-release | sed 's| ||g')
+        if [ -z "$OSNAME" ]; then
+          # shellcheck disable=SC2034
+          OSNAME="n/a"
+        fi
+        if [ "$OSREL" -le "6" ]; then
+          # 6.10.el6.centos.12.3
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        elif [ "$OSREL" == "7" ]; then
+          # 7.5.1804.4.el7.centos
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2"."$3}')
+        elif [ "$OSREL" == "8" ]; then
+          if [ "$(rpm -qf /etc/centos-release --qf='%{NAME}\n')" == "centos-stream-release" ]; then
+            # shellcheck disable=SC2034
+            OS=CentOSStream
+            # shellcheck disable=SC2034
+            OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+          else
+            # shellcheck disable=SC2034
+            OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}.%{RELEASE}\n' | awk -F. '{print $1"."$2"."$4}')
+          fi
+        else
+          # shellcheck disable=SC2034
+          OS=CentOSStream
+          # shellcheck disable=SC2034
+          OSVER=$(rpm -qf /etc/centos-release --qf='%{VERSION}\n')
+        fi
       elif [ -f /etc/oracle-release ]; then
         # shellcheck disable=SC2034
         OS=OracleServer
@@ -60,25 +87,27 @@ discover_os() {
         # shellcheck disable=SC2034
         OSVER=$(rpm -qf /etc/oracle-release --qf='%{VERSION}\n')
         # shellcheck disable=SC2034
-        OSREL=$(rpm -qf /etc/oracle-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+        OSNAME="n/a"
       else
         # shellcheck disable=SC2034
         OS=RedHatEnterpriseServer
-        # 7.5, 6Server
+        # 8.6, 7.5, 6Server
         # shellcheck disable=SC2034
         OSVER=$(rpm -qf /etc/redhat-release --qf='%{VERSION}\n')
+        # shellcheck disable=SC2034
+        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
         if [ "$OSVER" == "6Server" ]; then
           # shellcheck disable=SC2034
           OSVER=$(rpm -qf /etc/redhat-release --qf='%{RELEASE}\n' | awk -F. '{print $1"."$2}')
+        elif [ "$OSREL" == "8" ]; then
           # shellcheck disable=SC2034
-          OSNAME=Santiago
-        else
-          # shellcheck disable=SC2034
-          OSNAME=Maipo
+          OS=RedHatEnterprise
         fi
         # shellcheck disable=SC2034
-        OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
+        OSNAME=$(awk -F"[()]" '{print $2}' /etc/redhat-release | sed 's| ||g')
       fi
+      # shellcheck disable=SC2034
+      OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
     elif [ -f /etc/SuSE-release ]; then
       if grep -q "^SUSE Linux Enterprise Server" /etc/SuSE-release; then
         # shellcheck disable=SC2034
@@ -87,7 +116,7 @@ discover_os() {
       # shellcheck disable=SC2034
       OSVER=$(rpm -qf /etc/SuSE-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
       # shellcheck disable=SC2034
-      OSREL=$(rpm -qf /etc/SuSE-release --qf='%{VERSION}\n' | awk -F. '{print $1}')
+      OSREL=$(echo "$OSVER" | awk -F. '{print $1}')
       # shellcheck disable=SC2034
       OSNAME="n/a"
     fi
@@ -100,7 +129,7 @@ echo "****************************************"
 hostname
 # shellcheck disable=SC2016
 echo '$Id$'
-echo 'Version: 20200416'
+echo 'Version: 20230111'
 echo "Date: $(date -u '+%FT%T.000Z')"
 echo "****************************************"
 echo "*** OS details"
@@ -194,13 +223,16 @@ echo "****************************************"
 echo "*** kernel bugs"
 echo "** running config:"
 uname -r
+if [ "$OS" == OracleServer ] && uname -r | grep -q uek; then
+  echo "Kernel is UEK.  RHCK must be running instead."
+fi
 echo "** installed kernels:"
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   if [ "$OS" == OracleServer ]; then
-    rpm -q kernel kernel-uek
+    rpm -q kernel kernel-uek kernel-core kernel-uek-core
     if uname -r | grep -q uek; then K="uek-"; fi
   else
-    rpm -q kernel
+    rpm -q kernel kernel-core
   fi
   echo "** running kernel has fix?:"
   if uname -r | grep -Eq '^4\.[0-9].*uek'; then
@@ -585,14 +617,14 @@ if [ "$OS" == Debian ] || [ "$OS" == Ubuntu ] || [ "$OS" == "SUSE LINUX" ]; then
 else
   chkconfig --list ntpd
 fi
-if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" == 7 ]; then
+if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && [ "$OSREL" -ge 7 ]; then
   systemctl --lines 0 status chronyd.service
   RETVAL=$?
   # Do we want to support chrony? Does CM?
 fi
 echo "** timesync status:"
 ntpq -p
-if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && { [ "$OSREL" == 7 ] && [ "$RETVAL" == 0 ]; }; then
+if { [ "$OS" == CentOS ] || [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == OracleServer ]; } && { [ "$OSREL" -ge 7 ] && [ "$RETVAL" == 0 ]; }; then
   chronyc sources
 fi
 

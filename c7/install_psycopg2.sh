@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright Clairvoyant 2015
+# Copyright Clairvoyant 2023
 
 PATH=/usr/bin:/usr/sbin:/bin:/sbin:/usr/local/bin
-
-DATE=$(date +'%Y%m%d%H%M%S')
 
 # Function to discover basic OS details.
 discover_os() {
@@ -113,59 +111,35 @@ discover_os() {
   fi
 }
 
-is_virtual() {
-  grep -Eqi 'VirtualBox|VMware|Parallel|Xen|innotek|QEMU|Virtual Machine|Amazon EC2' /sys/devices/virtual/dmi/id/*
-  return $?
-}
-
-tinker_ntp.conf() {
-  cp -p /etc/ntp.conf /etc/ntp.conf."${DATE}"
-  sed -e '/# CLAIRVOYANT$/d' -i /etc/ntp.conf
-  # shellcheck disable=SC1004
-  sed -e '1i\
-# Keep ntpd from panicking in the event of a large clock skew when # CLAIRVOYANT\
-# a VM guest is suspended and resumed.                             # CLAIRVOYANT\
-tinker panic 0                                                     # CLAIRVOYANT' \
-      -i /etc/ntp.conf
-}
-
 echo "********************************************************************************"
 echo "*** $(basename "$0")"
 echo "********************************************************************************"
 # Check to see if we are on a supported OS.
 discover_os
-if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Debian ] && [ "$OS" != Ubuntu ]; then
+if [ "$OS" != RedHatEnterpriseServer ] && [ "$OS" != CentOS ] && [ "$OS" != OracleServer ] && [ "$OS" != Ubuntu ]; then
   echo "ERROR: Unsupported OS."
   exit 3
 fi
-if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ] && [ "$OSREL" -ge 8 ]; then
-  echo "ERROR: NTP no longer ships with RHEL/CentOS 8. Use chrony instead."
-  exit 4
-fi
 
-echo "Installing Network Time Protocol..."
+echo "Installing PostgreSQL client (psycopg2) into Python3..."
 if [ "$OS" == RedHatEnterpriseServer ] || [ "$OS" == CentOS ] || [ "$OS" == OracleServer ]; then
   if [ "$OSREL" == 7 ]; then
-    # https://www.centos.org/forums/viewtopic.php?f=47&t=47626
-    systemctl disable chronyd.service
+    if [ ! -f /opt/rh/rh-python38/enable ]; then
+      echo "ERROR: Python 3.8 is not installed. Exiting..."
+      exit 10
+    fi
+    # shellcheck disable=SC1091
+    source /opt/rh/rh-python38/enable
+    yum -y -e1 -d1 install postgresql-devel
+  elif [ "$OSREL" == 8 ]; then
+    yum -y -e1 -d1 install libpq-devel
   fi
-  yum -y -e1 -d1 remove chrony
-  yum -y -e1 -d1 install ntp
-  if is_virtual; then
-    tinker_ntp.conf
-  fi
-  service ntpdate start
-  chkconfig ntpdate on
-  service ntpd start
-  chkconfig ntpd on
-elif [ "$OS" == Debian ] || [ "$OS" == Ubuntu ]; then
+  yum -y -e1 -d1 install xmlsec1 xmlsec1-openssl
+  yum -y -e1 -d1 install gcc
+  pip3.8 install psycopg2==2.9.3
+elif [ "$OS" == Ubuntu ]; then
   export DEBIAN_FRONTEND=noninteractive
-  apt-get -y -q remove chrony
-  apt-get -y -q install ntp
-  if is_virtual; then
-    tinker_ntp.conf
-  fi
-  service ntp start
-  update-rc.d ntp defaults
+  apt-get -y -q install xmlsec1 libxmlsec1-openssl libpq-dev
+  pip3.8 install psycopg2==2.9.3 --ignore-installed
 fi
 
